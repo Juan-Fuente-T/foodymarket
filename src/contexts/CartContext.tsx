@@ -48,7 +48,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const addItem = (product: Product, quantity: number, notes?: string) => {
     if (restaurant && product.restaurantId !== restaurant.id) {
       toast({
-        variant: "destructive",
         title: "Different Restaurant",
         description: "Your cart contains items from a different restaurant. Would you like to clear your cart?",
         action: (

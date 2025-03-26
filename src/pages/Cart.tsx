@@ -5,11 +5,26 @@ import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Minus, Plus, Trash2, ArrowLeft } from "lucide-react";
+import { Minus, Plus, Trash2, ArrowLeft, ShoppingCart } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { orderAPI } from "@/services/api";
-import { Card, CardContent } from "@/components/ui/card";
+import { 
+  Card, 
+  CardContent, 
+  CardHeader, 
+  CardTitle, 
+  CardDescription, 
+  CardFooter 
+} from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table";
 
 const Cart = () => {
   const { items, restaurant, removeItem, updateItemQuantity, clearCart, totalItems, totalPrice } = useCart();
@@ -19,7 +34,6 @@ const Cart = () => {
   const handleCheckout = async () => {
     if (!isAuthenticated) {
       toast({
-        variant: "destructive",
         title: "Login Required",
         description: "You need to be logged in to checkout.",
         action: (
