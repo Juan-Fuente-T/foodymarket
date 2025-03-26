@@ -4,10 +4,14 @@ import com.c24_39_t_webapp.restaurants.dtos.request.CategoryRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.CategoryResponseDto;
 import com.c24_39_t_webapp.restaurants.exception.CategoryNotFoundException;
 import com.c24_39_t_webapp.restaurants.models.Category;
+import com.c24_39_t_webapp.restaurants.models.Restaurant;
 import com.c24_39_t_webapp.restaurants.repository.CategoryRepository;
+import com.c24_39_t_webapp.restaurants.repository.ProductRepository;
 import com.c24_39_t_webapp.restaurants.services.ICategoryService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,23 +23,29 @@ import java.util.stream.Collectors;
 public class CategoryServiceImpl implements ICategoryService {
 
     private final CategoryRepository categoryRepository;
+    private final ProductRepository productRepository;
 
     @Override
-    public CategoryResponseDto addCategory(CategoryRequestDto categoryRequestDto) {
-        Category newCategory = new Category();
+    public CategoryResponseDto addCategory(Category category) {
+        log.info("Agregando una nueva categoria: {}", category.getName());
 
-        newCategory.setName(categoryRequestDto.name());
-        newCategory.setDescription(categoryRequestDto.description());
+        // Verificar si ya existe una categoría con el mismo nombre
+        Category existingCategory = categoryRepository.findByName(category.getName());
+        if (existingCategory != null) {
+            log.warn("Intento de crear una categoría con un nombre duplicado. Nombre: {}", category.getName());
+            throw new IllegalArgumentException("Ya existe una categoría con este nombre.");
+        }
 
-        Category savedCategory = categoryRepository.save(newCategory);
+        Category savedCategory  = categoryRepository.save(category);
 
-        return new CategoryResponseDto(
+        CategoryResponseDto categoryResponseDto = new CategoryResponseDto(
                 savedCategory.getCtg_id(),
                 savedCategory.getName(),
                 savedCategory.getDescription()
         );
+        log.info("Categoria agregada exitosamente: {}", categoryResponseDto);
+        return categoryResponseDto;
     }
-
     @Override
     public List<CategoryResponseDto> findAllCategories() {
 
@@ -76,19 +86,17 @@ public class CategoryServiceImpl implements ICategoryService {
     }
 
     @Override
-    public CategoryResponseDto updateCategory(Long ctg_id, CategoryRequestDto updateDto) {
-        log.info("Actualizando la categoria con ID {}", ctg_id);
-        Category category = categoryRepository.findById(ctg_id)
-                .orElseThrow(() -> {
-                    log.warn("No se encontró una categoria con ese ID para editar: {}", ctg_id);
-                    return new CategoryNotFoundException(("No se encontró una categoria con ese ID para editar: " + ctg_id));
-                });
-        category.setName(updateDto.name());
-        category.setDescription(updateDto.description());
+    public CategoryResponseDto updateCategory(Category category) {
+        log.info("Actualizando la categoria con ID {}", category.getCtg_id());
 
         Category updatedCategory = categoryRepository.save(category);
+
         log.info("Categoria actualizado exitosamente: {}", updatedCategory);
-        return new CategoryResponseDto(updatedCategory);
+        return new CategoryResponseDto(
+                updatedCategory.getCtg_id(),
+                updatedCategory.getName(),
+                updatedCategory.getDescription()
+        );
     }
 
     @Override
