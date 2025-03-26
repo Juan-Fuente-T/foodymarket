@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useCart } from "@/contexts/CartContext";
@@ -6,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Minus, Plus, Trash2, ArrowLeft, ShoppingCart } from "lucide-react";
-import { toast } from "@/lib/toast";
+import { toast } from "sonner";
 import { orderAPI } from "@/services/api";
 import { 
   Card, 
@@ -33,17 +32,12 @@ const Cart = () => {
 
   const handleCheckout = async () => {
     if (!isAuthenticated) {
-      toast({
-        title: "Login Required",
+      toast.error("Login Required", {
         description: "You need to be logged in to checkout.",
-        action: (
-          <Button 
-            onClick={() => navigate('/login')}
-            className="bg-food-600 text-white px-3 py-1 rounded-md font-medium"
-          >
-            Log in
-          </Button>
-        ),
+        action: {
+          label: "Log in",
+          onClick: () => navigate('/login')
+        }
       });
       return;
     }
@@ -54,7 +48,6 @@ const Cart = () => {
     }
 
     try {
-      // Prepare order items with correct structure including id and product
       const orderItems = items.map(item => ({
         id: item.id,
         productId: item.productId,
