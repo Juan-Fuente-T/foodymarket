@@ -5,9 +5,15 @@ import com.c24_39_t_webapp.restaurants.dtos.request.ProductRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.GroupedProductsResponseDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.ProductResponseDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.ProductSummaryResponseDto;
+import com.c24_39_t_webapp.restaurants.exception.CategoryNotFoundException;
+import com.c24_39_t_webapp.restaurants.exception.ProductNotFoundException;
+import com.c24_39_t_webapp.restaurants.models.Product;
 import com.c24_39_t_webapp.restaurants.models.Restaurant;
 import com.c24_39_t_webapp.restaurants.models.Category;
+import com.c24_39_t_webapp.restaurants.repository.CategoryRepository;
+import com.c24_39_t_webapp.restaurants.repository.ProductRepository;
 import com.c24_39_t_webapp.restaurants.services.IProductService;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -23,23 +29,34 @@ public class ProductController {
 
     @Autowired
     private IProductService productService;
+    private CategoryRepository categoryRepository;
+    private ProductRepository productRepository;
 
 //    public ProductController(IProductService productService) {
 //        this.productService = productService;
 //    }
     /**
      * Endpoint to add a new {@link ResponseEntity} object to the system.
-     * Delegates the addition logic to {@link IProductService#addProduct(ProductRequestDto)}.
+     * Delegates the addition logic to {@link IProductService#addProduct(Product)}.
      *
      * @param requestDto The {@code CategoryRequestDto} object to add.
      * @return The {@code CategoryResponseDto} object representing the added category.
      */
     @PostMapping
     @PreAuthorize("hasAuthority('restaurante')")
-    public ResponseEntity<ProductResponseDto> addProduct(@RequestBody ProductRequestDto requestDto) {
+    public ResponseEntity<ProductResponseDto> addProduct(@Valid @RequestBody ProductRequestDto requestDto) {
         log.info("Recibida solicitud para añadir un producto al restaurante con ID: {}", requestDto.restaurantId());
         log.info("Datos del producto: {}", requestDto);
-        ProductResponseDto responseDto = productService.addProduct(requestDto);
+
+        Product product = new Product();
+        product.setName(requestDto.name());
+        product.setDescription(requestDto.description());
+        product.setPrice(requestDto.price());
+        product.setImage(requestDto.image());
+        product.setIsActive(requestDto.isActive());
+        product.setQuantity(requestDto.quantity());
+
+        ProductResponseDto responseDto = productService.addProduct(product);
         log.info("Producto agregado exitosamente: {}", responseDto);
         return ResponseEntity.ok(responseDto);
     }
@@ -75,7 +92,7 @@ public class ProductController {
 
     /**
      * Endpoint to update an existing {@link ProductResponseDto} object in the system.
-     * Delegates the update logic to {@link IProductService#updateProduct(Long, ProductRequestDto)}.
+     * Delegates the update logic to {@link IProductService#updateProduct(Product)}.
      *
      * @param prd_id The ID of the product to update.
      * @param updateDto The {@code ProductRequestDto} object containing the updated product details.
@@ -85,8 +102,25 @@ public class ProductController {
     @PreAuthorize("hasAuthority('restaurante')")
     public ResponseEntity<ProductResponseDto> updateProduct(@PathVariable Long prd_id, @RequestBody ProductRequestDto updateDto) {
         log.info("Solicitud recibida para actualizar el producto con ID: {}", prd_id);
-        ProductResponseDto updatedProduct = productService.updateProduct(prd_id, updateDto);
-        log.info("Producto con ID: {} actualizado exitosamente", prd_id);
+        Product product = productRepository.findById(prd_id)
+                .orElseThrow(() -> {
+                    log.warn("El ID del producto proporcionado es invalido: {}", prd_id);
+                    return new ProductNotFoundException("No se ha encontrado el producto con el ID " + prd_id);
+                });
+        Category category = categoryRepository.findById(updateDto.categoryId())
+                .orElseThrow(() -> {
+                    log.warn("El ID de la categoria proporcionada es invalido: {}", updateDto.categoryId());
+                    return new CategoryNotFoundException("No se ha encontrado la categoria con el ID " + updateDto.categoryId());
+                });
+        product.setCategory(category);
+        product.setName(updateDto.name());
+        product.setDescription(updateDto.description());
+        product.setPrice(updateDto.price());
+        product.setImage(updateDto.image());
+        product.setIsActive(updateDto.isActive());
+        product.setQuantity(updateDto.quantity());
+
+        ProductResponseDto updatedProduct = productService.updateProduct(product);
         return ResponseEntity.ok(updatedProduct);
     }
 
@@ -143,16 +177,16 @@ public class ProductController {
 
     /**
      * Endpoint to retrieve a list of all {@link ProductSummaryResponseDto} objects stored in the system.
-     * Delegates the retrieval logic to {@link IProductService#findProductsByRestaurant(Restaurant)}.
+     * Delegates the retrieval logic to {@link IProductService#findProductsByRestaurant(Long)}.
      *
-     * @param restaurant The restaurant to retrieve products for.
+     * @param restaurantId The id of the restaurant to retrieve products for.
      * @return A list of {@code ProductSummaryResponseDto} objects representing all products in the specified restaurant.
      */
     @GetMapping(value = "/byRestaurant/{restaurant}")
-    public ResponseEntity<List<ProductResponseDto>> findProductsByRestaurant(@PathVariable Restaurant restaurant) {
-        log.info("Solicitud recibida para obtener productos del restaurante: {}", restaurant);
-        List<ProductResponseDto> products = productService.findProductsByRestaurant(restaurant);
-        log.info("Se recuperaron {} productos del restaurante: {} exitosamente.", products.size(), restaurant);
+    public ResponseEntity<List<ProductResponseDto>> findProductsByRestaurant(@PathVariable Long restaurantId) {
+        log.info("Solicitud recibida para obtener productos del restaurante con ID: {}", restaurantId);
+        List<ProductResponseDto> products = productService.findProductsByRestaurantId(restaurantId);
+        log.info("Se recuperaron {} productos del restaurante: {} exitosamente.", products.size(), restaurantId);
         return ResponseEntity.ok(products);
     }
 

@@ -14,12 +14,10 @@ import java.util.Map;
 
 @Component
 public class JwtUtil {
-
     @Value("${jwt.secret}")
     private String secret;
     @Value("${jwt.expiration}")
     private long expiration;
-
     public String generateToken(String email, String role){
         return Jwts.builder()
                 .subject(email)
@@ -29,12 +27,10 @@ public class JwtUtil {
                 .signWith(getSigningKey())
                 .compact();
     }
-
     private SecretKey getSigningKey(){
         byte[] keyBytes = Decoders.BASE64.decode(secret);
         return Keys.hmacShaKeyFor(keyBytes);
     }
-
     public String extractEmail(String token) {
         return getClaims(token).getSubject();
     }
@@ -48,16 +44,13 @@ public class JwtUtil {
             return false;
         }
     }
-
     public boolean isValidToken(String token, UserEntity user){
         String email = extractEmail(token);
         return (email.equals(user.getEmail())) && !isExpiredToken(token);
     }
-
     public boolean isExpiredToken(String token){
         return getClaims(token).getExpiration().before(new Date());
     }
-
     private Claims getClaims(String token){
         return Jwts.parser()
                 .verifyWith(getSigningKey())
@@ -65,5 +58,4 @@ public class JwtUtil {
                 .parseSignedClaims(token).
                 getPayload();
     }
-
 }

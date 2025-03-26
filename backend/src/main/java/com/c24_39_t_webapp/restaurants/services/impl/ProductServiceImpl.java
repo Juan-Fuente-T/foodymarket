@@ -41,36 +41,29 @@ public class ProductServiceImpl implements IProductService {
 
 
     @Override
-    public ProductResponseDto addProduct(ProductRequestDto productRequestDto) {
-        log.info("Intentando crear un producto para el restaurante con ID: {}", productRequestDto.restaurantId());
+    public ProductResponseDto addProduct(Product product){
+        log.info("Intentando crear un producto para el restaurante con ID: {}", product.getRestaurant().getId());
 //        if (restaurantId == null || restaurantId <= 0) {
 //            throw new IllegalArgumentException("El ID del restaurante no es válido");
 //        }
-        Restaurant restaurant = restaurantRepository.findById(productRequestDto.restaurantId())
+        Restaurant restaurant = restaurantRepository.findById(product.getRestaurant().getId())
                 .orElseThrow(() -> new RestaurantNotFoundException("No se ha encontrado el restaurante"));
-        Category category = categoryRepository.findById(productRequestDto.categoryId())
+        Category category = categoryRepository.findById(product.getCategory().getCtg_id())
                 .orElseThrow(() -> new CategoryNotFoundException("No se ha encontrado la categoria"));
         String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
         log.info("Recuperando el email del usuario de la autenticacion: {}", userEmail);
         log.info("Recuperando el email del usuario del restaurante: {}", restaurant.getUserEntity().getEmail());
-
+        log.info("Usuario autenticado con email: {}", userEmail);
         if (!restaurant.getUserEntity().getEmail().equals(userEmail)) {
             throw new SecurityException("No tienes permiso para añadir productos a este restaurante");
         }
-        log.info("Usuario autenticado con email: {}", userEmail);
-        Product product = new Product();
+
         product.setRestaurant(restaurant);
         product.setCategory(category);
-        product.setName(productRequestDto.name());
-        product.setDescription(productRequestDto.description());
-        product.setPrice(productRequestDto.price());
-        product.setImage(productRequestDto.image());
-        product.setIsActive(productRequestDto.isActive());
-        product.setQuantity(productRequestDto.quantity());
-        log.info("Producto creado con éxito");
-
 
         product = productRepository.save(product);
+        log.info("Producto creado con éxito");
+
         return new ProductResponseDto(
                 product.getPrd_id(),
                 product.getRestaurant().getId(),
@@ -135,28 +128,12 @@ public class ProductServiceImpl implements IProductService {
 
     @Transactional
     @Override
-    public ProductResponseDto updateProduct(Long prd_id, ProductRequestDto updateDto) {
-        log.info("Actualizando el producto con ID {}", prd_id);
-        Product product = productRepository.findById(prd_id)
-                .orElseThrow(() -> {
-                    log.warn("El ID del producto proporcionado es invalido: {}", prd_id);
-                    return new ProductNotFoundException("No se ha encontrado el producto con el ID " + prd_id);
-                });
-        Category category = categoryRepository.findById(updateDto.categoryId())
-                .orElseThrow(() -> {
-                    log.warn("El ID de la categoria proporcionada es invalido: {}", updateDto.categoryId());
-                    return new CategoryNotFoundException("No se ha encontrado la categoria con el ID " + updateDto.categoryId());
-                });
-        product.setCategory(category);
-        product.setName(updateDto.name());
-        product.setDescription(updateDto.description());
-        product.setPrice(updateDto.price());
-        product.setImage(updateDto.image());
-        product.setIsActive(updateDto.isActive());
-        product.setQuantity(updateDto.quantity());
+    public ProductResponseDto updateProduct(Product product) {
+        log.info("Actualizando el producto con ID {}", product.getPrd_id());
 
         Product updatedProduct = productRepository.saveAndFlush(product);
-        log.info("Producto con ID {} ha sido actualizado con éxito", prd_id);
+        log.info("Producto con ID {} ha sido actualizado con éxito", product.getPrd_id());
+
         return new ProductResponseDto(
                 updatedProduct.getPrd_id(),
                 updatedProduct.getRestaurant().getId(),
@@ -232,15 +209,15 @@ public class ProductServiceImpl implements IProductService {
     }
 
     @Override
-    public List<ProductResponseDto> findProductsByRestaurant(Restaurant restaurant) {
-        log.info("Buscando productos del restaurante con ID: {}", restaurant.getId());
+    public List<ProductResponseDto> findProductsByRestaurantId(Long restaurantId) {
+        log.info("Buscando productos del restaurante con ID: {}", restaurantId);
 //        if (newRestaurant == null || newRestaurant <= 0) {
 //            log.warn("El ID del restaurante proporcionado es invalido: {}", restaurantId);
 //            throw new ProductNotFoundException("El ID del restaurante no es válido " + restaurantId);
 //        }
 //        Restaurant newRestaurant = restaurantRepository.findById(restaurant.rst_id());
 
-        List<Product> products = productRepository.findProductsByRestaurant(restaurant);
+        List<Product> products = productRepository.findProductsByRestaurantId(restaurantId);
         return products.stream()
                 .map(product -> new ProductResponseDto(
                         product.getPrd_id(),

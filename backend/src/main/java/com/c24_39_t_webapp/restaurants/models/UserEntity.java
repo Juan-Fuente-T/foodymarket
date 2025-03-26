@@ -28,7 +28,7 @@ public class UserEntity {
     private String password;
 
     @Column(name = "usr_tipo")
-    private String role;
+    private String role = "cliente";
 
     @Column(name="usr_telefono")
     private String phone;
@@ -36,7 +36,7 @@ public class UserEntity {
     @Column(name="usr_direccion")
     private String address;
 
-    @Column(name="usr_fecha_registro")
+    @Column(name = "usr_fecha_registro", nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     @CreationTimestamp
     private LocalDateTime createdAt;
 }

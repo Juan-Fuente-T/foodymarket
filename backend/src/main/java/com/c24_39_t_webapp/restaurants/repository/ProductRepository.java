@@ -23,7 +23,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findProductsByName(@Param("name") String name);
 
 //    @Query("SELECT p FROM Product p WHERE p.restaurant.rst_id = :restaurantId")
-    List<Product> findProductsByRestaurant(Restaurant restaurant);
+    List<Product> findProductsByRestaurantId(Long restaurantId);
 
 //    @Query("SELECT p FROM Product p WHERE p.restaurant = :restaurant")
 //    List<GroupedProductsResponseDto> findProductsByRestaurantAndCategory(@Param("restaurant") Restaurant restaurant);
