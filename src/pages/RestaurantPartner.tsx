@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useForm } from "react-hook-form";
 import { toast } from "@/lib/toast";
 import { restaurantAPI } from "@/services/api";
+import { User } from "@/types/models";
 
 interface PartnerFormValues {
   name: string;
@@ -42,12 +43,21 @@ const RestaurantPartner = () => {
         const { confirmPassword, restaurantName, restaurantDescription, restaurantAddress, 
                restaurantPhone, restaurantEmail, ...userData } = data;
         
+        // Handle user registration
         const newUser = await registerUser({
           ...userData,
           role: "owner"
-        });
+        }) as User; // Cast to User to ensure TypeScript knows it has an id
+        
+        if (!newUser || !newUser.id) {
+          throw new Error("Failed to register user");
+        }
         
         ownerId = newUser.id;
+      }
+      
+      if (!ownerId) {
+        throw new Error("Owner ID is required");
       }
       
       // Then create the restaurant
@@ -57,7 +67,7 @@ const RestaurantPartner = () => {
         address: data.restaurantAddress,
         phone: data.restaurantPhone,
         email: data.restaurantEmail,
-        ownerId: ownerId as string,
+        ownerId: ownerId,
         logo: "https://via.placeholder.com/150",
         coverImage: "https://via.placeholder.com/800x400",
         rating: 0,

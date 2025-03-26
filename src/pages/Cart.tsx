@@ -18,7 +18,8 @@ const Cart = () => {
   const handleCheckout = async () => {
     if (!isAuthenticated) {
       toast({
-        description: (
+        title: "Login Required",
+        action: (
           <div className="flex flex-col space-y-2">
             <p>You need to be logged in to checkout.</p>
             <Link to="/login">
@@ -38,22 +39,26 @@ const Cart = () => {
     }
 
     try {
-      const orderData = {
+      // Prepare order items with correct structure including id and product
+      const orderItems = items.map(item => ({
+        id: item.id,
+        productId: item.productId,
+        product: item.product,
+        quantity: item.quantity,
+        price: item.price,
+        notes: item.notes,
+      }));
+
+      await orderAPI.create({
         userId: user?.id,
         restaurantId: restaurant?.id,
-        items: items.map(item => ({
-          productId: item.productId,
-          quantity: item.quantity,
-          price: item.price,
-          notes: item.notes,
-        })),
+        items: orderItems,
         status: "pending",
         total: totalPrice,
         deliveryAddress: user?.address || "",
         paymentMethod: "card",
-      };
-
-      await orderAPI.create(orderData);
+      });
+      
       clearCart();
       toast.success("Order placed successfully!");
     } catch (error) {

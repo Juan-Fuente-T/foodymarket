@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -22,13 +22,17 @@ const RestaurantDetails = () => {
     queryKey: ["restaurant", id],
     queryFn: () => restaurantAPI.getById(id as string),
     enabled: !!id,
-    onSuccess: (data) => {
-      setRestaurant(data);
-      if (data.categories && data.categories.length > 0) {
-        setSelectedCategory(data.categories[0].id);
-      }
-    },
   });
+  
+  // Use useEffect to set restaurant in cart context after data is loaded
+  useEffect(() => {
+    if (restaurant) {
+      setRestaurant(restaurant);
+      if (restaurant.categories && restaurant.categories.length > 0) {
+        setSelectedCategory(restaurant.categories[0].id);
+      }
+    }
+  }, [restaurant, setRestaurant]);
   
   const { data: products = [], isLoading: isLoadingProducts } = useQuery({
     queryKey: ["products", id, selectedCategory],
