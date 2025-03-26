@@ -1,8 +1,7 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { User } from "@/types/models";
 import { authAPI } from "@/services/api";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "@/lib/toast";
 
 interface AuthContextType {
   user: User | null;
@@ -20,7 +19,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Check if user is already logged in
   useEffect(() => {
     const initAuth = async () => {
       try {

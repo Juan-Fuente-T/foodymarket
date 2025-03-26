@@ -1,7 +1,6 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { Product, OrderItem, Restaurant } from "@/types/models";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "@/lib/toast";
 
 interface CartContextType {
   items: OrderItem[];
@@ -25,7 +24,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [items, setItems] = useState<OrderItem[]>([]);
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
 
-  // Load cart from local storage
   useEffect(() => {
     const savedCart = localStorage.getItem(CART_STORAGE_KEY);
     if (savedCart) {
@@ -39,7 +37,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  // Save cart to local storage whenever it changes
   useEffect(() => {
     localStorage.setItem(
       CART_STORAGE_KEY,
@@ -48,7 +45,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   }, [items, restaurant]);
 
   const addItem = (product: Product, quantity: number, notes?: string) => {
-    // Check if trying to add from a different restaurant
     if (restaurant && product.restaurantId !== restaurant.id) {
       toast({
         title: "Cannot mix restaurants",
@@ -68,7 +64,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    // Check if product already in cart
     const existingItem = items.find((item) => item.productId === product.id);
     
     if (existingItem) {
@@ -81,7 +76,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       );
     } else {
       const newItem: OrderItem = {
-        id: Date.now().toString(), // Temporary ID
+        id: Date.now().toString(),
         productId: product.id,
         product,
         quantity,
