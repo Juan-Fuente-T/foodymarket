@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useCart } from "@/contexts/CartContext";
@@ -12,18 +13,20 @@ import {
   CardHeader, 
   CardTitle, 
   CardContent, 
-  CardFooter,
+  CardFooter
+} from "@/components/ui/card";
+import {
   Table,
   TableHeader,
   TableBody,
   TableHead,
   TableRow,
   TableCell
-} from "@/components/ui/card";
+} from "@/components/ui/table";
 
 const Cart = () => {
   const { items, totalItems, totalPrice, updateItemQuantity, removeItem, clearCart } = useCart();
-  const { isAuthenticated, currentUser } = useAuth();
+  const { user: currentUser, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   const handleCheckout = async () => {
