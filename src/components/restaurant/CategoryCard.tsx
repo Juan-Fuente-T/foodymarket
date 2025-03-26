@@ -15,7 +15,7 @@ export function CategoryCard({ category }: CategoryCardProps) {
     >
       <div className="aspect-square overflow-hidden">
         <img 
-          src={category.image || "https://via.placeholder.com/300"}
+          src={category.image || "https://via.placeholder.com/300?text=Category"}
           alt={category.name}
           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
         />

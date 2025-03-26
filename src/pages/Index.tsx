@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -10,19 +10,30 @@ import { Input } from "@/components/ui/input";
 import { useQuery } from "@tanstack/react-query";
 import { restaurantAPI, categoryAPI } from "@/services/api";
 import { Restaurant, Category } from "@/types/models";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: restaurants = [], isLoading: isLoadingRestaurants } = useQuery({
+  const { data: restaurants = [], isLoading: isLoadingRestaurants, error: restaurantsError } = useQuery({
     queryKey: ["restaurants"],
     queryFn: () => restaurantAPI.getAll(),
   });
 
-  const { data: categories = [], isLoading: isLoadingCategories } = useQuery({
+  const { data: categories = [], isLoading: isLoadingCategories, error: categoriesError } = useQuery({
     queryKey: ["categories"],
     queryFn: () => categoryAPI.getAll(),
   });
+  
+  // For debugging - can be removed in production
+  useEffect(() => {
+    if (restaurantsError) {
+      console.error("Error fetching restaurants:", restaurantsError);
+    }
+    if (categoriesError) {
+      console.error("Error fetching categories:", categoriesError);
+    }
+  }, [restaurantsError, categoriesError]);
 
   return (
     <Layout>
@@ -75,11 +86,28 @@ const Index = () => {
             </Button>
           </div>
           
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
-            {categories.slice(0, 4).map((category) => (
-              <CategoryCard key={category.id} category={category} />
-            ))}
-          </div>
+          {isLoadingCategories ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
+              {Array(4).fill(null).map((_, i) => (
+                <Skeleton key={i} className="aspect-square rounded-xl" />
+              ))}
+            </div>
+          ) : categoriesError ? (
+            <div className="text-center py-10">
+              <p className="text-red-500">Failed to load categories</p>
+              <Button onClick={() => window.location.reload()} className="mt-4">Retry</Button>
+            </div>
+          ) : categories.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
+              {categories.slice(0, 4).map((category) => (
+                <CategoryCard key={category.id} category={category} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-500">No categories available</p>
+            </div>
+          )}
         </div>
       </section>
 
@@ -95,11 +123,28 @@ const Index = () => {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {restaurants.slice(0, 3).map((restaurant) => (
-              <RestaurantCard key={restaurant.id} restaurant={restaurant} />
-            ))}
-          </div>
+          {isLoadingRestaurants ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Array(3).fill(null).map((_, i) => (
+                <Skeleton key={i} className="h-72 rounded-xl" />
+              ))}
+            </div>
+          ) : restaurantsError ? (
+            <div className="text-center py-10">
+              <p className="text-red-500">Failed to load restaurants</p>
+              <Button onClick={() => window.location.reload()} className="mt-4">Retry</Button>
+            </div>
+          ) : restaurants.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {restaurants.slice(0, 3).map((restaurant) => (
+                <RestaurantCard key={restaurant.id} restaurant={restaurant} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-500">No restaurants available</p>
+            </div>
+          )}
         </div>
       </section>
 

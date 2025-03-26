@@ -2,39 +2,40 @@
 import React from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useCart } from "@/contexts/CartContext";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
-import { Link } from "react-router-dom";
-import { orderAPI } from "@/services/api";
 import { useAuth } from "@/contexts/AuthContext";
+import { Link, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Minus, Plus, Trash2, ArrowLeft } from "lucide-react";
 import { toast } from "@/lib/toast";
+import { orderAPI } from "@/services/api";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 const Cart = () => {
-  const { items, restaurant, removeItem, updateItemQuantity, totalPrice, clearCart } = useCart();
+  const { items, restaurant, removeItem, updateItemQuantity, clearCart, totalItems, totalPrice } = useCart();
   const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   const handleCheckout = async () => {
     if (!isAuthenticated) {
       toast({
+        variant: "destructive",
         title: "Login Required",
+        description: "You need to be logged in to checkout.",
         action: (
-          <div className="flex flex-col space-y-2">
-            <p>You need to be logged in to checkout.</p>
-            <Link to="/login">
-              <Button className="bg-food-600 text-white w-full">
-                Login
-              </Button>
-            </Link>
-          </div>
-        )
+          <Button 
+            onClick={() => navigate('/login')}
+            className="bg-food-600 text-white px-3 py-1 rounded-md font-medium"
+          >
+            Log in
+          </Button>
+        ),
       });
       return;
     }
 
-    if (items.length === 0) {
-      toast.error("Your cart is empty");
+    if (!restaurant) {
+      toast.error("No restaurant selected");
       return;
     }
 
@@ -61,9 +62,10 @@ const Cart = () => {
       
       clearCart();
       toast.success("Order placed successfully!");
+      navigate("/");
     } catch (error) {
-      console.error("Error creating order:", error);
-      toast.error("Failed to place order. Please try again.");
+      console.error("Checkout error:", error);
+      toast.error("Failed to place order");
     }
   };
 

@@ -1,13 +1,13 @@
 
 import React from "react";
 import { Layout } from "@/components/layout/Layout";
-import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useAuth } from "@/contexts/AuthContext";
 import { useForm } from "react-hook-form";
 import { toast } from "@/lib/toast";
 import { restaurantAPI } from "@/services/api";
@@ -18,7 +18,8 @@ interface PartnerFormValues {
   email: string;
   password: string;
   confirmPassword: string;
-  phone: string;
+  phone?: string;
+  address?: string;
   restaurantName: string;
   restaurantDescription: string;
   restaurantAddress: string;
@@ -36,24 +37,27 @@ const RestaurantPartner = () => {
 
   const onSubmit = async (data: PartnerFormValues) => {
     try {
-      // First register the owner if not authenticated
       let ownerId = user?.id;
       
+      // If not logged in, register a new user
       if (!isAuthenticated) {
         const { confirmPassword, restaurantName, restaurantDescription, restaurantAddress, 
                restaurantPhone, restaurantEmail, ...userData } = data;
         
         // Handle user registration
-        const newUser = await registerUser({
+        // Note: registerUser returns a Promise<void> so we need to handle this differently
+        await registerUser({
           ...userData,
           role: "owner"
-        }) as User; // Cast to User to ensure TypeScript knows it has an id
+        });
         
-        if (!newUser || !newUser.id) {
-          throw new Error("Failed to register user");
+        // The user should now be authenticated after registration
+        // We need to use the current user ID after registration
+        if (!user?.id) {
+          // Wait briefly for auth context to update
+          await new Promise(resolve => setTimeout(resolve, 500));
+          ownerId = user?.id;
         }
-        
-        ownerId = newUser.id;
       }
       
       if (!ownerId) {
@@ -72,15 +76,16 @@ const RestaurantPartner = () => {
         coverImage: "https://via.placeholder.com/800x400",
         rating: 0,
         reviewCount: 0,
-        categories: [],
-        openingHours: "9 AM - 9 PM"
+        openingHours: "9:00 AM - 10:00 PM",
+        categories: []
       });
       
-      toast.success("Restaurant registered successfully!");
+      toast.success("Restaurant partnership application submitted successfully!");
       navigate("/dashboard");
+      
     } catch (error) {
-      console.error("Registration error:", error);
-      toast.error("Failed to register restaurant. Please try again.");
+      console.error("Partner registration error:", error);
+      toast.error("Failed to register as a partner");
     }
   };
 

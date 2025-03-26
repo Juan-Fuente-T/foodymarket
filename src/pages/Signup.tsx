@@ -40,9 +40,11 @@ const Signup = () => {
         ...userData,
         role: "customer"
       });
+      toast.success("Account created successfully!");
       navigate("/");
     } catch (error) {
       console.error("Signup error:", error);
+      toast.error("Failed to create account. Please try again.");
     }
   };
 

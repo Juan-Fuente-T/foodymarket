@@ -12,6 +12,14 @@ import {
 // Base URL for API requests
 const API_BASE_URL = "https://c24-39-t-webapp.onrender.com/api";
 
+// Token storage key
+const TOKEN_STORAGE_KEY = "food_delivery_token";
+
+// Helper function to get auth token
+const getAuthToken = () => {
+  return localStorage.getItem(TOKEN_STORAGE_KEY);
+};
+
 // Helper function for handling fetch responses
 const handleResponse = async (response: Response) => {
   if (!response.ok) {
@@ -27,16 +35,31 @@ const fetchWithError = async (
   options: RequestInit = {}
 ): Promise<any> => {
   try {
+    // Get the auth token if available
+    const token = getAuthToken();
+    
+    // Prepare headers
+    const headers: HeadersInit = {
+      "Content-Type": "application/json",
+      ...options.headers,
+    };
+    
+    // Add auth token if available
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+    
+    console.log(`Making API request to: ${API_BASE_URL}${url}`);
+    
     const response = await fetch(`${API_BASE_URL}${url}`, {
       ...options,
-      headers: {
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
+      headers,
     });
+    
     return await handleResponse(response);
   } catch (error) {
     console.error(`API request failed: ${error}`);
+    console.error(`Failed URL: ${API_BASE_URL}${url}`);
     toast.error("Something went wrong with the request");
     throw error;
   }
