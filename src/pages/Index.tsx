@@ -14,112 +14,15 @@ import { Restaurant, Category } from "@/types/models";
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: featuredRestaurants = [], isLoading: isLoadingRestaurants } = useQuery({
-    queryKey: ["featuredRestaurants"],
-    queryFn: () => restaurantAPI.getFeatured(),
+  const { data: restaurants = [], isLoading: isLoadingRestaurants } = useQuery({
+    queryKey: ["restaurants"],
+    queryFn: () => restaurantAPI.getAll(),
   });
 
   const { data: categories = [], isLoading: isLoadingCategories } = useQuery({
     queryKey: ["categories"],
     queryFn: () => categoryAPI.getAll(),
   });
-
-  // Mock data for demonstration
-  const mockRestaurants: Restaurant[] = [
-    {
-      id: "1",
-      name: "Burger Palace",
-      description: "The best burgers in town, made with premium ingredients and love.",
-      address: "123 Main St, Anytown",
-      phone: "555-1234",
-      email: "info@burgerpalace.com",
-      logo: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1000&q=80",
-      coverImage: "https://images.unsplash.com/photo-1561758033-d89a9ad46330?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1000&q=80",
-      rating: 4.8,
-      reviewCount: 234,
-      categories: [
-        { id: "1", name: "Burgers", description: "Juicy burgers for all tastes" },
-        { id: "2", name: "American", description: "Classic American cuisine" }
-      ],
-      ownerId: "owner1",
-      openingHours: "9 AM - 10 PM",
-      createdAt: "2023-01-01",
-      updatedAt: "2023-05-15"
-    },
-    {
-      id: "2",
-      name: "Pizza Heaven",
-      description: "Authentic Italian pizzas made in wood-fired ovens imported from Naples.",
-      address: "456 Elm St, Anytown",
-      phone: "555-5678",
-      email: "hello@pizzaheaven.com",
-      logo: "https://images.unsplash.com/photo-1590947132387-155cc02f3212?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1000&q=80",
-      coverImage: "https://images.unsplash.com/photo-1513104890138-7c749659a591?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1000&q=80",
-      rating: 4.6,
-      reviewCount: 198,
-      categories: [
-        { id: "3", name: "Pizza", description: "Delicious pizzas from around the world" },
-        { id: "4", name: "Italian", description: "Traditional Italian cuisine" }
-      ],
-      ownerId: "owner2",
-      openingHours: "11 AM - 11 PM",
-      createdAt: "2023-02-15",
-      updatedAt: "2023-06-20"
-    },
-    {
-      id: "3",
-      name: "Sushi Ocean",
-      description: "Fresh and delicious sushi prepared by expert Japanese chefs.",
-      address: "789 Oak St, Anytown",
-      phone: "555-9012",
-      email: "info@sushiocean.com",
-      logo: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1000&q=80",
-      coverImage: "https://images.unsplash.com/photo-1611143669185-af224c5e3252?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1000&q=80",
-      rating: 4.9,
-      reviewCount: 312,
-      categories: [
-        { id: "5", name: "Sushi", description: "Fresh and authentic sushi" },
-        { id: "6", name: "Japanese", description: "Traditional Japanese cuisine" }
-      ],
-      ownerId: "owner3",
-      openingHours: "12 PM - 10 PM",
-      createdAt: "2023-03-10",
-      updatedAt: "2023-07-05"
-    }
-  ];
-
-  const mockCategories: Category[] = [
-    {
-      id: "1",
-      name: "Burgers",
-      description: "Juicy burgers for all tastes",
-      image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1000&q=80"
-    },
-    {
-      id: "3",
-      name: "Pizza",
-      description: "Delicious pizzas from around the world",
-      image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1000&q=80"
-    },
-    {
-      id: "5",
-      name: "Sushi",
-      description: "Fresh and authentic sushi",
-      image: "https://images.unsplash.com/photo-1611143669185-af224c5e3252?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1000&q=80"
-    },
-    {
-      id: "7",
-      name: "Mexican",
-      description: "Spicy and flavorful Mexican dishes",
-      image: "https://images.unsplash.com/photo-1615870216519-2f9fa575fa5c?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1000&q=80"
-    }
-  ];
-
-  const displayedRestaurants = 
-    featuredRestaurants.length > 0 ? featuredRestaurants : mockRestaurants;
-  
-  const displayedCategories = 
-    categories.length > 0 ? categories : mockCategories;
 
   return (
     <Layout>
@@ -173,7 +76,7 @@ const Index = () => {
           </div>
           
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
-            {displayedCategories.map((category) => (
+            {categories.slice(0, 4).map((category) => (
               <CategoryCard key={category.id} category={category} />
             ))}
           </div>
@@ -193,7 +96,7 @@ const Index = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {displayedRestaurants.map((restaurant) => (
+            {restaurants.slice(0, 3).map((restaurant) => (
               <RestaurantCard key={restaurant.id} restaurant={restaurant} />
             ))}
           </div>

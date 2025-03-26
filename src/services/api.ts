@@ -10,7 +10,7 @@ import {
 } from "@/types/models";
 
 // Base URL for API requests
-const API_BASE_URL = "https://api.example.com"; // Replace with your actual API URL
+const API_BASE_URL = "https://c24-39-t-webapp.onrender.com/api";
 
 // Helper function for handling fetch responses
 const handleResponse = async (response: Response) => {
@@ -63,99 +63,102 @@ export const authAPI = {
 
 // Restaurants
 export const restaurantAPI = {
-  getAll: () => fetchWithError("/restaurants"),
+  getAll: () => fetchWithError("/restaurant/all"),
   
-  getById: (id: string) => fetchWithError(`/restaurants/${id}`),
+  getById: (id: string) => fetchWithError(`/restaurant/${id}`),
   
   getByCategory: (categoryId: string) =>
-    fetchWithError(`/restaurants?categoryId=${categoryId}`),
+    fetchWithError(`/restaurant/byCategory/${categoryId}`),
   
   create: (data: Partial<Restaurant>) =>
-    fetchWithError("/restaurants", {
+    fetchWithError("/restaurant", {
       method: "POST",
       body: JSON.stringify(data),
     }),
   
   update: (id: string, data: Partial<Restaurant>) =>
-    fetchWithError(`/restaurants/${id}`, {
+    fetchWithError(`/restaurant/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
     }),
   
   delete: (id: string) =>
-    fetchWithError(`/restaurants/${id}`, { method: "DELETE" }),
+    fetchWithError(`/restaurant/${id}`, { method: "DELETE" }),
   
-  getFeatured: () => fetchWithError("/restaurants/featured"),
+  getFeatured: () => fetchWithError("/restaurant/featured"),
 };
 
 // Categories
 export const categoryAPI = {
-  getAll: () => fetchWithError("/categories"),
+  getAll: () => fetchWithError("/category/all"),
   
-  getById: (id: string) => fetchWithError(`/categories/${id}`),
+  getById: (id: string) => fetchWithError(`/category/${id}`),
   
   create: (data: Partial<Category>) =>
-    fetchWithError("/categories", {
+    fetchWithError("/category", {
       method: "POST",
       body: JSON.stringify(data),
     }),
   
   update: (id: string, data: Partial<Category>) =>
-    fetchWithError(`/categories/${id}`, {
+    fetchWithError(`/category/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
     }),
   
   delete: (id: string) =>
-    fetchWithError(`/categories/${id}`, { method: "DELETE" }),
+    fetchWithError(`/category/${id}`, { method: "DELETE" }),
 };
 
 // Products
 export const productAPI = {
   getByRestaurant: (restaurantId: string) =>
-    fetchWithError(`/products?restaurantId=${restaurantId}`),
+    fetchWithError(`/product/byRestaurant/${restaurantId}`),
   
-  getById: (id: string) => fetchWithError(`/products/${id}`),
+  getById: (id: string) => fetchWithError(`/product/${id}`),
   
   getByCategory: (categoryId: string) =>
-    fetchWithError(`/products?categoryId=${categoryId}`),
+    fetchWithError(`/product/byCategory/${categoryId}`),
+  
+  getByRestaurantAndCategory: (restaurantId: string, categoryId: string) =>
+    fetchWithError(`/product/byRestaurantAndCategory/${restaurantId}/${categoryId}`),
   
   create: (data: Partial<Product>) =>
-    fetchWithError("/products", {
+    fetchWithError("/product", {
       method: "POST",
       body: JSON.stringify(data),
     }),
   
   update: (id: string, data: Partial<Product>) =>
-    fetchWithError(`/products/${id}`, {
+    fetchWithError(`/product/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
     }),
   
   delete: (id: string) =>
-    fetchWithError(`/products/${id}`, { method: "DELETE" }),
+    fetchWithError(`/product/${id}`, { method: "DELETE" }),
   
-  getFeatured: () => fetchWithError("/products/featured"),
+  getFeatured: () => fetchWithError("/product/featured"),
 };
 
 // Orders
 export const orderAPI = {
   create: (data: Partial<Order>) =>
-    fetchWithError("/orders", {
+    fetchWithError("/order", {
       method: "POST",
       body: JSON.stringify(data),
     }),
   
   getByUser: (userId: string) =>
-    fetchWithError(`/orders?userId=${userId}`),
+    fetchWithError(`/order/byUser/${userId}`),
   
   getByRestaurant: (restaurantId: string) =>
-    fetchWithError(`/orders?restaurantId=${restaurantId}`),
+    fetchWithError(`/order/byRestaurant/${restaurantId}`),
   
-  getById: (id: string) => fetchWithError(`/orders/${id}`),
+  getById: (id: string) => fetchWithError(`/order/${id}`),
   
   updateStatus: (id: string, status: Order["status"]) =>
-    fetchWithError(`/orders/${id}/status`, {
+    fetchWithError(`/order/${id}/status`, {
       method: "PATCH",
       body: JSON.stringify({ status }),
     }),
@@ -164,34 +167,34 @@ export const orderAPI = {
 // Reviews
 export const reviewAPI = {
   getByRestaurant: (restaurantId: string) =>
-    fetchWithError(`/reviews?restaurantId=${restaurantId}`),
+    fetchWithError(`/review/byRestaurant/${restaurantId}`),
   
   create: (data: Partial<Review>) =>
-    fetchWithError("/reviews", {
+    fetchWithError("/review", {
       method: "POST",
       body: JSON.stringify(data),
     }),
   
   update: (id: string, data: Partial<Review>) =>
-    fetchWithError(`/reviews/${id}`, {
+    fetchWithError(`/review/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
     }),
   
   delete: (id: string) =>
-    fetchWithError(`/reviews/${id}`, { method: "DELETE" }),
+    fetchWithError(`/review/${id}`, { method: "DELETE" }),
 };
 
 // Users
 export const userAPI = {
   update: (id: string, data: Partial<User>) =>
-    fetchWithError(`/users/${id}`, {
+    fetchWithError(`/user/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
     }),
   
   delete: (id: string) =>
-    fetchWithError(`/users/${id}`, { method: "DELETE" }),
+    fetchWithError(`/user/${id}`, { method: "DELETE" }),
   
-  getById: (id: string) => fetchWithError(`/users/${id}`),
+  getById: (id: string) => fetchWithError(`/user/${id}`),
 };

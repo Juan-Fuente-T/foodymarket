@@ -1,6 +1,8 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { Product, OrderItem, Restaurant } from "@/types/models";
 import { toast } from "@/lib/toast";
+import { Button } from "@/components/ui/button";
 
 interface CartContextType {
   items: OrderItem[];
@@ -47,19 +49,20 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const addItem = (product: Product, quantity: number, notes?: string) => {
     if (restaurant && product.restaurantId !== restaurant.id) {
       toast({
-        title: "Cannot mix restaurants",
-        description: "Your cart contains items from a different restaurant. Would you like to clear your cart?",
-        action: (
-          <button
-            onClick={() => {
-              clearCart();
-              addItem(product, quantity, notes);
-            }}
-            className="bg-food-600 text-white px-3 py-1 rounded-md font-medium"
-          >
-            Clear cart
-          </button>
-        ),
+        description: (
+          <div className="flex flex-col space-y-2">
+            <p>Your cart contains items from a different restaurant. Would you like to clear your cart?</p>
+            <Button
+              onClick={() => {
+                clearCart();
+                addItem(product, quantity, notes);
+              }}
+              className="bg-food-600 text-white px-3 py-1 rounded-md font-medium"
+            >
+              Clear cart
+            </Button>
+          </div>
+        )
       });
       return;
     }
