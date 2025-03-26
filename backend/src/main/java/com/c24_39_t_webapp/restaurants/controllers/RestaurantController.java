@@ -4,10 +4,12 @@ import com.c24_39_t_webapp.restaurants.dtos.request.RestaurantRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.RestaurantResponseDto;
 import com.c24_39_t_webapp.restaurants.exception.RestaurantNotFoundException;
 import com.c24_39_t_webapp.restaurants.models.Restaurant;
+import com.c24_39_t_webapp.restaurants.repository.RestaurantRepository;
 import com.c24_39_t_webapp.restaurants.services.IRestaurantService;
 import com.c24_39_t_webapp.restaurants.services.impl.UserDetailsImpl;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -24,6 +26,7 @@ import java.util.List;
 public class RestaurantController {
     @Autowired
     private IRestaurantService restaurantService;
+    private RestaurantResponseDto restaurantResponseDto;
 
     /**
      * Test endpoint to verify that the controller handles POST requests correctly.
@@ -61,16 +64,27 @@ public class RestaurantController {
     @PreAuthorize("hasAuthority('restaurante')")
     public ResponseEntity<?> registerRestaurant(@RequestBody @Valid final RestaurantRequestDto restaurantRequestDto,
                                                 @AuthenticationPrincipal final UserDetailsImpl userDetails) {
-        RestaurantResponseDto restaurant = restaurantService.
-                registerRestaurant(restaurantRequestDto, userDetails.getUsername());
+        log.info("Solicitud recibida para registrar un restaurante para el usuario con email: {}", userDetails.getUsername());
 
-        URI uri = ServletUriComponentsBuilder
-                .fromCurrentContextPath()
-                .path("/api/restaurant/{rst_id}")
-                .buildAndExpand(restaurant.rst_id())
-                .toUri();
+        Restaurant restaurant = new Restaurant();
+        restaurant.setName(restaurantRequestDto.name());
+        restaurant.setDescription(restaurantRequestDto.description());
+        restaurant.setPhone(restaurantRequestDto.phone());
+        restaurant.setAddress(restaurantRequestDto.address());
+        restaurant.setLogo(restaurantRequestDto.logo());
+        restaurant.setCategoria(restaurantRequestDto.categoria());
 
-        return ResponseEntity.created(uri).build();
+        RestaurantResponseDto restaurantResponseDto = restaurantService.
+                registerRestaurant(restaurant, userDetails.getUsername());
+
+//        URI uri = ServletUriComponentsBuilder
+//                .fromCurrentContextPath()
+//                .path("/api/restaurant/{rst_id}")
+//                .buildAndExpand(restaurant.rst_id())
+//                .toUri();
+//
+//        return ResponseEntity.created(uri).build();
+        return ResponseEntity.status(HttpStatus.CREATED).body(restaurantResponseDto);
     }
 
     /**
@@ -106,7 +120,7 @@ public class RestaurantController {
 
     /**
      * Endpoint to update an existing restaurant in the system using the provided {@link RestaurantRequestDto}.
-     * Delegates the update logic to {@link IRestaurantService#updateRestaurant(Long, RestaurantRequestDto)}.
+     * Delegates the update logic to {@link IRestaurantService#updateRestaurant( Restaurant)}.
      *
      * @param rst_id The ID of the restaurant to update.
      * @param restaurantRequestDto The {@link RestaurantRequestDto} object containing the updated details of the restaurant.
@@ -121,17 +135,27 @@ public class RestaurantController {
             @RequestBody @Valid RestaurantRequestDto restaurantRequestDto
     ) {
             log.info("Solicitud recibida para actualizar el restaurante con ID: {}", rst_id);
-            RestaurantResponseDto updatedRestaurant = restaurantService.updateRestaurant(rst_id, restaurantRequestDto);
+
+        Restaurant restaurant = restaurantService.findRestaurantEntityById(rst_id);
+
+        restaurant.setName(restaurantRequestDto.name());
+        restaurant.setDescription(restaurantRequestDto.description());
+        restaurant.setCategoria(restaurantRequestDto.categoria());
+        restaurant.setPhone(restaurantRequestDto.phone());
+        restaurant.setAddress(restaurantRequestDto.address());
+        restaurant.setLogo(restaurantRequestDto.logo());
+
+        RestaurantResponseDto updatedRestaurant = restaurantService.updateRestaurant(restaurant);
             log.info("Restaurante con ID: {} actualizado exitosamente", rst_id);
             return ResponseEntity.ok(updatedRestaurant);
     }
 
     /**
-     * Endpoint to update an existing restaurant in the system using the provided {@link RestaurantRequestDto}.
-     * Delegates the update logic to {@link IRestaurantService#updateRestaurant(Long, RestaurantRequestDto)}.
+     * Endpoint to delete an existing restaurant in the system using the provided {@link RestaurantRequestDto}.
+     * Delegates the delete logic to {@link IRestaurantService#deleteById(Long)}.
      *
-     * @param rst_id The ID of the restaurant to update.
-     * @return A response entity containing the updated restaurant.
+     * @param rst_id The ID of the restaurant to delete.
+     * @return A {@link ResponseEntity} object with a status of 204 No Content.
      */
     @DeleteMapping("/{rst_id}")
     @PreAuthorize("hasAuthority('restaurante')")

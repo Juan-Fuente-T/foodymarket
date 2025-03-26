@@ -31,6 +31,9 @@ public class Restaurant {
     @Column(name = "rst_descripcion", nullable = false)
     private String description;
 
+    @Column(name = "rst_categoria", nullable = false)
+    private String categoria;
+
     @Column(name = "rst_telefono", nullable = false)
     private String phone;
 

@@ -26,7 +26,7 @@ public class RestaurantServiceImpl implements IRestaurantService {
     private final RestaurantRepository restaurantRepository;
     private final UserRepository userRepository;
 
-    public RestaurantResponseDto registerRestaurant(RestaurantRequestDto restaurantRequestDto, String email) {
+    public RestaurantResponseDto registerRestaurant(Restaurant restaurant, String email) {
         log.info("Intentando crear un restaurante para el usuario con email: {}", email);
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> {
@@ -38,14 +38,15 @@ public class RestaurantServiceImpl implements IRestaurantService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tienes permisos para crear un Restaurante");
         }
 
-        Restaurant restaurant = new Restaurant(restaurantRequestDto);
         restaurant.setUserEntity(user);
+
         restaurantRepository.save(restaurant);
         log.info("¡Restaurante creado Exitosamente!");
         return new RestaurantResponseDto(
                 restaurant.getId(),
                 restaurant.getName(),
                 restaurant.getDescription(),
+                restaurant.getCategoria(),
                 restaurant.getPhone(),
                 restaurant.getAddress(),
                 restaurant.getLogo()
@@ -66,6 +67,7 @@ public class RestaurantServiceImpl implements IRestaurantService {
                         restaurant.getId(),
                         restaurant.getName(),
                         restaurant.getDescription(),
+                        restaurant.getCategoria(),
                         restaurant.getPhone(),
                         restaurant.getAddress(),
                         restaurant.getLogo()
@@ -86,6 +88,7 @@ public class RestaurantServiceImpl implements IRestaurantService {
                         restaurant.getId(),
                         restaurant.getName(),
                         restaurant.getDescription(),
+                        restaurant.getCategoria(),
                         restaurant.getPhone(),
                         restaurant.getAddress(),
                         restaurant.getLogo()
@@ -97,30 +100,20 @@ public class RestaurantServiceImpl implements IRestaurantService {
     }
 
     @Override
-    public RestaurantResponseDto updateRestaurant(Long id, RestaurantRequestDto updateDto) {
-//        if (!restaurantRepository.existsById(id)) {
-//            throw new RestaurantNotFoundException("Restaurante no encontrado con id: " + id);
-//        }
-        log.info("Actualizando el restaurante con ID: {}", id);
-        Restaurant restaurant = restaurantRepository.findById(id)
-                .orElseThrow(() -> {
-                log.warn("No se encontró un restaurante con ese ID para editar: {}", id);
-                return new RestaurantNotFoundException(("No se encontró un restaurante con ese ID para editar: " + id));
-                });
-//        Category category = new Category();
-//        category.setName(expenseRequestDto.getCategoryName());
-        restaurant.setName(updateDto.name());
-        restaurant.setDescription(updateDto.description());
-        restaurant.setPhone(updateDto.phone());
-        restaurant.setAddress(updateDto.address());
-        restaurant.setLogo(updateDto.logo());
+    public RestaurantResponseDto updateRestaurant(Restaurant restaurant) {
+        if (!restaurantRepository.existsById(restaurant.getId())) {
+            throw new RestaurantNotFoundException("Restaurante no encontrado con id: " + restaurant.getId());
+        }
+        log.info("Actualizando el restaurante con ID: {}", restaurant.getId());
 
         Restaurant updatedRestaurant = restaurantRepository.save(restaurant);
+
         log.info("Restaurante actualizado exitosamente: {}", updatedRestaurant);
         return new RestaurantResponseDto(
                 updatedRestaurant.getId(),
                 updatedRestaurant.getName(),
                 updatedRestaurant.getDescription(),
+                restaurant.getCategoria(),
                 updatedRestaurant.getPhone(),
                 updatedRestaurant.getAddress(),
                 updatedRestaurant.getLogo()
@@ -136,5 +129,14 @@ public class RestaurantServiceImpl implements IRestaurantService {
     private Restaurant getRestaurantById(Long id) {
         return restaurantRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("El restaurante no existe!"));
+    }
+    @Override
+    public Restaurant findRestaurantEntityById(Long id) { // Este devuelve un Restaurant
+        log.info("Buscando el restaurante con ID: {} para actualización", id);
+        return restaurantRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.warn("No se encontró un restaurante con ese ID para editar: {}", id);
+                    return new RestaurantNotFoundException(("No se encontró un restaurante con ese ID para editar: " + id));
+                });
     }
 }

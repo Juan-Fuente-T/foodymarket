@@ -9,6 +9,9 @@ public record RestaurantRequestDto(
         @NotBlank(message = "La descripción no puede estar vacía.")
         String description,
 
+        @NotBlank(message = "La categoria no puede estar vacía.")
+        String categoria,
+
         @NotBlank(message = "El teléfono no puede estar vacío.")
         String phone,
 

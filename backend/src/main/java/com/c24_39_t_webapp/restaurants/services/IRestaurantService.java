@@ -8,13 +8,11 @@ import com.c24_39_t_webapp.restaurants.models.Restaurant;
 import java.util.List;
 
 public interface IRestaurantService {
+    RestaurantResponseDto registerRestaurant(Restaurant restaurant, String username);
+    RestaurantResponseDto updateRestaurant(Restaurant restaurant);
     List<RestaurantResponseDto> findAll();
-
     RestaurantResponseDto findById(Long id);
-
-    RestaurantResponseDto updateRestaurant(Long id, RestaurantRequestDto updateDto);
-
+    Restaurant findRestaurantEntityById(Long id);
     void deleteById(Long id);
 
-    RestaurantResponseDto registerRestaurant(RestaurantRequestDto restaurantRequestDto, String username);
 }

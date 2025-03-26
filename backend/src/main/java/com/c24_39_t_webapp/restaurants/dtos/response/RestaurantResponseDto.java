@@ -6,7 +6,9 @@ public record RestaurantResponseDto(
         Long rst_id,
         String name,
         String description,
+        String categoria,
         String phone,
         String address,
         String logo
-) { }
+) {
+}
