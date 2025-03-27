@@ -1,7 +1,6 @@
 package com.c24_39_t_webapp.restaurants.config.segurity;
 
 import com.c24_39_t_webapp.restaurants.models.UserEntity;
-import io.github.cdimascio.dotenv.Dotenv;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -12,12 +11,11 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.Map;
+
 @Component
 public class JwtUtil {
-Dotenv dotenv = Dotenv.configure().load();
-// System.out.println("JWT_SECRET (desde .env): " + );
-//        System.out.println("SUPABASE_URL (desde .env): " + dotenv.get("SUPABASE_URL"));
-    @Value("$dotenv.get(\"JWT_SECRET\")")
+
+    @Value("${jwt.secret}")
     private String secret;
     @Value("${jwt.expiration}")
     private long expiration;
