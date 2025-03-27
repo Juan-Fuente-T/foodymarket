@@ -34,7 +34,7 @@ public class OrderController {
      * @return The {@code OrderResponseDto} object representing the added order.
      */
     @PostMapping
-    @PreAuthorize("hasAnyAuthority('cliente')")
+    @PreAuthorize("hasRole('CLIENTE')")
     public ResponseEntity<OrderResponseDto> addOrder(@RequestBody OrderRequestDto requestDto, @RequestParam String email) {
         log.info("Recibida solicitud para añadir un pedido con los siguientes datos: {}", requestDto);
         OrderResponseDto responseDto = orderService.addOrder(requestDto, email);
@@ -49,7 +49,7 @@ public class OrderController {
      * @return A list of {@code OrderResponseDto} objects representing all orders in the system.
      */
     @GetMapping
-    @PreAuthorize("hasAnyAuthority('restaurante')")
+    @PreAuthorize("hasRole('RESTAURANTE')")
     public ResponseEntity<List<OrderResponseDto>> findAllOrders(Long restaurantId) {
         log.info("Solicitud recibida para obtener todos los pedidos.");
         List<OrderResponseDto> orders = orderService.findAllOrders(restaurantId);
@@ -65,7 +65,7 @@ public class OrderController {
      * @return The {@code OrderResponseDto} object representing the retrieved order.
      */
     @GetMapping(value = "/{ord_id}")
-    @PreAuthorize("hasAnyAuthority('restaurante')")
+    @PreAuthorize("hasRole('RESTAURANTE')")
     public ResponseEntity<OrderResponseDto> findOrderById(@PathVariable Long ord_id) {
         log.info("Solicitud recibida para obtener el pedido con id: {}", ord_id);
         OrderResponseDto order = orderService.findOrderById(ord_id);
@@ -82,7 +82,7 @@ public class OrderController {
      * @return The {@code OrderResponseDto} object representing the updated order.
      */
     @PatchMapping(value = "/{ord_id}")
-    @PreAuthorize("hasAnyAuthority('restaurante')")
+    @PreAuthorize("hasRole('RESTAURANTE')")
     public ResponseEntity<OrderResponseDto> updateOrder(@PathVariable Long ord_id, @RequestBody OrderUpdateRequestDto updateRequestDto) {
         log.info("Solicitud recibida para actualizar el pedido con id: {} con los siguientes datos: {}", ord_id, updateRequestDto);
         OrderResponseDto order = orderService.updateOrder(ord_id, updateRequestDto);
@@ -97,7 +97,7 @@ public class OrderController {
      * @param ord_id The ID of the order to delete.
      */
     @DeleteMapping(value = "/{ord_id}")
-    @PreAuthorize("hasAnyAuthority('restaurante')")
+    @PreAuthorize("hasRole('RESTAURANTE')")
     public ResponseEntity<Void> deleteOrder(@PathVariable Long ord_id) {
         log.info("Solicitud recibida para eliminar el pedido con id: {} junto a sus detalles de pedido", ord_id);
         orderService.deleteOrder(ord_id); // Llama al servicio
@@ -113,7 +113,7 @@ public class OrderController {
      * @return A list of {@code OrderResponseDto} objects representing all orders within the specified date range.
      */
     @GetMapping(value = "/byDate")
-    @PreAuthorize("hasAnyAuthority('restaurante')")
+    @PreAuthorize("hasRole('RESTAURANTE')")
     public List<OrderResponseDto> getOrdersByDate(
             @RequestParam Long restaurantId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
@@ -132,7 +132,7 @@ public class OrderController {
      * @return A list of {@code OrderResponseDto} objects representing all orders for the specified client.
      */
     @GetMapping(value = "/byClientId/{cln_id}")
-    @PreAuthorize("hasAnyAuthority('cliente')")
+    @PreAuthorize("hasRole('CLIENTE')")
     public List<OrderResponseDto> getOrdersByClientId(@PathVariable Long cln_id) {
         log.info("Solicitud recibida para obtener todos los pedidos realizados por el cliente con id: {}", cln_id);
         List<OrderResponseDto> clientOrders = orderService.findByClientId(cln_id);
@@ -150,7 +150,7 @@ public class OrderController {
      * @return A list of {@code OrderResponseDto} objects representing all orders for the specified client within the specified date range.
      */
     @GetMapping(value = "/byClientDate")
-    @PreAuthorize("hasAnyAuthority('cliente')")
+    @PreAuthorize("hasRole('CLIENTE')")
     public List<OrderResponseDto> findByClientIdAndCreatedAtBetween(
             @RequestParam Long clientId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
@@ -168,7 +168,7 @@ public class OrderController {
      * @return A list of {@code OrderResponseDto} objects representing all orders in the specified state.
      */
     @GetMapping(value = "/byRestaurantAndState")
-    @PreAuthorize("hasAnyAuthority('restaurante')")
+    @PreAuthorize("hasRole('RESTAURANTE')")
     public List<OrderResponseDto> findByRestaurantIdAndState(
             @RequestParam OrderState state,
             @RequestParam Long restaurantId) {

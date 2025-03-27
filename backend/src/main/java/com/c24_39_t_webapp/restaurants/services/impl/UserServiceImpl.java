@@ -12,6 +12,9 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -23,6 +26,7 @@ public class UserServiceImpl implements IUserService {
     @Autowired
     private PasswordEncoder passwordEncoder;
     @Override
+    @Transactional
     public UserResponseDto createUser(UserEntity user) {
         log.info("Creando un nuevo usuario con email: {}", user.getEmail());
         // Codifica la contraseña antes de guardarla
@@ -34,6 +38,7 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
+    @Transactional
     public UserResponseDto updateUser(UserEntity user) {
         log.info("Actualizando el usuario con email: {}", user.getEmail());
 
@@ -71,6 +76,7 @@ public class UserServiceImpl implements IUserService {
 //                .collect(Collectors.toList());
 //    }
     @Override
+    @Transactional
     public void deleteUser(Long id) {
         log.info("Eliminando usuario con ID: {}", id);
         if (!userRepository.existsById(id)) {

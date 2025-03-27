@@ -20,7 +20,6 @@ public interface IProductService {
 
 //    List<ProductSummaryResponseDto> findProductsByCategory(Long categoryId);
     List<ProductSummaryResponseDto> findProductsByCategory(Category category);
-
     List<ProductSummaryResponseDto> findProductsByName(String name);
 
     List<ProductResponseDto> findProductsByRestaurantId(Long restaurantId);

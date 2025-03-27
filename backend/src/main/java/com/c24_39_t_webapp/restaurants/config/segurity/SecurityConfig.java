@@ -28,22 +28,29 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf(AbstractHttpConfigurer::disable).sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)).authorizeHttpRequests(auth -> auth.requestMatchers("/api/public/**", "/auth/**", "/h2-console", "/api/restaurant/testMethod", "/api/restaurant/testPostMethod").permitAll()
+        http.csrf(AbstractHttpConfigurer::disable).sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)).authorizeHttpRequests(auth -> auth.requestMatchers("/api/public/**", "/auth/**", "/h2-console", "/api/restaurant/testMethod", "/api/restaurant/testPostMethod",
+//                        Swagger paths
+                        "/swagger-ui.html",
+                        "/api-docs/**",
+                        "/swagger-ui/**",
+                        "/v3/api-docs/**",
+                        "/swagger-ui.html",
+                        "/webjars/**").permitAll()
                 // Consultas públicas (lectura para todos)
                 .requestMatchers(HttpMethod.GET, "/api/category/**", "/api/restaurant/**", "/api/product/**").permitAll()
-                .requestMatchers("/api/category/**", "/api/restaurant/**", "/api/product/**").hasAuthority("restaurante")
-                // Orders: Cliente solo crea (POST)
-                .requestMatchers(HttpMethod.POST, "/api/order/**").hasAuthority("cliente")
+                .requestMatchers("/api/category/**", "/api/restaurant/**", "/api/product/**").hasRole("RESTAURANTE")  // Orders: Cliente solo crea (POST)
+                .requestMatchers(HttpMethod.POST, "/api/order/**").hasRole("CLIENTE")
                 // Orders: Cliente solo consulta (GET) por fecha y cliente
-                .requestMatchers(HttpMethod.GET, "/api/order/byClientDate", "/api/order/byClientId/{cln_id}").hasAuthority("cliente")
+                .requestMatchers(HttpMethod.GET, "/api/order/byClientDate", "/api/order/byClientId/{cln_id}").hasRole("CLIENTE")
                 // Orders: Restaurante gestiona lo demás (GET, PATCH, DELETE)
-                .requestMatchers(HttpMethod.GET, "/api/order/**").hasAuthority("restaurante")
-                .requestMatchers(HttpMethod.PATCH, "/api/order/**").hasAuthority("restaurante")
-                .requestMatchers(HttpMethod.DELETE, "/api/order/**").hasAuthority("restaurante")
+                .requestMatchers(HttpMethod.GET, "/api/order/**").hasRole("RESTAURANTE")
+                .requestMatchers(HttpMethod.PATCH, "/api/order/**").hasRole("RESTAURANTE")
+                .requestMatchers(HttpMethod.DELETE, "/api/order/**").hasRole("RESTAURANTE")
                 // Rutas exclusivas de restaurante, salvo GET
-                .requestMatchers("/api/category/**", "/api/restaurant/**", "/api/product/**").hasAuthority("restaurante")
+                .requestMatchers("/api/category/**", "/api/restaurant/**", "/api/product/**").hasRole(
+                        "RESTAURANTE")
                 // Rutas exclusivas de cliente
-                .requestMatchers("/api/user/**").hasAuthority("cliente").anyRequest().authenticated()).addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class);
+                .requestMatchers("/api/user/**").hasRole("CLIENTE").anyRequest().authenticated()).addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

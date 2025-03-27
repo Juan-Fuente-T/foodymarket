@@ -51,7 +51,7 @@ public class AuthService {
         );
         SecurityContextHolder.getContext().setAuthentication(authentication);
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        String token = jwtUtil.generateToken(request.email(), userDetails.getRole());
+        String token = jwtUtil.generateToken(request.email(), userDetails.getRole(), userDetails.getId());
         UserResponseDto userResponse = new UserResponseDto(userDetails);
         return new AuthResponse(token, "El usuario ha iniciado sesión correctamente",userResponse);
     }

@@ -12,6 +12,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @AllArgsConstructor
+@Transactional
 public class RestaurantServiceImpl implements IRestaurantService {
 
     private final RestaurantRepository restaurantRepository;
@@ -32,7 +34,7 @@ public class RestaurantServiceImpl implements IRestaurantService {
                     log.warn("Intento fallido: Usuario con email {} no encontrado", email);
                     return new ResponseStatusException(HttpStatus.FORBIDDEN, "Usuario no registrado");
                 });
-        if (!user.getRole().equals("RESTAURANT")) {
+        if (!user.getRole().equals("RESTAURANTE")) {
             log.warn("Intento fallido: Usuario con el Rol {} no esta autorizado", user.getRole());
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tienes permisos para crear un Restaurante");
         }
