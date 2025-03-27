@@ -1,17 +1,13 @@
 package com.c24_39_t_webapp.restaurants.services.impl;
 
-import com.c24_39_t_webapp.restaurants.dtos.request.CategoryRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.CategoryResponseDto;
 import com.c24_39_t_webapp.restaurants.exception.CategoryNotFoundException;
 import com.c24_39_t_webapp.restaurants.models.Category;
-import com.c24_39_t_webapp.restaurants.models.Restaurant;
 import com.c24_39_t_webapp.restaurants.repository.CategoryRepository;
 import com.c24_39_t_webapp.restaurants.repository.ProductRepository;
 import com.c24_39_t_webapp.restaurants.services.ICategoryService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

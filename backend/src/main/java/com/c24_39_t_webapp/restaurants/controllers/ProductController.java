@@ -8,7 +8,6 @@ import com.c24_39_t_webapp.restaurants.dtos.response.ProductSummaryResponseDto;
 import com.c24_39_t_webapp.restaurants.exception.CategoryNotFoundException;
 import com.c24_39_t_webapp.restaurants.exception.ProductNotFoundException;
 import com.c24_39_t_webapp.restaurants.models.Product;
-import com.c24_39_t_webapp.restaurants.models.Restaurant;
 import com.c24_39_t_webapp.restaurants.models.Category;
 import com.c24_39_t_webapp.restaurants.repository.CategoryRepository;
 import com.c24_39_t_webapp.restaurants.repository.ProductRepository;
@@ -28,9 +27,15 @@ import java.util.List;
 public class ProductController {
 
     @Autowired
-    private IProductService productService;
-    private CategoryRepository categoryRepository;
-    private ProductRepository productRepository;
+    private final IProductService productService;
+    private final CategoryRepository categoryRepository;
+    private final ProductRepository productRepository;
+
+    public ProductController(IProductService productService, CategoryRepository categoryRepository, ProductRepository productRepository) {
+        this.productService = productService;
+        this.categoryRepository = categoryRepository;
+        this.productRepository = productRepository;
+    }
 
 //    public ProductController(IProductService productService) {
 //        this.productService = productService;
@@ -177,13 +182,13 @@ public class ProductController {
 
     /**
      * Endpoint to retrieve a list of all {@link ProductSummaryResponseDto} objects stored in the system.
-     * Delegates the retrieval logic to {@link IProductService#findProductsByRestaurant(Long)}.
+     * Delegates the retrieval logic to {@link IProductService#findProductsByRestaurantId(Long)}.
      *
      * @param restaurantId The id of the restaurant to retrieve products for.
      * @return A list of {@code ProductSummaryResponseDto} objects representing all products in the specified restaurant.
      */
-    @GetMapping(value = "/byRestaurant/{restaurant}")
-    public ResponseEntity<List<ProductResponseDto>> findProductsByRestaurant(@PathVariable Long restaurantId) {
+    @GetMapping(value = "/byRestaurant/{restaurantId}")
+    public ResponseEntity<List<ProductResponseDto>> findProductsByRestaurantId(@PathVariable Long restaurantId) {
         log.info("Solicitud recibida para obtener productos del restaurante con ID: {}", restaurantId);
         List<ProductResponseDto> products = productService.findProductsByRestaurantId(restaurantId);
         log.info("Se recuperaron {} productos del restaurante: {} exitosamente.", products.size(), restaurantId);

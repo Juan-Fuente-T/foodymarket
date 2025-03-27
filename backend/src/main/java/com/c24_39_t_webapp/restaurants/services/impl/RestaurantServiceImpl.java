@@ -1,6 +1,5 @@
 package com.c24_39_t_webapp.restaurants.services.impl;
 
-import com.c24_39_t_webapp.restaurants.dtos.request.RestaurantRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.RestaurantResponseDto;
 import com.c24_39_t_webapp.restaurants.exception.RestaurantNotFoundException;
 import com.c24_39_t_webapp.restaurants.exception.user_implementations.ResourceNotFoundException;

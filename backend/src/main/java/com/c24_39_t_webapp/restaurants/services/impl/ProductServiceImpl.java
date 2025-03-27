@@ -1,6 +1,5 @@
 package com.c24_39_t_webapp.restaurants.services.impl;
 
-import com.c24_39_t_webapp.restaurants.dtos.request.ProductRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.GroupedProductsResponseDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.ProductResponseDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.ProductSummaryResponseDto;
@@ -33,7 +32,6 @@ import java.util.TreeMap;
 @AllArgsConstructor
 public class ProductServiceImpl implements IProductService {
     private final ProductRepository productRepository;
-    private final UserRepository userRepository;
     private final RestaurantRepository restaurantRepository;
     private final CategoryRepository categoryRepository;
     @PersistenceContext

@@ -2,18 +2,14 @@ package com.c24_39_t_webapp.restaurants.controllers;
 
 import com.c24_39_t_webapp.restaurants.dtos.request.CategoryRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.CategoryResponseDto;
-import com.c24_39_t_webapp.restaurants.dtos.response.RestaurantResponseDto;
 import com.c24_39_t_webapp.restaurants.exception.CategoryNotFoundException;
-import com.c24_39_t_webapp.restaurants.exception.RestaurantNotFoundException;
 import com.c24_39_t_webapp.restaurants.models.Category;
 import com.c24_39_t_webapp.restaurants.repository.CategoryRepository;
 import com.c24_39_t_webapp.restaurants.services.ICategoryService;
-import com.c24_39_t_webapp.restaurants.services.IRestaurantService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -99,7 +95,7 @@ public class CategoryController {
 
     /**
      * Endpoint to update an existing category in the system using the provided {@link CategoryRequestDto}.
-     * Delegates the update logic to {@link ICategoryService#updateCategory(Long, Category)}.
+     * Delegates the update logic to {@link ICategoryService#updateCategory(Category)}.
      *
      * @param ctg_id    The ID of the category to update.
      * @param updateDto The {@link CategoryRequestDto} object containing the details of the updated category.

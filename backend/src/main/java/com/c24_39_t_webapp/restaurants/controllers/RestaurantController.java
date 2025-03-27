@@ -2,9 +2,7 @@ package com.c24_39_t_webapp.restaurants.controllers;
 
 import com.c24_39_t_webapp.restaurants.dtos.request.RestaurantRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.RestaurantResponseDto;
-import com.c24_39_t_webapp.restaurants.exception.RestaurantNotFoundException;
 import com.c24_39_t_webapp.restaurants.models.Restaurant;
-import com.c24_39_t_webapp.restaurants.repository.RestaurantRepository;
 import com.c24_39_t_webapp.restaurants.services.IRestaurantService;
 import com.c24_39_t_webapp.restaurants.services.impl.UserDetailsImpl;
 import jakarta.validation.Valid;
@@ -15,9 +13,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.net.URI;
+//import java.net.URI;
 import java.util.List;
 
 @Slf4j
