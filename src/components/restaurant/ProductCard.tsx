@@ -42,7 +42,7 @@ export function ProductCard({ product }: ProductCardProps) {
         )}
         {product.category && (
           <Badge className="absolute top-2 right-2 bg-white/90 text-food-700">
-            {product.category.name}
+            {product.category}
           </Badge>
         )}
       </div>
