@@ -1,4 +1,3 @@
-
 import { toast } from "@/lib/toast";
 import { 
   User, 
@@ -8,8 +7,8 @@ import {
   Review
 } from "@/types/models";
 
-// Base API URL
-const API_BASE_URL = "http://localhost:3000/api";
+// Base API URL - Updated to use port 8080
+const API_BASE_URL = "http://localhost:8080/api";
 
 // Generic fetch with error handling
 const fetchWithError = async (
