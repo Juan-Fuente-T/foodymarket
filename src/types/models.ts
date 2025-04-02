@@ -11,13 +11,6 @@ export interface User {
   updatedAt: string;
 }
 
-export interface Category {
-  id: string;
-  name: string;
-  description?: string;
-  image?: string;
-}
-
 export interface Restaurant {
   id: string;
   name: string;
@@ -29,7 +22,7 @@ export interface Restaurant {
   coverImage: string;
   rating: number;
   reviewCount: number;
-  category: Category; // Cambiado de categories[] a category
+  category: string; // Cambiado: ahora es solo un string, no una entidad
   ownerId: string;
   openingHours: string;
   createdAt: string;
@@ -42,7 +35,7 @@ export interface Product {
   description: string;
   price: number;
   image: string;
-  category: Category; // Cambiado de categoryId a category
+  category: string; // Cambiado: ahora es solo un string, no una entidad
   restaurantId: string;
   available: boolean;
   featured: boolean;

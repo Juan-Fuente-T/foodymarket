@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useQuery } from "@tanstack/react-query";
-import { restaurantAPI, categoryAPI } from "@/services/api";
+import { restaurantAPI } from "@/services/api";
 import { RestaurantCard } from "@/components/restaurant/RestaurantCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
@@ -20,10 +20,19 @@ const Restaurants = () => {
     queryFn: () => restaurantAPI.getAll(),
   });
   
-  const { data: categories = [], isLoading: isLoadingCategories } = useQuery({
-    queryKey: ["categories"],
-    queryFn: () => categoryAPI.getAll(),
-  });
+  // Obtener categorías únicas de los restaurantes
+  const categories = React.useMemo(() => {
+    if (!restaurants.length) return [];
+    
+    const uniqueCategories = new Set<string>();
+    restaurants.forEach(restaurant => {
+      if (restaurant.category) {
+        uniqueCategories.add(restaurant.category);
+      }
+    });
+    
+    return Array.from(uniqueCategories);
+  }, [restaurants]);
   
   // Filter restaurants based on search term and category
   const filteredRestaurants = restaurants.filter(restaurant => {
@@ -33,7 +42,7 @@ const Restaurants = () => {
       : true;
       
     const matchesCategory = selectedCategory
-      ? restaurant.category.id === selectedCategory
+      ? restaurant.category === selectedCategory
       : true;
       
     return matchesSearch && matchesCategory;
@@ -76,20 +85,20 @@ const Restaurants = () => {
                     All Restaurants
                   </Button>
                   
-                  {isLoadingCategories ? (
+                  {isLoadingRestaurants ? (
                     Array(5).fill(0).map((_, i) => (
                       <Skeleton key={i} className="h-8 w-full" />
                     ))
                   ) : (
                     categories.map(category => (
                       <Button
-                        key={category.id}
-                        onClick={() => setSelectedCategory(category.id)}
-                        variant={selectedCategory === category.id ? "default" : "outline"}
+                        key={category}
+                        onClick={() => setSelectedCategory(category)}
+                        variant={selectedCategory === category ? "default" : "outline"}
                         size="sm"
-                        className={`w-full justify-start ${selectedCategory === category.id ? "bg-food-600" : ""}`}
+                        className={`w-full justify-start ${selectedCategory === category ? "bg-food-600" : ""}`}
                       >
-                        {category.name}
+                        {category}
                       </Button>
                     ))
                   )}

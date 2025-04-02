@@ -22,7 +22,7 @@ export function RestaurantCard({ restaurant }: RestaurantCardProps) {
           <div className="absolute top-4 left-4 flex flex-wrap gap-2">
             {restaurant.category && (
               <Badge variant="secondary" className="bg-white/90 backdrop-blur-sm text-food-700">
-                {restaurant.category.name}
+                {restaurant.category}
               </Badge>
             )}
           </div>

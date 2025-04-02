@@ -26,12 +26,12 @@ const Index = () => {
     }
   }, [restaurantsError]);
 
-  // Agrupar restaurantes por categoría
+  // Agrupar restaurantes por categoría (ahora es solo un string)
   const restaurantsByCategory = React.useMemo(() => {
     if (!restaurants.length) return {};
     
     return restaurants.reduce((acc, restaurant) => {
-      const categoryName = restaurant.category?.name || 'Uncategorized';
+      const categoryName = restaurant.category || 'Uncategorized';
       if (!acc[categoryName]) {
         acc[categoryName] = [];
       }
@@ -107,30 +107,34 @@ const Index = () => {
             </div>
           ) : categories.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
-              {categories.slice(0, 4).map((category, index) => (
-                <Link 
-                  key={index}
-                  to={`/restaurants?category=${category}`}
-                  className="group relative overflow-hidden rounded-xl bg-white shadow-sm transition-all duration-300 hover:shadow-lg"
-                >
-                  <div className="aspect-square overflow-hidden">
-                    <img 
-                      src={restaurantsByCategory[category][0]?.category?.image || "https://via.placeholder.com/300?text=Category"}
-                      alt={category}
-                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
-                  </div>
-                  <div className="absolute bottom-0 left-0 right-0 p-4">
-                    <h3 className="text-xl font-bold text-white drop-shadow-md">
-                      {category}
-                    </h3>
-                    <p className="mt-1 text-sm text-white/90 line-clamp-2">
-                      {restaurantsByCategory[category].length} restaurants
-                    </p>
-                  </div>
-                </Link>
-              ))}
+              {categories.slice(0, 4).map((category, index) => {
+                const firstRestaurantWithCategory = restaurantsByCategory[category][0];
+                return (
+                  <Link 
+                    key={index}
+                    to={`/restaurants?category=${category}`}
+                    className="group relative overflow-hidden rounded-xl bg-white shadow-sm transition-all duration-300 hover:shadow-lg"
+                  >
+                    <div className="aspect-square overflow-hidden">
+                      {/* Usar una imagen del primer restaurante con esta categoría */}
+                      <img 
+                        src={firstRestaurantWithCategory?.coverImage || "https://via.placeholder.com/300?text=Category"}
+                        alt={category}
+                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
+                    </div>
+                    <div className="absolute bottom-0 left-0 right-0 p-4">
+                      <h3 className="text-xl font-bold text-white drop-shadow-md">
+                        {category}
+                      </h3>
+                      <p className="mt-1 text-sm text-white/90 line-clamp-2">
+                        {restaurantsByCategory[category].length} restaurants
+                      </p>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-8">

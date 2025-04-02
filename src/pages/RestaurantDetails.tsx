@@ -36,12 +36,12 @@ const RestaurantDetails = () => {
     enabled: !!id && !!restaurant,
   });
   
-  // Agrupar productos por categoría
+  // Agrupar productos por categoría (ahora category es simplemente un string)
   const productsByCategory = React.useMemo(() => {
     if (!products.length) return {};
     
     return products.reduce((acc, product) => {
-      const categoryName = product.category?.name || 'Uncategorized';
+      const categoryName = product.category || 'Uncategorized';
       if (!acc[categoryName]) {
         acc[categoryName] = [];
       }
@@ -119,7 +119,7 @@ const RestaurantDetails = () => {
           <div className="absolute top-4 left-4 flex flex-wrap gap-2">
             {restaurant.category && (
               <Badge variant="secondary" className="bg-white/90 backdrop-blur-sm text-food-700">
-                {restaurant.category.name}
+                {restaurant.category}
               </Badge>
             )}
           </div>

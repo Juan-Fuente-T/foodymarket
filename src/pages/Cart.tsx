@@ -58,7 +58,7 @@ const Cart = () => {
           notes: item.notes
         })),
         total: totalPrice,
-        status: "pending",
+        status: "pending" as const,
         deliveryAddress: currentUser.address || "",
         paymentMethod: "cash" as const
       };
