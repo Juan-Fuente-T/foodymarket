@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -36,7 +35,7 @@ interface PartnerFormValues {
 
 const RestaurantPartner = () => {
   const navigate = useNavigate();
-  const { register: registerUser, isAuthenticated, user } = useAuth();
+  const { registerUser, isAuthenticated, user } = useAuth();
   const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<PartnerFormValues>();
   
   const password = React.useRef({});
@@ -84,7 +83,7 @@ const RestaurantPartner = () => {
         rating: 0,
         reviewCount: 0,
         openingHours: "9:00 AM - 10:00 PM",
-        categories: []
+        category: selectedCategory
       });
       
       toast.success("Restaurant partnership application submitted successfully!");

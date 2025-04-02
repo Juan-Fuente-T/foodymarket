@@ -33,7 +33,7 @@ const Restaurants = () => {
       : true;
       
     const matchesCategory = selectedCategory
-      ? restaurant.categories.some(category => category.id === selectedCategory)
+      ? restaurant.category.id === selectedCategory
       : true;
       
     return matchesSearch && matchesCategory;

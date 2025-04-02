@@ -1,4 +1,3 @@
-
 import { toast } from "@/lib/toast";
 import { 
   User, 
@@ -264,6 +263,24 @@ export const restaurantAPI = {
     fetchWithError(`/restaurant/${id}`, { method: "DELETE" }),
   
   getFeatured: () => fetchWithError("/restaurants/featured"),
+};
+
+// Categories
+export const categoryAPI = {
+  getAll: () => fetchWithError("/categories"),
+  getById: (id: string) => fetchWithError(`/category/${id}`),
+  create: (data: Partial<Category>) =>
+    fetchWithError("/category", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  update: (id: string, data: Partial<Category>) =>
+    fetchWithError(`/category/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  delete: (id: string) =>
+    fetchWithError(`/category/${id}`, { method: "DELETE" }),
 };
 
 // Products

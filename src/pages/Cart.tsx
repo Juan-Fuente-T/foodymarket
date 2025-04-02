@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useCart } from "@/contexts/CartContext";
@@ -47,12 +46,13 @@ const Cart = () => {
     }
 
     try {
-      // Preparar los datos del pedido
       const orderData = {
         userId: currentUser.id,
         restaurantId: items[0]?.product.restaurantId,
         items: items.map(item => ({
+          id: "", // This will be assigned by the backend
           productId: item.productId,
+          product: item.product, // Include the full product
           quantity: item.quantity,
           price: item.price,
           notes: item.notes
