@@ -12,18 +12,21 @@ import { restaurantAPI, categoryAPI } from "@/services/api";
 import { Restaurant, Category } from "@/types/models";
 import { Skeleton } from "@/components/ui/skeleton";
 
+
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
   const { data: restaurants = [], isLoading: isLoadingRestaurants, error: restaurantsError } = useQuery({
-    queryKey: ["restaurants"],
+    queryKey: ["restaurant/all"],
     queryFn: () => restaurantAPI.getAll(),
   });
 
   const { data: categories = [], isLoading: isLoadingCategories, error: categoriesError } = useQuery({
-    queryKey: ["categories"],
+    queryKey: ["category"],
     queryFn: () => categoryAPI.getAll(),
   });
+  console.log("Categorias", categories);
+  console.log("Restaurants", restaurants);
   
   // For debugging - can be removed in production
   useEffect(() => {
@@ -34,6 +37,13 @@ const Index = () => {
       console.error("Error fetching categories:", categoriesError);
     }
   }, [restaurantsError, categoriesError]);
+
+  useEffect(() => {
+    fetch("https://zealous-bravery-production.up.railway.app/api/restaurant/all")
+      .then(res => res.json())
+      .then(data => console.log("Data cruda:", data))
+      .catch(console.error);
+  }, []);
 
   return (
     <Layout>
@@ -136,9 +146,13 @@ const Index = () => {
             </div>
           ) : restaurants.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {restaurants.slice(0, 3).map((restaurant) => (
+              {restaurants.slice(0, 3).map((restaurant) => {
+                console.log(`Restaurant ID: ${restaurant.id}`, restaurant);
+                return <RestaurantCard key={restaurant.id} restaurant={restaurant} />;
+              })}
+              {/* {restaurants.slice(0, 3).map((restaurant) => (
                 <RestaurantCard key={restaurant.id} restaurant={restaurant} />
-              ))}
+              ))} */}
             </div>
           ) : (
             <div className="text-center py-8">

@@ -1,39 +1,41 @@
 
+// export type UserRole = 'cliente' | 'restaurante' | 'admin';
+export type UserRole = 'cliente' | 'restaurante';
+
 export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'customer' | 'owner' | 'admin';
+  role: UserRole;
   phone?: string;
   address?: string;
-  avatar?: string;
   createdAt: string;
-  updatedAt: string;
 }
 
 export interface Category {
   id: string;
   name: string;
   description?: string;
-  image?: string;
+  createdAt: string;
+  updatedAt: string;
+  // image?: string;
 }
 
 export interface Restaurant {
-  id: string;
+  id: number;
   name: string;
   description: string;
-  address: string;
+  category: string; // Simple string según tu modelo
   phone: string;
-  email: string;
+  address: string;
   logo: string;
-  coverImage: string;
-  rating: number;
-  reviewCount: number;
-  categories: Category[];
-  ownerId: string;
-  openingHours: string;
+  ownerId: string; // Relación con User
   createdAt: string;
   updatedAt: string;
+  // Nota: rating y reviewCount serían calculados
+  // coverImage: string;
+  // rating: number;
+  // reviewCount: number;
 }
 
 export interface Product {
@@ -42,44 +44,40 @@ export interface Product {
   description: string;
   price: number;
   image: string;
-  categoryId: string;
-  restaurantId: string;
   available: boolean;
-  featured: boolean;
+  quantity: number;
+  restaurantId: string;
+  categoryId: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export type OrderStatus = 'pendiente' | 'pagado' | 'entregado' | 'cancelado';
+
+export interface Order {
+  id: string;
+  clientId: string;
+  restaurantId: string;
+  status: OrderStatus;
+  total: number;
+  comments?: string;
+  createdAt: string;
+  updatedAt: string;
+  items: OrderItem[]; // Relación con OrderDetails
 }
 
 export interface OrderItem {
   id: string;
   productId: string;
-  product: Product;
   quantity: number;
-  price: number;
-  notes?: string;
-}
-
-export interface Order {
-  id: string;
-  userId: string;
-  restaurantId: string;
-  restaurant: Restaurant;
-  items: OrderItem[];
-  status: 'pending' | 'accepted' | 'rejected' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
-  total: number;
-  deliveryAddress: string;
-  paymentMethod: 'cash' | 'card' | 'online';
-  createdAt: string;
-  updatedAt: string;
+  subtotal: number;
 }
 
 export interface Review {
   id: string;
-  userId: string;
-  user: User;
   restaurantId: string;
-  rating: number;
-  comment: string;
+  userId: string;
+  score: number; // 0-10
+  comments?: string;
   createdAt: string;
-  updatedAt: string;
 }

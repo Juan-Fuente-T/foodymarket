@@ -13,17 +13,18 @@ import {
   CardTitle, 
   CardContent, 
   CardFooter,
-  Table,
+} from "@/components/ui/card";
+import {  Table,
   TableHeader,
   TableBody,
   TableHead,
   TableRow,
   TableCell
-} from "@/components/ui/card";
+} from "@/components/ui/table";
 
 const Cart = () => {
   const { items, totalItems, totalPrice, updateItemQuantity, removeItem, clearCart } = useCart();
-  const { isAuthenticated, currentUser } = useAuth();
+  const { isAuthenticated, user: currentUser } = useAuth();
   const navigate = useNavigate();
 
   const handleCheckout = async () => {

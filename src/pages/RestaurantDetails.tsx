@@ -27,19 +27,18 @@ const RestaurantDetails = () => {
   useEffect(() => {
     if (restaurant) {
       setRestaurant(restaurant);
-      if (restaurant.categories && restaurant.categories.length > 0) {
-        setSelectedCategory(restaurant.categories[0].id);
+      if (restaurant.category) {
+        setSelectedCategory(restaurant.category);
       }
     }
   }, [restaurant, setRestaurant]);
   
   const { data: products = [], isLoading: isLoadingProducts } = useQuery({
-    queryKey: ["products", id, selectedCategory],
+    queryKey: ["products", id],
     queryFn: () => {
-      if (selectedCategory) {
-        return productAPI.getByRestaurantAndCategory(id as string, selectedCategory);
-      }
-      return productAPI.getByRestaurant(id as string);
+      const response = productAPI.getByRestaurantAndCategory(Number(id));
+      console.log("Products en RestaurantDetails", response);
+      // return response;
     },
     enabled: !!id && !!restaurant,
   });
@@ -91,18 +90,19 @@ const RestaurantDetails = () => {
             className="w-full h-80 object-cover"
           />
           <div className="absolute top-4 left-4 flex flex-wrap gap-2">
-            {restaurant.categories.map((category) => (
-              <Badge key={category.id} variant="secondary" className="bg-white/90 backdrop-blur-sm text-food-700">
-                {category.name}
+            {/* {restaurant.categories.map((category) => ( */}
+              <Badge key={selectedCategory} variant="secondary" className="bg-white/90 backdrop-blur-sm text-food-700">
+                {selectedCategory}
               </Badge>
-            ))}
+            // ))}
           </div>
           <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/80 to-transparent p-4">
             <h1 className="text-3xl font-bold text-white">{restaurant.name}</h1>
             <div className="flex items-center text-white mt-2">
               <Star className="h-5 w-5 mr-1 fill-yellow-400 stroke-yellow-400" />
-              <span className="font-medium">{restaurant.rating.toFixed(1)}</span>
-              <span className="text-gray-300 ml-2">({restaurant.reviewCount} reviews)</span>
+              {/* <span className="font-medium">{restaurant.rating.toFixed(1)}</span>
+              <span className="text-gray-300 ml-2">({restaurant.reviewCount} reviews)</span> */}
+              FALLAN los rating
             </div>
           </div>
         </div>
@@ -112,13 +112,13 @@ const RestaurantDetails = () => {
           <div className="md:col-span-2">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Menu</h2>
 
-            {/* Category Tabs */}
-            {restaurant.categories.length > 1 && (
-              <Tabs defaultValue={restaurant.categories[0].id} className="mb-4">
+            {/* Category Tabs
+            {restaurant.category && (
+              <Tabs defaultValue={selectedCategory} className="mb-4">
                 <TabsList>
-                  {restaurant.categories.map((category) => (
+                  {restaurant.category => (
                     <TabsTrigger 
-                      key={category.id} 
+                      key={category} 
                       value={category.id}
                       onClick={() => setSelectedCategory(category.id)}
                     >
@@ -127,7 +127,7 @@ const RestaurantDetails = () => {
                   ))}
                 </TabsList>
               </Tabs>
-            )}
+            )} */}
 
             {/* Product List */}
             {isLoadingProducts ? (
@@ -162,7 +162,8 @@ const RestaurantDetails = () => {
               </div>
               <div className="flex items-center text-gray-600 mb-2">
                 <Clock className="h-4 w-4 mr-2" />
-                <span>{restaurant.openingHours}</span>
+                {/* <span>{restaurant.openingHours}</span> */}
+                Falla openinghours
               </div>
               <div className="flex items-center text-gray-600 mb-4">
                 <a href={`tel:${restaurant.phone}`} className="hover:text-food-600 transition-colors">

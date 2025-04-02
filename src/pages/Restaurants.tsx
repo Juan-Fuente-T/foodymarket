@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useQuery } from "@tanstack/react-query";
 import { restaurantAPI, categoryAPI } from "@/services/api";
@@ -20,11 +20,57 @@ const Restaurants = () => {
     queryFn: () => restaurantAPI.getAll(),
   });
   
-  const { data: categories = [], isLoading: isLoadingCategories } = useQuery({
-    queryKey: ["categories"],
-    queryFn: () => categoryAPI.getAll(),
-  });
-  
+  // const { data: categories = [], isLoading: isLoadingCategories } = useQuery({
+  //   queryKey: ["categories"],
+  //   queryFn: () => categoryAPI.getAll(),
+  // });
+
+
+  // Extraer categorías únicas de los restaurantes
+  const categories = useMemo(() => {
+    const categorySet = new Set<string>();
+    
+    restaurants.forEach(restaurant => {
+      if (restaurant.category) {
+        categorySet.add(restaurant.category);
+      }
+    });
+    
+    return Array.from(categorySet).map(category => ({
+      id: category,
+      name: category
+    }));
+  }, [restaurants]);
+
+
+  // categories: [
+  //   {
+  //     id: "1",
+  //     name: "Fast Food",
+  //     description: "Quick and tasty meals",
+  //     image: "https://images.unsplash.com/photo-1561758033-d89a9ad46330?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1000&q=80"
+  //   },
+  //   {
+  //     id: "2",
+  //     name: "Italian",
+  //     description: "Authentic Italian cuisine",
+  //     image: "https://images.unsplash.com/photo-1498579150354-977475b7ea0b?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1000&q=80"
+  //   },
+  //   {
+  //     id: "3",
+  //     name: "Japanese",
+  //     description: "Fresh sushi and Japanese dishes",
+  //     image: "https://images.unsplash.com/photo-1617196035154-1e7e6e28b30f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1000&q=80"
+  //   },
+  //   {
+  //     id: "4",
+  //     name: "Mexican",
+  //     description: "Spicy and flavorful Mexican food",
+  //     image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1000&q=80"
+  //   }
+  // ]
+
+
   // Filter restaurants based on search term and category
   const filteredRestaurants = restaurants.filter(restaurant => {
     const matchesSearch = searchTerm 
@@ -76,7 +122,7 @@ const Restaurants = () => {
                     All Restaurants
                   </Button>
                   
-                  {isLoadingCategories ? (
+                  {isLoadingRestaurants ? (
                     Array(5).fill(0).map((_, i) => (
                       <Skeleton key={i} className="h-8 w-full" />
                     ))
@@ -95,76 +141,44 @@ const Restaurants = () => {
                   )}
                 </div>
               </div>
-              
-              <div className="mb-6">
-                <h3 className="text-sm font-medium text-gray-700 mb-2">Rating</h3>
-                <div className="space-y-2">
-                  {[5, 4, 3, 2, 1].map(rating => (
-                    <div key={rating} className="flex items-center">
-                      <input
-                        type="checkbox"
-                        id={`rating-${rating}`}
-                        className="h-4 w-4 text-food-600 rounded"
-                      />
-                      <label htmlFor={`rating-${rating}`} className="ml-2 flex items-center">
-                        {Array(5).fill(0).map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`h-4 w-4 ${i < rating ? "fill-yellow-400 stroke-yellow-400" : "stroke-gray-300"}`}
-                          />
-                        ))}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
-              <Button variant="outline" className="w-full" onClick={() => {
-                setSearchTerm("");
-                setSelectedCategory(null);
-              }}>
-                Clear Filters
-              </Button>
             </div>
           </div>
           
           <div className="md:col-span-3">
             <form onSubmit={handleSearch} className="mb-6">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <Input
-                  type="text"
-                  placeholder="Search restaurants..."
-                  className="pl-10 pr-4 py-6 w-full rounded-lg shadow-sm"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
+              <Input
+                type="text"
+                placeholder="Search restaurants..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full"
+              />
             </form>
             
             {isLoadingRestaurants ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {Array(6).fill(0).map((_, i) => (
-                  <Skeleton key={i} className="h-64 w-full rounded-xl" />
+                  <Skeleton key={i} className="h-72 rounded-xl" />
                 ))}
               </div>
             ) : filteredRestaurants.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredRestaurants.map(restaurant => (
                   <RestaurantCard key={restaurant.id} restaurant={restaurant} />
                 ))}
               </div>
             ) : (
-              <div className="text-center py-16">
-                <h2 className="text-xl font-medium text-gray-900 mb-2">No restaurants found</h2>
-                <p className="text-gray-600 mb-6">
-                  {searchTerm ? `No results found for "${searchTerm}"` : "There are no restaurants available."}
-                </p>
-                <Button onClick={() => {
-                  setSearchTerm("");
-                  setSelectedCategory(null);
-                }} className="bg-food-600 hover:bg-food-700">
-                  Clear Search
+              <div className="text-center py-10">
+                <p className="text-gray-500">No restaurants found</p>
+                <Button 
+                  onClick={() => {
+                    setSearchTerm("");
+                    setSelectedCategory(null);
+                  }} 
+                  variant="link"
+                  className="mt-2"
+                >
+                  Clear filters
                 </Button>
               </div>
             )}
@@ -175,4 +189,4 @@ const Restaurants = () => {
   );
 };
 
-export default Restaurants;
+export default Restaurants; 

@@ -10,24 +10,30 @@ interface RestaurantCardProps {
 }
 
 export function RestaurantCard({ restaurant }: RestaurantCardProps) {
+  if (!restaurant.id) {
+    console.error("Restaurant ID is missing!", restaurant);
+    return null;
+  }
+
   // Handle empty categories array
-  const categories = restaurant.categories || [];
+  const category = restaurant.category || '';
   
   return (
     <Link to={`/restaurants/${restaurant.id}`} className="block">
       <div className="restaurant-card bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500">
-        <div className="restaurant-image-container h-48 relative">
+        {/* <div className="restaurant-image-container h-48 relative rounded-md"> */}
+        <div className="restaurant-image-container relative rounded-md">
           <img
-            src={restaurant.coverImage || "https://via.placeholder.com/800x400?text=Restaurant"}
+            src={restaurant.logo || "https://via.placeholder.com/800x400?text=Restaurant"}
             alt={restaurant.name}
-            className="restaurant-image w-full h-full object-cover"
+            className="restaurant-image w-full h-full object-contain rounded-md"
           />
           <div className="absolute top-4 left-4 flex flex-wrap gap-2">
-            {categories.slice(0, 3).map((category) => (
-              <Badge key={category.id} variant="secondary" className="bg-white/90 backdrop-blur-sm text-food-700">
-                {category.name}
+            {/* {categories.slice(0, 3).map((category) => ( */}
+              <Badge key={category} variant="secondary" className="bg-white/90 backdrop-blur-sm text-food-700">
+                {category}
               </Badge>
-            ))}
+            // ))}
           </div>
         </div>
         <div className="p-4">
@@ -38,10 +44,12 @@ export function RestaurantCard({ restaurant }: RestaurantCardProps) {
             <div className="flex items-center">
               <Star className="h-4 w-4 fill-yellow-400 stroke-yellow-400 mr-1" />
               <span className="text-sm font-medium">
-                {restaurant.rating?.toFixed(1) || "New"}
+                {/* {restaurant.rating?.toFixed(1) || "New"} */}
+                FALLA
               </span>
               <span className="text-xs text-gray-500 ml-1">
-                ({restaurant.reviewCount || 0})
+                {/* ({restaurant.reviewCount || 0}) */}
+                FALLA
               </span>
             </div>
           </div>
@@ -51,7 +59,8 @@ export function RestaurantCard({ restaurant }: RestaurantCardProps) {
           <div className="flex items-center text-sm text-gray-500 space-x-4">
             <div className="flex items-center">
               <Clock className="h-4 w-4 mr-1 text-gray-400" />
-              <span>{restaurant.openingHours || "Hours not available"}</span>
+              {/* <span>{restaurant.openingHours || "Hours not available"}</span> */}
+              <span>{restaurant.phone || "Phone"}</span>
             </div>
             <div className="flex items-center">
               <MapPin className="h-4 w-4 mr-1 text-gray-400" />
