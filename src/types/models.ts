@@ -29,7 +29,7 @@ export interface Restaurant {
   coverImage: string;
   rating: number;
   reviewCount: number;
-  categories: Category[];
+  category: Category; // Cambiado de categories[] a category
   ownerId: string;
   openingHours: string;
   createdAt: string;
@@ -42,7 +42,7 @@ export interface Product {
   description: string;
   price: number;
   image: string;
-  categoryId: string;
+  category: Category; // Cambiado de categoryId a category
   restaurantId: string;
   available: boolean;
   featured: boolean;

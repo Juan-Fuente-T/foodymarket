@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useParams, Link } from "react-router-dom";
@@ -14,7 +15,6 @@ import { useCart } from "@/contexts/CartContext";
 
 const RestaurantDetails = () => {
   const { id } = useParams<{ id: string }>();
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
   const { setRestaurant } = useCart();
   
   const { data: restaurant, isLoading: isLoadingRestaurant } = useQuery({
@@ -23,26 +23,52 @@ const RestaurantDetails = () => {
     enabled: !!id,
   });
   
-  // Use useEffect to set restaurant in cart context and selected category after data is loaded
+  // Use useEffect to set restaurant in cart context after data is loaded
   useEffect(() => {
     if (restaurant) {
       setRestaurant(restaurant);
-      if (restaurant.categories && restaurant.categories.length > 0) {
-        setSelectedCategory(restaurant.categories[0].id);
-      }
     }
   }, [restaurant, setRestaurant]);
   
   const { data: products = [], isLoading: isLoadingProducts } = useQuery({
-    queryKey: ["products", id, selectedCategory],
-    queryFn: () => {
-      if (selectedCategory) {
-        return productAPI.getByRestaurantAndCategory(id as string, selectedCategory);
-      }
-      return productAPI.getByRestaurant(id as string);
-    },
+    queryKey: ["products", id],
+    queryFn: () => productAPI.getByRestaurant(id as string),
     enabled: !!id && !!restaurant,
   });
+  
+  // Agrupar productos por categoría
+  const productsByCategory = React.useMemo(() => {
+    if (!products.length) return {};
+    
+    return products.reduce((acc, product) => {
+      const categoryName = product.category?.name || 'Uncategorized';
+      if (!acc[categoryName]) {
+        acc[categoryName] = [];
+      }
+      acc[categoryName].push(product);
+      return acc;
+    }, {} as Record<string, Product[]>);
+  }, [products]);
+  
+  // Obtener las categorías únicas de los productos
+  const categories = React.useMemo(() => {
+    return Object.keys(productsByCategory);
+  }, [productsByCategory]);
+  
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  
+  // Establecer la primera categoría como seleccionada cuando se cargan los datos
+  useEffect(() => {
+    if (categories.length > 0 && !selectedCategory) {
+      setSelectedCategory(categories[0]);
+    }
+  }, [categories, selectedCategory]);
+  
+  // Filtrar productos por categoría seleccionada
+  const filteredProducts = React.useMemo(() => {
+    if (!selectedCategory) return products;
+    return productsByCategory[selectedCategory] || [];
+  }, [selectedCategory, products, productsByCategory]);
   
   if (isLoadingRestaurant) {
     return (
@@ -91,11 +117,11 @@ const RestaurantDetails = () => {
             className="w-full h-80 object-cover"
           />
           <div className="absolute top-4 left-4 flex flex-wrap gap-2">
-            {restaurant.categories.map((category) => (
-              <Badge key={category.id} variant="secondary" className="bg-white/90 backdrop-blur-sm text-food-700">
-                {category.name}
+            {restaurant.category && (
+              <Badge variant="secondary" className="bg-white/90 backdrop-blur-sm text-food-700">
+                {restaurant.category.name}
               </Badge>
-            ))}
+            )}
           </div>
           <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/80 to-transparent p-4">
             <h1 className="text-3xl font-bold text-white">{restaurant.name}</h1>
@@ -113,16 +139,16 @@ const RestaurantDetails = () => {
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Menu</h2>
 
             {/* Category Tabs */}
-            {restaurant.categories.length > 1 && (
-              <Tabs defaultValue={restaurant.categories[0].id} className="mb-4">
+            {categories.length > 1 && (
+              <Tabs value={selectedCategory} className="mb-4">
                 <TabsList>
-                  {restaurant.categories.map((category) => (
+                  {categories.map((category) => (
                     <TabsTrigger 
-                      key={category.id} 
-                      value={category.id}
-                      onClick={() => setSelectedCategory(category.id)}
+                      key={category} 
+                      value={category}
+                      onClick={() => setSelectedCategory(category)}
                     >
-                      {category.name}
+                      {category}
                     </TabsTrigger>
                   ))}
                 </TabsList>
@@ -136,9 +162,9 @@ const RestaurantDetails = () => {
                   <Skeleton key={i} className="h-56 w-full rounded-xl" />
                 ))}
               </div>
-            ) : products.length > 0 ? (
+            ) : filteredProducts.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {products.map((product) => (
+                {filteredProducts.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
               </div>

@@ -2,7 +2,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Star, Clock, MapPin } from "lucide-react";
-import { Restaurant, Category } from "@/types/models";
+import { Restaurant } from "@/types/models";
 import { Badge } from "@/components/ui/badge";
 
 interface RestaurantCardProps {
@@ -10,9 +10,6 @@ interface RestaurantCardProps {
 }
 
 export function RestaurantCard({ restaurant }: RestaurantCardProps) {
-  // Handle empty categories array
-  const categories = restaurant.categories || [];
-  
   return (
     <Link to={`/restaurants/${restaurant.id}`} className="block">
       <div className="restaurant-card bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500">
@@ -23,11 +20,11 @@ export function RestaurantCard({ restaurant }: RestaurantCardProps) {
             className="restaurant-image w-full h-full object-cover"
           />
           <div className="absolute top-4 left-4 flex flex-wrap gap-2">
-            {categories.slice(0, 3).map((category) => (
-              <Badge key={category.id} variant="secondary" className="bg-white/90 backdrop-blur-sm text-food-700">
-                {category.name}
+            {restaurant.category && (
+              <Badge variant="secondary" className="bg-white/90 backdrop-blur-sm text-food-700">
+                {restaurant.category.name}
               </Badge>
-            ))}
+            )}
           </div>
         </div>
         <div className="p-4">

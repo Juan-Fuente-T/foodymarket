@@ -40,6 +40,11 @@ export function ProductCard({ product }: ProductCardProps) {
             Featured
           </Badge>
         )}
+        {product.category && (
+          <Badge className="absolute top-2 right-2 bg-white/90 text-food-700">
+            {product.category.name}
+          </Badge>
+        )}
       </div>
       <div className="p-4 flex flex-col flex-grow">
         <div className="flex justify-between items-start mb-2">

@@ -47,28 +47,26 @@ const Cart = () => {
     }
 
     try {
-      const orderItems = items.map(item => ({
-        id: item.id,
-        productId: item.productId,
-        quantity: item.quantity,
-        price: item.price,
-        notes: item.notes
-      }));
-
-      const order = {
+      // Preparar los datos del pedido
+      const orderData = {
         userId: currentUser.id,
         restaurantId: items[0]?.product.restaurantId,
-        items: orderItems,
+        items: items.map(item => ({
+          productId: item.productId,
+          quantity: item.quantity,
+          price: item.price,
+          notes: item.notes
+        })),
         total: totalPrice,
-        status: "pending"
+        status: "pending",
+        deliveryAddress: currentUser.address || "",
+        paymentMethod: "cash" as const
       };
 
-      // For mock development, just simulate order placement success
-      // In production, this would use the actual API call
-      console.log("Order placed:", order);
+      console.log("Order to be placed:", orderData);
       
       try {
-        const response = await orderAPI.create(order);
+        const response = await orderAPI.create(orderData);
         toast.success("Order placed successfully!");
         clearCart();
         navigate('/');

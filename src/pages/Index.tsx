@@ -4,12 +4,11 @@ import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { RestaurantCard } from "@/components/restaurant/RestaurantCard";
-import { CategoryCard } from "@/components/restaurant/CategoryCard";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useQuery } from "@tanstack/react-query";
-import { restaurantAPI, categoryAPI } from "@/services/api";
-import { Restaurant, Category } from "@/types/models";
+import { restaurantAPI } from "@/services/api";
+import { Restaurant } from "@/types/models";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const Index = () => {
@@ -19,21 +18,30 @@ const Index = () => {
     queryKey: ["restaurants"],
     queryFn: () => restaurantAPI.getAll(),
   });
-
-  const { data: categories = [], isLoading: isLoadingCategories, error: categoriesError } = useQuery({
-    queryKey: ["categories"],
-    queryFn: () => categoryAPI.getAll(),
-  });
   
-  // For debugging - can be removed in production
+  // Para debugging - puede ser eliminado en producción
   useEffect(() => {
     if (restaurantsError) {
       console.error("Error fetching restaurants:", restaurantsError);
     }
-    if (categoriesError) {
-      console.error("Error fetching categories:", categoriesError);
-    }
-  }, [restaurantsError, categoriesError]);
+  }, [restaurantsError]);
+
+  // Agrupar restaurantes por categoría
+  const restaurantsByCategory = React.useMemo(() => {
+    if (!restaurants.length) return {};
+    
+    return restaurants.reduce((acc, restaurant) => {
+      const categoryName = restaurant.category?.name || 'Uncategorized';
+      if (!acc[categoryName]) {
+        acc[categoryName] = [];
+      }
+      acc[categoryName].push(restaurant);
+      return acc;
+    }, {} as Record<string, Restaurant[]>);
+  }, [restaurants]);
+
+  // Obtener categorías únicas
+  const categories = Object.keys(restaurantsByCategory);
 
   return (
     <Layout>
@@ -82,25 +90,46 @@ const Index = () => {
               Browse By Category
             </h2>
             <Button asChild variant="ghost" className="text-food-600 hover:text-food-700">
-              <Link to="/categories">View All</Link>
+              <Link to="/restaurants">View All</Link>
             </Button>
           </div>
           
-          {isLoadingCategories ? (
+          {isLoadingRestaurants ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
               {Array(4).fill(null).map((_, i) => (
                 <Skeleton key={i} className="aspect-square rounded-xl" />
               ))}
             </div>
-          ) : categoriesError ? (
+          ) : restaurantsError ? (
             <div className="text-center py-10">
               <p className="text-red-500">Failed to load categories</p>
               <Button onClick={() => window.location.reload()} className="mt-4">Retry</Button>
             </div>
           ) : categories.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
-              {categories.slice(0, 4).map((category) => (
-                <CategoryCard key={category.id} category={category} />
+              {categories.slice(0, 4).map((category, index) => (
+                <Link 
+                  key={index}
+                  to={`/restaurants?category=${category}`}
+                  className="group relative overflow-hidden rounded-xl bg-white shadow-sm transition-all duration-300 hover:shadow-lg"
+                >
+                  <div className="aspect-square overflow-hidden">
+                    <img 
+                      src={restaurantsByCategory[category][0]?.category?.image || "https://via.placeholder.com/300?text=Category"}
+                      alt={category}
+                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
+                  </div>
+                  <div className="absolute bottom-0 left-0 right-0 p-4">
+                    <h3 className="text-xl font-bold text-white drop-shadow-md">
+                      {category}
+                    </h3>
+                    <p className="mt-1 text-sm text-white/90 line-clamp-2">
+                      {restaurantsByCategory[category].length} restaurants
+                    </p>
+                  </div>
+                </Link>
               ))}
             </div>
           ) : (
