@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useParams, Link } from "react-router-dom";
@@ -14,7 +15,6 @@ import { useCart } from "@/contexts/CartContext";
 
 const RestaurantDetails = () => {
   const { id } = useParams<{ id: string }>();
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
   const { setRestaurant } = useCart();
   
   const { data: restaurant, isLoading: isLoadingRestaurant } = useQuery({
@@ -23,7 +23,7 @@ const RestaurantDetails = () => {
     enabled: !!id,
   });
   
-  // Use useEffect to set restaurant in cart context and selected category after data is loaded
+  // Use useEffect to set restaurant in cart context after data is loaded
   useEffect(() => {
     if (restaurant) {
       setRestaurant(restaurant);
@@ -42,6 +42,40 @@ const RestaurantDetails = () => {
     },
     enabled: !!id && !!restaurant,
   });
+  
+  // Agrupar productos por categoría (ahora category es simplemente un string)
+  const productsByCategory = React.useMemo(() => {
+    if (!products.length) return {};
+    
+    return products.reduce((acc, product) => {
+      const categoryName = product.category || 'Uncategorized';
+      if (!acc[categoryName]) {
+        acc[categoryName] = [];
+      }
+      acc[categoryName].push(product);
+      return acc;
+    }, {} as Record<string, Product[]>);
+  }, [products]);
+  
+  // Obtener las categorías únicas de los productos
+  const categories = React.useMemo(() => {
+    return Object.keys(productsByCategory);
+  }, [productsByCategory]);
+  
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  
+  // Establecer la primera categoría como seleccionada cuando se cargan los datos
+  useEffect(() => {
+    if (categories.length > 0 && !selectedCategory) {
+      setSelectedCategory(categories[0]);
+    }
+  }, [categories, selectedCategory]);
+  
+  // Filtrar productos por categoría seleccionada
+  const filteredProducts = React.useMemo(() => {
+    if (!selectedCategory) return products;
+    return productsByCategory[selectedCategory] || [];
+  }, [selectedCategory, products, productsByCategory]);
   
   if (isLoadingRestaurant) {
     return (
@@ -90,19 +124,19 @@ const RestaurantDetails = () => {
             className="w-full h-80 object-cover"
           />
           <div className="absolute top-4 left-4 flex flex-wrap gap-2">
-            {/* {restaurant.categories.map((category) => ( */}
-              <Badge key={selectedCategory} variant="secondary" className="bg-white/90 backdrop-blur-sm text-food-700">
-                {selectedCategory}
+            {restaurant.category && (
+              <Badge variant="secondary" className="bg-white/90 backdrop-blur-sm text-food-700">
+                {restaurant.category}
               </Badge>
-            // ))}
+            )}
           </div>
           <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/80 to-transparent p-4">
             <h1 className="text-3xl font-bold text-white">{restaurant.name}</h1>
             <div className="flex items-center text-white mt-2">
               <Star className="h-5 w-5 mr-1 fill-yellow-400 stroke-yellow-400" />
-              {/* <span className="font-medium">{restaurant.rating.toFixed(1)}</span>
-              <span className="text-gray-300 ml-2">({restaurant.reviewCount} reviews)</span> */}
-              FALLAN los rating
+              {/* <span className="font-medium">{restaurant.rating.toFixed(1)}</span> */}
+              <span>Falla</span> 
+              {/* <span className="text-gray-300 ml-2">({restaurant.reviewCount} reviews)</span> */}
             </div>
           </div>
         </div>
@@ -116,13 +150,17 @@ const RestaurantDetails = () => {
             {restaurant.category && (
               <Tabs defaultValue={selectedCategory} className="mb-4">
                 <TabsList>
+                  {categories.map((category) => (
                   {restaurant.category => (
                     <TabsTrigger 
+                      key={category} 
+                      value={category}
+                      onClick={() => setSelectedCategory(category)}
                       key={category} 
                       value={category.id}
                       onClick={() => setSelectedCategory(category.id)}
                     >
-                      {category.name}
+                      {category}
                     </TabsTrigger>
                   ))}
                 </TabsList>
@@ -136,9 +174,9 @@ const RestaurantDetails = () => {
                   <Skeleton key={i} className="h-56 w-full rounded-xl" />
                 ))}
               </div>
-            ) : products.length > 0 ? (
+            ) : filteredProducts.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {products.map((product) => (
+                {filteredProducts.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
               </div>

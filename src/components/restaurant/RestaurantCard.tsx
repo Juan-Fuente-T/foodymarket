@@ -2,7 +2,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Star, Clock, MapPin } from "lucide-react";
-import { Restaurant, Category } from "@/types/models";
+import { Restaurant } from "@/types/models";
 import { Badge } from "@/components/ui/badge";
 
 interface RestaurantCardProps {
@@ -14,10 +14,6 @@ export function RestaurantCard({ restaurant }: RestaurantCardProps) {
     console.error("Restaurant ID is missing!", restaurant);
     return null;
   }
-
-  // Handle empty categories array
-  const category = restaurant.category || '';
-  
   return (
     <Link to={`/restaurants/${restaurant.id}`} className="block">
       <div className="restaurant-card bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500">
@@ -29,11 +25,11 @@ export function RestaurantCard({ restaurant }: RestaurantCardProps) {
             className="restaurant-image w-full h-full object-contain rounded-md"
           />
           <div className="absolute top-4 left-4 flex flex-wrap gap-2">
-            {/* {categories.slice(0, 3).map((category) => ( */}
-              <Badge key={category} variant="secondary" className="bg-white/90 backdrop-blur-sm text-food-700">
-                {category}
+            {restaurant.category && (
+              <Badge variant="secondary" className="bg-white/90 backdrop-blur-sm text-food-700">
+                {restaurant.category}
               </Badge>
-            // ))}
+            )}
           </div>
         </div>
         <div className="p-4">

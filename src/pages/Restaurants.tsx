@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useQuery } from "@tanstack/react-query";
-import { restaurantAPI, categoryAPI } from "@/services/api";
+import { restaurantAPI } from "@/services/api";
 import { RestaurantCard } from "@/components/restaurant/RestaurantCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
@@ -20,57 +20,20 @@ const Restaurants = () => {
     queryFn: () => restaurantAPI.getAll(),
   });
   
-  // const { data: categories = [], isLoading: isLoadingCategories } = useQuery({
-  //   queryKey: ["categories"],
-  //   queryFn: () => categoryAPI.getAll(),
-  // });
-
-
-  // Extraer categorías únicas de los restaurantes
-  const categories = useMemo(() => {
-    const categorySet = new Set<string>();
+  // Obtener categorías únicas de los restaurantes
+  const categories = React.useMemo(() => {
+    if (!restaurants.length) return [];
     
+    const uniqueCategories = new Set<string>();
     restaurants.forEach(restaurant => {
       if (restaurant.category) {
-        categorySet.add(restaurant.category);
+        uniqueCategories.add(restaurant.category);
       }
     });
     
-    return Array.from(categorySet).map(category => ({
-      id: category,
-      name: category
-    }));
+    return Array.from(uniqueCategories);
   }, [restaurants]);
-
-
-  // categories: [
-  //   {
-  //     id: "1",
-  //     name: "Fast Food",
-  //     description: "Quick and tasty meals",
-  //     image: "https://images.unsplash.com/photo-1561758033-d89a9ad46330?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1000&q=80"
-  //   },
-  //   {
-  //     id: "2",
-  //     name: "Italian",
-  //     description: "Authentic Italian cuisine",
-  //     image: "https://images.unsplash.com/photo-1498579150354-977475b7ea0b?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1000&q=80"
-  //   },
-  //   {
-  //     id: "3",
-  //     name: "Japanese",
-  //     description: "Fresh sushi and Japanese dishes",
-  //     image: "https://images.unsplash.com/photo-1617196035154-1e7e6e28b30f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1000&q=80"
-  //   },
-  //   {
-  //     id: "4",
-  //     name: "Mexican",
-  //     description: "Spicy and flavorful Mexican food",
-  //     image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1000&q=80"
-  //   }
-  // ]
-
-
+  
   // Filter restaurants based on search term and category
   const filteredRestaurants = restaurants.filter(restaurant => {
     const matchesSearch = searchTerm 
@@ -79,7 +42,7 @@ const Restaurants = () => {
       : true;
       
     const matchesCategory = selectedCategory
-      ? restaurant.categories.some(category => category.id === selectedCategory)
+      ? restaurant.category === selectedCategory
       : true;
       
     return matchesSearch && matchesCategory;
@@ -129,13 +92,13 @@ const Restaurants = () => {
                   ) : (
                     categories.map(category => (
                       <Button
-                        key={category.id}
-                        onClick={() => setSelectedCategory(category.id)}
-                        variant={selectedCategory === category.id ? "default" : "outline"}
+                        key={category}
+                        onClick={() => setSelectedCategory(category)}
+                        variant={selectedCategory === category ? "default" : "outline"}
                         size="sm"
-                        className={`w-full justify-start ${selectedCategory === category.id ? "bg-food-600" : ""}`}
+                        className={`w-full justify-start ${selectedCategory === category ? "bg-food-600" : ""}`}
                       >
-                        {category.name}
+                        {category}
                       </Button>
                     ))
                   )}

@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { Product, OrderItem, Restaurant } from "@/types/models";
 import { toast } from "sonner";
@@ -46,7 +47,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   }, [items, restaurant]);
 
   const addItem = (product: Product, quantity: number, notes?: string) => {
-    if (restaurant && product.restaurantId !== restaurant.id) {
+    if (restaurant && Number(product.restaurantId) !== restaurant.id) {
       toast.warning("Different Restaurant", {
         description: "Your cart contains items from a different restaurant. Would you like to clear your cart?",
         action: {
@@ -66,7 +67,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       setItems(
         items.map((item) =>
           item.productId === product.id
-            ? { ...item, quantity: item.quantity + quantity, notes: notes || item.notes }
+            ? { ...item, quantity: item.quantity + quantity, notes: notes || ''}
             : item
         )
       );
@@ -74,10 +75,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       const newItem: OrderItem = {
         id: Date.now().toString(),
         productId: product.id,
-        product,
         quantity,
-        price: product.price,
-        notes,
+        subtotal: product.price * quantity
       };
       setItems([...items, newItem]);
     }
@@ -114,13 +113,13 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const canAddProduct = (product: Product) => {
-    return !restaurant || restaurant.id === product.restaurantId;
+    return !restaurant || restaurant.id === Number(product.restaurantId);
   };
 
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   
   const totalPrice = items.reduce(
-    (sum, item) => sum + item.price * item.quantity,
+    (sum, item) => sum + item.subtotal,
     0
   );
 

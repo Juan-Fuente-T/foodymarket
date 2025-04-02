@@ -183,12 +183,14 @@ const MOCK_DATA = {
   //   }
 };
 
-// Generic fetch function with error handling and mock data fallback
+// Generic fetch with error handling
 const fetchWithError = async (
-  url: string,
+  endpoint: string,
   options: RequestInit = {}
 ): Promise<any> => {
   try {
+    const url = `${API_BASE_URL}${endpoint}`;
+    
     // Preparar headers sin Content-Type por defecto
     const headers: HeadersInit = {
       ...options.headers,
@@ -198,96 +200,155 @@ const fetchWithError = async (
     if (options.method && ['POST', 'PUT', 'PATCH'].includes(options.method)) {
       headers['Content-Type'] = 'application/json';
     }
-    // Get the auth token if available
-    // const token = getAuthToken();
 
-    // // Prepare headers
-    // const headers: HeadersInit = {
-    //   "Content-Type": "application/json",
-    //   ...options.headers,
-    // };
-
-    // Add auth token if available
-    // if (token) {
-    //   headers["Authorization"] = `Bearer ${token}`;
-    // }
-
-    console.log(`Making API request to: ${API_BASE_URL}${url}`);
+    console.log(`Making API request to: ${url}`);
 
     // Try to fetch from API
-    try {
-      const response = await fetch(`${API_BASE_URL}${url}`, {
-        ...options,
-        headers,
-      });
+    const response = await fetch(url, {
+      ...options,
+      headers,
+    });
 
-      return await handleResponse(response);
-    } catch (error) {
-      console.error(`API request failed: ${error}`);
-      console.error(`Failed URL: ${API_BASE_URL}${url}`);
-
-      /* // Mock data comentado (completo, sin cambios de estructura)
-      if (url === "/restaurant/all") {
-        console.log("Using mock restaurant data due to API failure");
-        return MOCK_DATA.restaurants;
-      } else if (url === "/category") {
-        console.log("Using mock category data due to API failure");
-        return MOCK_DATA.categories;
-      } else if (url.startsWith("/product/byRestaurant/")) {
-        const restaurantId = url.split("/").pop() || "";
-        console.log(`Using mock product data for restaurant ${restaurantId} due to API failure`);
-        return MOCK_DATA.products[restaurantId] || [];
-      } else if (url.startsWith("/restaurant/")) {
-        const requestedId = url.split("/").pop() || "";
-        const mockRestaurant = MOCK_DATA.restaurants.find(r => r.id === requestedId);
-        if (mockRestaurant) {
-          console.log(`Using mock data for restaurant ${requestedId} due to API failure`);
-          return mockRestaurant;
-        }
-      } else if (url.startsWith("/category/")) {
-        const requestedId = url.split("/").pop() || "";
-        const mockCategory = MOCK_DATA.categories.find(c => c.id === requestedId);
-        if (mockCategory) {
-          console.log(`Using mock data for category ${requestedId} due to API failure`);
-          return mockCategory;
-        }
-      } else if (url.startsWith("/restaurant/byCategory/")) {
-        const categoryId = url.split("/").pop() || "";
-        const matchingRestaurants = MOCK_DATA.restaurants.filter(r => 
-          r.categories.some(c => c.id === categoryId)
-        );
-        console.log(`Using mock restaurant data for category ${categoryId} due to API failure`);
-        return matchingRestaurants;
-      }
-      */
-
-      // If no mock data is available for this endpoint, display error and rethrow
-      toast.error("Something went wrong with the request");
-      throw error;
-    }
+    return await handleResponse(response);
   } catch (error) {
-    console.error(`Request completely failed: ${error}`);
+    console.error(`API request failed: ${error}`);
+    console.error(`Failed URL: ${API_BASE_URL}${endpoint}`);
+
+    /* // Mock data comentado (completo, sin cambios de estructura)
+    if (endpoint === "/restaurant/all") {
+      console.log("Using mock restaurant data due to API failure");
+      return MOCK_DATA.restaurants;
+    } else if (endpoint === "/category") {
+      console.log("Using mock category data due to API failure");
+      return MOCK_DATA.categories;
+    } else if (endpoint.startsWith("/product/byRestaurant/")) {
+      const restaurantId = endpoint.split("/").pop() || "";
+      console.log(`Using mock product data for restaurant ${restaurantId} due to API failure`);
+      return MOCK_DATA.products[restaurantId] || [];
+    } else if (endpoint.startsWith("/restaurant/")) {
+      const requestedId = endpoint.split("/").pop() || "";
+      const mockRestaurant = MOCK_DATA.restaurants.find(r => r.id === requestedId);
+      if (mockRestaurant) {
+        console.log(`Using mock data for restaurant ${requestedId} due to API failure`);
+        return mockRestaurant;
+      }
+    } else if (endpoint.startsWith("/category/")) {
+      const requestedId = endpoint.split("/").pop() || "";
+      const mockCategory = MOCK_DATA.categories.find(c => c.id === requestedId);
+      if (mockCategory) {
+        console.log(`Using mock data for category ${requestedId} due to API failure`);
+        return mockCategory;
+      }
+    } else if (endpoint.startsWith("/restaurant/byCategory/")) {
+      const categoryId = endpoint.split("/").pop() || "";
+      const matchingRestaurants = MOCK_DATA.restaurants.filter(r => 
+        r.categories.some(c => c.id === categoryId)
+      );
+      console.log(`Using mock restaurant data for category ${categoryId} due to API failure`);
+      return matchingRestaurants;
+    }
+    */
+
+    // If no mock data is available for this endpoint, display error and rethrow
+    toast.error("Something went wrong with the request");
     throw error;
   }
 };
 
-// Authentication
-export const authAPI = {
+// Users
+export const userAPI = {
   login: (email: string, password: string) =>
-    fetchWithError("/auth/login", {
+    fetchWithError("/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
     }),
-
+  
   register: (userData: Partial<User>) =>
-    fetchWithError("/auth/register", {
+    fetchWithError("/register", {
       method: "POST",
       body: JSON.stringify(userData),
     }),
+  
+  getProfile: () => fetchWithError("/profile"),
+  
+  updateProfile: (userData: Partial<User>) =>
+    fetchWithError("/profile", {
+      method: "PUT",
+      body: JSON.stringify(userData),
+    }),
+  
+  uploadAvatar: async (file: File) => {
+    const formData = new FormData();
+    formData.append("avatar", file);
+    
+    return fetchWithError("/profile/avatar", {
+      method: "POST",
+      headers: {}, // Remove Content-Type for FormData
+      body: formData,
+    });
+  },
+  
+  getAllUsers: () => fetchWithError("/users"),
+  
+  getUserById: (id: string) => fetchWithError(`/users/${id}`),
+  
+  deleteUser: (id: string) =>
+    fetchWithError(`/users/${id}`, { method: "DELETE" }),
+};
 
-  logout: () => fetchWithError("/auth/logout", { method: "POST" }),
-
-  getCurrentUser: () => fetchWithError("/auth/me"),
+// Auth
+export const authAPI = {
+  login: async (email: string, password: string) => {
+    try {
+      const data = await userAPI.login(email, password);
+      // Store token in localStorage
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+      }
+      return data.user;
+    } catch (error) {
+      console.error("Login error:", error);
+      throw error;
+    }
+  },
+  
+  register: async (userData: Partial<User>) => {
+    try {
+      const data = await userAPI.register(userData);
+      // Store token in localStorage
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+      }
+      return data.user;
+    } catch (error) {
+      console.error("Registration error:", error);
+      throw error;
+    }
+  },
+  
+  logout: () => {
+    // Remove token from localStorage
+    localStorage.removeItem("token");
+  },
+  
+  getCurrentUser: async () => {
+    // Check if token exists
+    const token = localStorage.getItem("token");
+    if (!token) {
+      return null;
+    }
+    
+    try {
+      return await userAPI.getProfile();
+    } catch (error) {
+      console.error("Get current user error:", error);
+      // If unauthorized, clear the token
+      if ((error as any).message?.includes("401")) {
+        localStorage.removeItem("token");
+      }
+      return null;
+    }
+  },
 };
 
 // Restaurants
@@ -518,43 +579,43 @@ export const reviewAPI = {
 // };
 // services/api.ts
 
-export const userAPI = {
-  // CREATE (POST) 
-  create: async (data: Omit<User, 'id' | 'createdAt'>) => {
-    const response = await fetchWithError(`/api/user}`, {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
-    return adaptUser(response);
-  },
+// export const userAPI = {
+//   // CREATE (POST) 
+//   create: async (data: Omit<User, 'id' | 'createdAt'>) => {
+//     const response = await fetchWithError(`/api/user}`, {
+//       method: "POST",
+//       body: JSON.stringify(data),
+//     });
+//     return adaptUser(response);
+//   },
 
-  update: async (id: string, data: Partial<Omit<User, 'id' | 'createdAt'>>) => {
-    const response = await fetchWithError(
-      `/api/user/${id}`,
-      {
-        method: "PUT",
-        body: JSON.stringify(data), // Envía data DIRECTAMENTE
-      }
-    );
-    return adaptUser(response);
-  },
+//   update: async (id: string, data: Partial<Omit<User, 'id' | 'createdAt'>>) => {
+//     const response = await fetchWithError(
+//       `/api/user/${id}`,
+//       {
+//         method: "PUT",
+//         body: JSON.stringify(data), // Envía data DIRECTAMENTE
+//       }
+//     );
+//     return adaptUser(response);
+//   },
 
-  delete: async (id: string) => {
-    await fetchWithError(
-      `/api/user/${id}}`,
-      { method: "DELETE" }
-    );
-  },
+//   delete: async (id: string) => {
+//     await fetchWithError(
+//       `/api/user/${id}}`,
+//       { method: "DELETE" }
+//     );
+//   },
 
-  getById: async (id: string) => {
-    const data = await fetchWithError(`/api/user/${id}`);
-    return adaptUser(data);
-  }
+//   getById: async (id: string) => {
+//     const data = await fetchWithError(`/api/user/${id}`);
+//     return adaptUser(data);
+//   }
 
-  // // EXTRA: Get Current User (si el backend llega a tenerlo)
-  // getCurrent: async () => {
-  //   const data = await fetchWithError("/auth/me");
-  //   return adaptUser(data);
-  // }
+//   // // EXTRA: Get Current User (si el backend llega a tenerlo)
+//   // getCurrent: async () => {
+//   //   const data = await fetchWithError("/auth/me");
+//   //   return adaptUser(data);
+//   // }
 
-};
+// };

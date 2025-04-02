@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
@@ -15,10 +15,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
-import { toast } from "@/lib/toast";
+import { toast } from "sonner";
 import { restaurantAPI } from "@/services/api";
-import { User } from "@/types/models";
 
 interface PartnerFormValues {
   name: string;
@@ -32,39 +32,36 @@ interface PartnerFormValues {
   restaurantAddress: string;
   restaurantPhone: string;
   restaurantEmail: string;
+  restaurantCategory: string;
 }
+
+const CATEGORIES = [
+  "Italian", "Mexican", "Chinese", "Japanese", "American", 
+  "Thai", "Indian", "French", "Spanish", "Greek", "Other"
+];
 
 const RestaurantPartner = () => {
   const navigate = useNavigate();
-  const { register: registerUser, isAuthenticated, user } = useAuth();
-  const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<PartnerFormValues>();
+  const { user, isAuthenticated } = useAuth();
+  const { register, handleSubmit, watch, setValue, formState: { errors, isSubmitting } } = useForm<PartnerFormValues>({
+    defaultValues: {
+      restaurantCategory: "Other"
+    }
+  });
   
   const password = React.useRef({});
   password.current = watch("password", "");
-
+  
   const onSubmit = async (data: PartnerFormValues) => {
     try {
       let ownerId = user?.id;
       
       // If not logged in, register a new user
       if (!isAuthenticated) {
-        const { confirmPassword, restaurantName, restaurantDescription, restaurantAddress, 
-               restaurantPhone, restaurantEmail, ...userData } = data;
-        
-        // Handle user registration
-        // Note: registerUser returns a Promise<void> so we need to handle this differently
-        await registerUser({
-          ...userData,
-          role: "owner"
-        });
-        
-        // The user should now be authenticated after registration
-        // We need to use the current user ID after registration
-        if (!user?.id) {
-          // Wait briefly for auth context to update
-          await new Promise(resolve => setTimeout(resolve, 500));
-          ownerId = user?.id;
-        }
+        // No tenemos acceso a registerUser en AuthContext, mostrar un error
+        toast.error("You need to be logged in to register a restaurant");
+        navigate("/login");
+        return;
       }
       
       if (!ownerId) {
@@ -84,7 +81,7 @@ const RestaurantPartner = () => {
         rating: 0,
         reviewCount: 0,
         openingHours: "9:00 AM - 10:00 PM",
-        categories: []
+        category: data.restaurantCategory // Ahora es solo un string
       });
       
       toast.success("Restaurant partnership application submitted successfully!");
@@ -109,186 +106,124 @@ const RestaurantPartner = () => {
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               {!isAuthenticated && (
-                <>
-                  <div className="bg-gray-50 p-4 rounded-lg space-y-4">
-                    <h3 className="font-medium text-lg">Owner Information</h3>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="name">Full Name</Label>
-                        <Input 
-                          id="name" 
-                          placeholder="John Doe" 
-                          {...register("name", { 
-                            required: "Name is required" 
-                          })}
-                        />
-                        {errors.name && (
-                          <p className="text-sm text-red-500">{errors.name.message}</p>
-                        )}
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input 
-                          id="email" 
-                          type="email" 
-                          placeholder="name@example.com" 
-                          {...register("email", { 
-                            required: "Email is required",
-                            pattern: {
-                              value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                              message: "Invalid email address"
-                            }
-                          })}
-                        />
-                        {errors.email && (
-                          <p className="text-sm text-red-500">{errors.email.message}</p>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="password">Password</Label>
-                        <Input 
-                          id="password" 
-                          type="password" 
-                          {...register("password", { 
-                            required: "Password is required",
-                            minLength: {
-                              value: 6,
-                              message: "Password must be at least 6 characters"
-                            }
-                          })}
-                        />
-                        {errors.password && (
-                          <p className="text-sm text-red-500">{errors.password.message}</p>
-                        )}
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="confirmPassword">Confirm Password</Label>
-                        <Input 
-                          id="confirmPassword" 
-                          type="password" 
-                          {...register("confirmPassword", { 
-                            required: "Please confirm your password",
-                            validate: value => value === password.current || "Passwords do not match"
-                          })}
-                        />
-                        {errors.confirmPassword && (
-                          <p className="text-sm text-red-500">{errors.confirmPassword.message}</p>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Phone</Label>
-                      <Input 
-                        id="phone" 
-                        placeholder="+1 (555) 123-4567" 
-                        {...register("phone", { 
-                          required: "Phone number is required" 
-                        })}
-                      />
-                      {errors.phone && (
-                        <p className="text-sm text-red-500">{errors.phone.message}</p>
-                      )}
-                    </div>
-                  </div>
-                </>
+                <div className="text-center py-8">
+                  <p className="text-gray-500 mb-4">You need to be logged in to register a restaurant.</p>
+                  <Button asChild className="bg-food-600 hover:bg-food-700">
+                    <Link to="/login">Log In</Link>
+                  </Button>
+                </div>
               )}
               
-              <div className="bg-gray-50 p-4 rounded-lg space-y-4">
-                <h3 className="font-medium text-lg">Restaurant Information</h3>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="restaurantName">Restaurant Name</Label>
-                  <Input 
-                    id="restaurantName" 
-                    placeholder="My Amazing Restaurant" 
-                    {...register("restaurantName", { 
-                      required: "Restaurant name is required" 
-                    })}
-                  />
-                  {errors.restaurantName && (
-                    <p className="text-sm text-red-500">{errors.restaurantName.message}</p>
-                  )}
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="restaurantDescription">Description</Label>
-                  <Textarea 
-                    id="restaurantDescription" 
-                    placeholder="Tell us about your restaurant..." 
-                    className="min-h-[100px]"
-                    {...register("restaurantDescription", { 
-                      required: "Description is required" 
-                    })}
-                  />
-                  {errors.restaurantDescription && (
-                    <p className="text-sm text-red-500">{errors.restaurantDescription.message}</p>
-                  )}
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="restaurantAddress">Address</Label>
-                  <Input 
-                    id="restaurantAddress" 
-                    placeholder="123 Main St, City, Country" 
-                    {...register("restaurantAddress", { 
-                      required: "Address is required" 
-                    })}
-                  />
-                  {errors.restaurantAddress && (
-                    <p className="text-sm text-red-500">{errors.restaurantAddress.message}</p>
-                  )}
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {isAuthenticated && (
+                <div className="bg-gray-50 p-4 rounded-lg space-y-4">
+                  <h3 className="font-medium text-lg">Restaurant Information</h3>
+                  
                   <div className="space-y-2">
-                    <Label htmlFor="restaurantPhone">Restaurant Phone</Label>
+                    <Label htmlFor="restaurantName">Restaurant Name</Label>
                     <Input 
-                      id="restaurantPhone" 
-                      placeholder="+1 (555) 987-6543" 
-                      {...register("restaurantPhone", { 
-                        required: "Restaurant phone is required" 
+                      id="restaurantName" 
+                      placeholder="My Amazing Restaurant" 
+                      {...register("restaurantName", { 
+                        required: "Restaurant name is required" 
                       })}
                     />
-                    {errors.restaurantPhone && (
-                      <p className="text-sm text-red-500">{errors.restaurantPhone.message}</p>
+                    {errors.restaurantName && (
+                      <p className="text-sm text-red-500">{errors.restaurantName.message}</p>
                     )}
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="restaurantEmail">Restaurant Email</Label>
-                    <Input 
-                      id="restaurantEmail" 
-                      type="email" 
-                      placeholder="restaurant@example.com" 
-                      {...register("restaurantEmail", { 
-                        required: "Restaurant email is required",
-                        pattern: {
-                          value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                          message: "Invalid email address"
-                        }
+                    <Label htmlFor="restaurantCategory">Category</Label>
+                    <Select 
+                      onValueChange={(value) => setValue("restaurantCategory", value)}
+                      defaultValue="Other"
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CATEGORIES.map(category => (
+                          <SelectItem key={category} value={category}>
+                            {category}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="restaurantDescription">Description</Label>
+                    <Textarea 
+                      id="restaurantDescription" 
+                      placeholder="Tell us about your restaurant..." 
+                      className="min-h-[100px]"
+                      {...register("restaurantDescription", { 
+                        required: "Description is required" 
                       })}
                     />
-                    {errors.restaurantEmail && (
-                      <p className="text-sm text-red-500">{errors.restaurantEmail.message}</p>
+                    {errors.restaurantDescription && (
+                      <p className="text-sm text-red-500">{errors.restaurantDescription.message}</p>
                     )}
                   </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="restaurantAddress">Address</Label>
+                    <Input 
+                      id="restaurantAddress" 
+                      placeholder="123 Main St, City, Country" 
+                      {...register("restaurantAddress", { 
+                        required: "Address is required" 
+                      })}
+                    />
+                    {errors.restaurantAddress && (
+                      <p className="text-sm text-red-500">{errors.restaurantAddress.message}</p>
+                    )}
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="restaurantPhone">Restaurant Phone</Label>
+                      <Input 
+                        id="restaurantPhone" 
+                        placeholder="+1 (555) 987-6543" 
+                        {...register("restaurantPhone", { 
+                          required: "Restaurant phone is required" 
+                        })}
+                      />
+                      {errors.restaurantPhone && (
+                        <p className="text-sm text-red-500">{errors.restaurantPhone.message}</p>
+                      )}
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="restaurantEmail">Restaurant Email</Label>
+                      <Input 
+                        id="restaurantEmail" 
+                        type="email" 
+                        placeholder="restaurant@example.com" 
+                        {...register("restaurantEmail", { 
+                          required: "Restaurant email is required",
+                          pattern: {
+                            value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                            message: "Invalid email address"
+                          }
+                        })}
+                      />
+                      {errors.restaurantEmail && (
+                        <p className="text-sm text-red-500">{errors.restaurantEmail.message}</p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-food-600 hover:bg-food-700"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? "Registering..." : "Register Restaurant"}
+                  </Button>
                 </div>
-              </div>
-              
-              <Button 
-                type="submit" 
-                className="w-full bg-food-600 hover:bg-food-700"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? "Registering..." : "Register Restaurant"}
-              </Button>
+              )}
             </form>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">

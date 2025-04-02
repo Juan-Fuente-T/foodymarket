@@ -13,7 +13,6 @@ import Signup from "./pages/Signup";
 import Cart from "./pages/Cart";
 import Restaurants from "./pages/Restaurants";
 import RestaurantDetails from "./pages/RestaurantDetails";
-import Categories from "./pages/Categories";
 import RestaurantPartner from "./pages/RestaurantPartner";
 import Dashboard from "./pages/Dashboard";
 
@@ -41,8 +40,6 @@ const App = () => (
               <Route path="/cart" element={<Cart />} />
               <Route path="/restaurants" element={<Restaurants />} />
               <Route path="/restaurants/:id" element={<RestaurantDetails />} />
-              <Route path="/categories" element={<Categories />} />
-              <Route path="/categories/:id" element={<Categories />} />
               <Route path="/partner" element={<RestaurantPartner />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="*" element={<NotFound />} />

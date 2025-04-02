@@ -12,19 +12,21 @@ import {
   CardHeader, 
   CardTitle, 
   CardContent, 
-  CardFooter,
+  CardFooter
 } from "@/components/ui/card";
-import {  Table,
+import {
+  Table,
   TableHeader,
   TableBody,
   TableHead,
   TableRow,
   TableCell
 } from "@/components/ui/table";
+import { OrderStatus } from "@/types/models";
 
 const Cart = () => {
-  const { items, totalItems, totalPrice, updateItemQuantity, removeItem, clearCart } = useCart();
-  const { isAuthenticated, user: currentUser } = useAuth();
+  const { items, totalItems, totalPrice, restaurant, updateItemQuantity, removeItem, clearCart } = useCart();
+  const { user: currentUser, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   const handleCheckout = async () => {
@@ -43,39 +45,40 @@ const Cart = () => {
       toast.error("User information missing");
       return;
     }
+  
+    if (!restaurant) {
+      toast.error("No restaurant selected");
+      return;
+    }
 
     try {
-      const orderItems = items.map(item => ({
-        id: item.id,
-        productId: item.productId,
-        quantity: item.quantity,
-        price: item.price,
-        notes: item.notes
-      }));
-
-      const order = {
-        userId: currentUser.id,
-        restaurantId: items[0]?.product.restaurantId,
-        items: orderItems,
+      const orderData = {
+        clientId: currentUser.id,
+        restaurantId: restaurant.id.toString(),
+        status: 'pendiente' as OrderStatus,  // Usar el valor correcto del enum
         total: totalPrice,
-        status: "pending"
-      };
-
-      // For mock development, just simulate order placement success
-      // In production, this would use the actual API call
-      console.log("Order placed:", order);
-      toast.success("Order placed successfully!");
-      clearCart();
-      navigate('/');
+        comments: '', 
+        items: items.map(item => ({
+          id: '',
+          productId: item.productId,
+          quantity: item.quantity,
+          subtotal: item.subtotal
+      })),
+    };
+      console.log("Order to be placed:", orderData);
       
-      // Commented out for now to avoid API errors
-      // const response = await orderAPI.create(order);
-      // toast.success("Order placed successfully!");
-      // clearCart();
-      // navigate('/');
+      try {
+        const response = await orderAPI.create(orderData, currentUser.email);
+        toast.success("Order placed successfully!");
+        clearCart();
+        navigate('/');
+      } catch (error) {
+        console.error("Error placing order:", error);
+        toast.error("Failed to place order. Please try again.");
+      }
     } catch (error) {
-      console.error("Error placing order:", error);
-      toast.error("Failed to place order. Please try again.");
+      console.error("Error preparing order:", error);
+      toast.error("Failed to prepare order. Please try again.");
     }
   };
 
@@ -102,19 +105,20 @@ const Cart = () => {
             ) : (
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Product</TableHead>
-                    <TableHead>Price</TableHead>
-                    <TableHead>Quantity</TableHead>
-                    <TableHead>Total</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
+                <TableRow>
+      <TableHead>Product</TableHead>
+      <TableHead>Price</TableHead>
+      <TableHead>Quantity</TableHead>
+      <TableHead>Subtotal</TableHead>
+      <TableHead className="text-right">Actions</TableHead>
+    </TableRow>
                 </TableHeader>
                 <TableBody>
                   {items.map((item) => (
+                    
                     <TableRow key={item.id}>
-                      <TableCell className="font-medium">{item.product.name}</TableCell>
-                      <TableCell>${item.price.toFixed(2)}</TableCell>
+                      <TableCell className="font-medium">{item.productId}</TableCell>
+                      <TableCell>${(item.subtotal/item.quantity).toFixed(2)}</TableCell>
                       <TableCell>
                         <div className="flex items-center">
                           <Button
@@ -134,7 +138,7 @@ const Cart = () => {
                           </Button>
                         </div>
                       </TableCell>
-                      <TableCell>${(item.price * item.quantity).toFixed(2)}</TableCell>
+                      <TableCell>${(item.subtotal.toFixed(2))}</TableCell>
                       <TableCell className="text-right">
                         <Button
                           variant="outline"
