@@ -66,18 +66,19 @@ const Cart = () => {
       // For mock development, just simulate order placement success
       // In production, this would use the actual API call
       console.log("Order placed:", order);
-      toast.success("Order placed successfully!");
-      clearCart();
-      navigate('/');
       
-      // Commented out for now to avoid API errors
-      // const response = await orderAPI.create(order);
-      // toast.success("Order placed successfully!");
-      // clearCart();
-      // navigate('/');
+      try {
+        const response = await orderAPI.create(order);
+        toast.success("Order placed successfully!");
+        clearCart();
+        navigate('/');
+      } catch (error) {
+        console.error("Error placing order:", error);
+        toast.error("Failed to place order. Please try again.");
+      }
     } catch (error) {
-      console.error("Error placing order:", error);
-      toast.error("Failed to place order. Please try again.");
+      console.error("Error preparing order:", error);
+      toast.error("Failed to prepare order. Please try again.");
     }
   };
 
