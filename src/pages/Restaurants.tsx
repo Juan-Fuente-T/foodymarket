@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useQuery } from "@tanstack/react-query";
-import { restaurantAPI } from "@/services/api";
+import { restaurantAPI, productAPI } from "@/services/api";
 import { RestaurantCard } from "@/components/restaurant/RestaurantCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
@@ -46,6 +46,21 @@ const Restaurants = () => {
       : true;
       
     return matchesSearch && matchesCategory;
+  });
+
+  const { data: products = [], isLoading, error } = useQuery({
+    queryKey: ["products", restaurants[0].id],
+    queryFn: async () => {
+      try {
+        const response = await productAPI.getByRestaurantAndCategory(Number(restaurants[0].id));
+        return response || []; // Asegura que siempre devuelva un array
+      } catch (err) {
+        console.error("Error fetching products:", err);
+        return []; // Devuelve array vacío en caso de error
+      }
+    },
+    retry: 1, // Solo reintentar una vez
+    staleTime: 1000 * 60 * 5 // 5 minutos de cache
   });
   
   // Update search params when search term changes

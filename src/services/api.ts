@@ -12,6 +12,7 @@ import { adaptProduct } from '../services/api/adapters/product.adapter';
 import { adaptOrder } from '../services/api/adapters/order.adapter';
 import { adaptReview } from '../services/api/adapters/review.adapter';
 import { adaptUser } from '../services/api/adapters/user.adapter';
+import { dataTagSymbol } from "@tanstack/react-query";
 
 
 // Base URL for API requests
@@ -442,8 +443,30 @@ export const productAPI = {
   },
 
   getByRestaurantAndCategory: async (restaurantId: number) => {
-    const data = await fetchWithError(`/product/byRestaurantAndCategory/${restaurantId}`);
-    return data.map(adaptProduct);
+    const response = await fetchWithError(`/product/byRestaurantAndCategory/${restaurantId}`);
+    // Verifica si la respuesta es un array de categorías con productos
+    if (!Array.isArray(response)) {
+      throw new Error("Formato de respuesta inválido");
+    }
+
+    return response.map((categoryGroup: any) => ({
+      categoryName: categoryGroup.categoryName,
+      categoryId: categoryGroup.categoryId,
+      restaurantName: categoryGroup.restaurantName,
+      restaurantId: categoryGroup.restaurantId,
+      products: categoryGroup.products.map((product: any) => ({
+        id: product.prd_id.toString(),
+        name: product.name,
+        price: product.price,
+        image: product.image,
+        description: product.description,
+        category: categoryGroup.categoryName, 
+        available: product.isActive,
+        quantity: product.quantity,
+        restaurantId: product.restaurantId
+        // Opcional: agregar más campos si los necesitas en Product
+      })),
+    }));
   },
 
   create: async (data: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => {

@@ -52,6 +52,14 @@ export interface Product {
   updatedAt: string;
 }
 
+export interface GroupedProduct {
+  categoryName: string;
+  categoryId: number,
+  restaurantName: string;
+  restaurantId: number,
+  products: Product[];
+}
+
 export type OrderStatus = 'pendiente' | 'pagado' | 'entregado' | 'cancelado';
 
 export interface Order {

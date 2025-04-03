@@ -1,15 +1,24 @@
 import { Product } from '@/types/models';
+import { GroupedProduct } from '@/types/models';
 
 export const adaptProduct = (data: any): Product => ({
   id: data.prd_id?.toString() || '',
-  name: data.prd_nombre || '',
-  description: data.prd_descripcion || '',
-  price: data.prd_precio || 0,
-  image: data.prd_imagen || '',
-  available: data.prd_activo || false,
-  quantity: data.prd_cantidad || 0,
-  restaurantId: data.restaurant?.id?.toString() || '',
-  categoryId: data.category?.ctg_id?.toString() || '',
+  name: data.name || '',
+  description: data.description || '',
+  price: data.price || 0,
+  image: data.image || '',
+  available: data.isActive || false,
+  quantity: data.quantity || 0,
+  restaurantId: data.restaurantId.toString() || '',
+  categoryId: data.categoryId.toString() || '',
   createdAt: data.prd_fecha_alta?.toString() || new Date().toISOString(),
   updatedAt: data.prd_fecha_actualizacion?.toString() || new Date().toISOString()
+});
+
+export const adaptGroupedProduct = (data: any): GroupedProduct => ({
+  categoryName: data.categoryName,
+  categoryId: data.categoryId,
+  restaurantName: data.restaurantName,
+  restaurantId: data.restaurantId,
+  products: data.products
 });

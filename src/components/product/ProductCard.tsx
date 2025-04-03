@@ -1,27 +1,63 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Product } from "@/types/models";
 import { useCart } from "@/contexts/CartContext";
 import { Button } from "@/components/ui/button";
 import { Plus, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useNavigate } from "react-router-dom";
+import { toast } from 'sonner';
+import { ProductDetailModal } from './ProductDetailModal';
 
 interface ProductCardProps {
-  product: Product;
+  product: Product
+  onOpenModal: (product: Product) => void
 }
 
-export function ProductCard({ product }: ProductCardProps) {
-  const { addItem, isProductInCart, canAddProduct } = useCart();
 
-  const handleAddToCart = () => {
+export function ProductCard({ product, onOpenModal }: ProductCardProps) {
+  const navigate = useNavigate();
+  const { addItem, isProductInCart, canAddProduct } = useCart();
+  console.log('Cart context:', { isProductInCart, canAddProduct });
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleClick = () => {
+    onOpenModal(product)
+  }
+  // const handleCardClick = (e: React.MouseEvent) => {
+  //   // Solo navega si el click NO fue en el botón
+  //   if (!(e.target instanceof HTMLElement)) return;
+  //   if (!e.target.closest('button')) {
+  //     navigate(`/product/${product.id}`);
+  //   }
+  // };
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     addItem(product, 1);
+    toast.success(`${product.name} added to cart`);
   };
 
   const isInCart = isProductInCart(product.id);
   const canAdd = canAddProduct(product);
 
+  if (!product.id) {
+    console.error("ProductID is missing!", product);
+    return null;
+  }
+  console.log('Disable conditions:', {
+    available: product.available,
+    inCart: isInCart,
+    canAdd: canAdd,
+    finalDisabled: !product.available || isInCart || !canAdd
+  });
   return (
-    <div className="food-card bg-white rounded-xl overflow-hidden shadow-sm h-full flex flex-col">
+    // <Link to={`/products/${product.id}`} className="block">
+    // <div className="food-card bg-white rounded-xl overflow-hidden shadow-sm h-full flex flex-col hover:shadow-md transition-shadow cursor-pointer"
+    <div className="food-card bg-white rounded-xl overflow-hidden shadow-sm h-full flex flex-col hover:shadow-md transition-shadow"
+      onClick={handleClick}
+    >
       <div className="relative h-40 overflow-hidden">
         <img
           src={product.image || "https://via.placeholder.com/300"}
@@ -35,14 +71,14 @@ export function ProductCard({ product }: ProductCardProps) {
             </Badge>
           </div>
         )}
-        {product.featured && (
+        {/* {product.featured && (
           <Badge className="absolute top-2 left-2 bg-food-500 hover:bg-food-600">
             Featured
           </Badge>
-        )}
-        {product.category && (
+        )} */}
+        {product.categoryId && (
           <Badge className="absolute top-2 right-2 bg-white/90 text-food-700">
-            {product.category}
+            {product.categoryId}
           </Badge>
         )}
       </div>
@@ -60,9 +96,10 @@ export function ProductCard({ product }: ProductCardProps) {
         </p>
         <Button
           onClick={handleAddToCart}
-          className="w-full"
+          className="w-full transition-all disabled:opacity-50 disabled:bg-gray-300 disabled:cursor-not-allowed cursor-pointer"
           disabled={!product.available || isInCart || !canAdd}
           variant={isInCart ? "outline" : "default"}
+
         >
           {isInCart ? (
             <>
@@ -75,6 +112,12 @@ export function ProductCard({ product }: ProductCardProps) {
           )}
         </Button>
       </div>
+      {isModalOpen && (
+        <ProductDetailModal
+          product={product}
+          onClose={() => setIsModalOpen(false)}
+        />
+      )}
     </div>
   );
 }
