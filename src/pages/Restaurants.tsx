@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useQuery } from "@tanstack/react-query";
 import { restaurantAPI, productAPI } from "@/services/api";
@@ -7,17 +7,25 @@ import { RestaurantCard } from "@/components/restaurant/RestaurantCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams, Link, Navigate } from "react-router-dom";
 import { Search, Filter, Star } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Restaurants = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  
+  // Redirigir a login si no está autenticado
+  if (!authLoading && !isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
   
   const { data: restaurants = [], isLoading: isLoadingRestaurants } = useQuery({
     queryKey: ["restaurants"],
     queryFn: () => restaurantAPI.getAll(),
+    enabled: isAuthenticated, // Solo cargar si está autenticado
   });
   
   // Obtener categorías únicas de los restaurantes
@@ -48,21 +56,6 @@ const Restaurants = () => {
     return matchesSearch && matchesCategory;
   });
 
-  const { data: products = [], isLoading, error } = useQuery({
-    queryKey: ["products", restaurants[0].id],
-    queryFn: async () => {
-      try {
-        const response = await productAPI.getByRestaurantAndCategory(Number(restaurants[0].id));
-        return response || []; // Asegura que siempre devuelva un array
-      } catch (err) {
-        console.error("Error fetching products:", err);
-        return []; // Devuelve array vacío en caso de error
-      }
-    },
-    retry: 1, // Solo reintentar una vez
-    staleTime: 1000 * 60 * 5 // 5 minutos de cache
-  });
-  
   // Update search params when search term changes
   useEffect(() => {
     if (searchTerm) {
@@ -77,6 +70,16 @@ const Restaurants = () => {
     e.preventDefault();
     // Search is already updated via the input onChange
   };
+  
+  if (authLoading) {
+    return (
+      <Layout>
+        <div className="flex justify-center items-center h-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-food-600"></div>
+        </div>
+      </Layout>
+    );
+  }
   
   return (
     <Layout>

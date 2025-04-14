@@ -1,3 +1,4 @@
+
 import { Product } from '@/types/models';
 import { GroupedProduct } from '@/types/models';
 
@@ -9,8 +10,8 @@ export const adaptProduct = (data: any): Product => ({
   image: data.image || '',
   available: data.isActive || false,
   quantity: data.quantity || 0,
-  restaurantId: data.restaurantId.toString() || '',
-  categoryId: data.categoryId.toString() || '',
+  restaurantId: data.restaurantId?.toString() || '',
+  categoryId: data.categoryId?.toString() || '',
   createdAt: data.prd_fecha_alta?.toString() || new Date().toISOString(),
   updatedAt: data.prd_fecha_actualizacion?.toString() || new Date().toISOString()
 });

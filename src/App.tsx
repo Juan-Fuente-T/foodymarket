@@ -15,6 +15,7 @@ import Restaurants from "./pages/Restaurants";
 import RestaurantDetails from "./pages/RestaurantDetails";
 import RestaurantPartner from "./pages/RestaurantPartner";
 import Dashboard from "./pages/Dashboard";
+import Orders from "./pages/Orders";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -42,6 +43,7 @@ const App = () => (
               <Route path="/restaurants/:id" element={<RestaurantDetails />} />
               <Route path="/partner" element={<RestaurantPartner />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/orders" element={<Orders />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

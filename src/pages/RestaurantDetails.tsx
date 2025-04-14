@@ -1,45 +1,37 @@
+
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useCart } from '@/contexts/CartContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { restaurantAPI, productAPI } from '@/services/api';
 import { Product, Restaurant, GroupedProduct } from '@/types/models';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Star, MapPin, Clock, Phone, ArrowLeft } from 'lucide-react';  // Iconos
-import { Layout } from '@/components/layout/Layout.tsx';
+import { Layout } from '@/components/layout/Layout';
 import { ProductCard } from '@/components/product/ProductCard';
 import { ProductDetailModal } from '../components/product/ProductDetailModal';
 
 const RestaurantDetails = () => {
   const { id } = useParams<{ id: string }>();
   const { setRestaurant } = useCart();
-  const [selectedProduct, setSelectedProduct] = useState<null | Product>(null)
+  const [selectedProduct, setSelectedProduct] = useState<null | Product>(null);
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+
+  // Redirigir a login si no está autenticado
+  if (!authLoading && !isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
 
   // Obtener restaurante
   const { data: restaurant, isLoading: isLoadingRestaurant } = useQuery({
     queryKey: ["restaurant", id],
     queryFn: () => restaurantAPI.getById(id as string),
-    enabled: !!id,
+    enabled: !!id && isAuthenticated,
   });
 
   // Obtener productos
-  // const { data: products = [], isLoading: isLoadingProducts } = useQuery({
-  //   queryKey: ["products", id],
-  //   queryFn: () => productAPI.getByRestaurant(id as string),
-  //   enabled: !!id && !!restaurant,
-  // });
-
-  // // Agrupar productos por categoría (sin componentes externos)
-  // const productsByCategory = React.useMemo(() => {
-  //   const grouped: Record<string, Product[]> = {};
-  //   products.forEach(product => {
-  //     const category = product.category || 'Other';
-  //     grouped[category] = grouped[category] || [];
-  //     grouped[category].push(product);
-  //   });
-  //   return grouped;
-  // }, [products]);
   const { data: categoriesWithProducts = [], isLoading: isLoadingProducts, error } = useQuery({
     queryKey: ["products", id],
     queryFn: async () => {
@@ -47,8 +39,9 @@ const RestaurantDetails = () => {
       console.log("Categories", response);
       return response || []; // Asegura array vacío si response es undefined
     },
-    enabled: !!id && !!restaurant
+    enabled: !!id && !!restaurant && isAuthenticated
   });
+  
   const totalProducts = categoriesWithProducts.reduce(
     (acc, category) => acc + category.products.length, 
     0
@@ -59,7 +52,17 @@ const RestaurantDetails = () => {
     if (restaurant) setRestaurant(restaurant);
   }, [restaurant]);
 
-  // --- Renderizado simplificado SIN COMPONENTES INVENTADOS ---
+  // --- Renderizado simplificado ---
+  if (authLoading) {
+    return (
+      <Layout>
+        <div className="flex justify-center items-center h-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-food-600"></div>
+        </div>
+      </Layout>
+    );
+  }
+
   if (isLoadingRestaurant) {
     return (
       <Layout>
@@ -140,19 +143,6 @@ const RestaurantDetails = () => {
                       {categoryGroup.products.map((product) => (
                         <ProductCard
                           key={product.id}
-                          // product={{
-                          //   id: product.id.toString(),
-                          //   name: product.name,
-                          //   description: product.description,
-                          //   price: product.price,
-                          //   image: product.image,
-                          //   available: product.available,
-                          //   quantity: product.quantity,
-                          //   restaurantId: product.restaurantId,
-                          //   // categoryId: product.categoryId.toString(),
-                          //   createdAt: product.createdAt,
-                          //   updatedAt: product.updatedAt
-                          // }}
                           product={product}
                           onOpenModal={(product) => setSelectedProduct(product)}
                         />
@@ -160,12 +150,7 @@ const RestaurantDetails = () => {
                     </div>
                   </div>
                 ))}
-                {/* {categoriesWithProducts.length === 0 && (
-                  <div className="text-center py-16">
-                    <p className="text-gray-600">No hay productos disponibles.</p>
-                  </div>
-                )} */}
-                 {!isLoadingProducts && totalProducts === 0 && (
+                {!isLoadingProducts && totalProducts === 0 && (
                   <div className="text-center py-16">
                     <p className="text-gray-600">No hay productos disponibles.</p>
                   </div>
