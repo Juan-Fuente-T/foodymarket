@@ -76,6 +76,7 @@ const RestaurantPartner = () => {
         phone: data.restaurantPhone,
         category: data.restaurantCategory,
         logo: "https://via.placeholder.com/150",
+        ownerId: ownerId, // Add ownerId back to match the expected type
         coverImage: "https://via.placeholder.com/800x400",
         rating: 0,
         reviewCount: 0,
