@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -33,7 +34,8 @@ export function Navbar() {
   const navLinks = [
     { name: "Home", path: "/" },
     { name: "Restaurants", path: "/restaurants" },
-    { name: "Categories", path: "/categories" },
+    // Cambiado de "Categories" a "Menu" y actualizado el path
+    { name: "Menu", path: "/restaurants" },
   ];
 
   // Add owner dashboard link for restaurant owners

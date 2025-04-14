@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ const Login = () => {
   const navigate = useNavigate();
   const { login, isAuthenticated } = useAuth();
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginFormValues>();
+  const [authError, setAuthError] = useState<string | null>(null);
 
   React.useEffect(() => {
     if (isAuthenticated) {
@@ -27,11 +28,15 @@ const Login = () => {
   }, [isAuthenticated, navigate]);
 
   const onSubmit = async (data: LoginFormValues) => {
+    setAuthError(null);
     try {
       await login(data.email, data.password);
+      toast.success("Login successful!");
       navigate("/");
     } catch (error) {
       console.error("Login error:", error);
+      setAuthError("Login failed. Please check your credentials.");
+      toast.error("Login failed. Please check your credentials.");
     }
   };
 
@@ -47,6 +52,11 @@ const Login = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              {authError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded text-red-600 text-sm">
+                  {authError}
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input 
@@ -76,11 +86,8 @@ const Login = () => {
                   id="password" 
                   type="password" 
                   {...register("password", { 
-                    required: "Password is required",
-                    minLength: {
-                      value: 6,
-                      message: "Password must be at least 6 characters"
-                    }
+                    required: "Password is required"
+                    // Se ha eliminado la validación de longitud mínima para permitir contraseñas más cortas
                   })}
                 />
                 {errors.password && (

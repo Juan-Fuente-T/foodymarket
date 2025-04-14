@@ -1,4 +1,5 @@
-import React from "react";
+
+import React, { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ const Signup = () => {
   const navigate = useNavigate();
   const { register: registerUser, isAuthenticated } = useAuth();
   const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<SignupFormValues>();
+  const [authError, setAuthError] = useState<string | null>(null);
   
   const password = React.useRef({});
   password.current = watch("password", "");
@@ -33,16 +35,18 @@ const Signup = () => {
   }, [isAuthenticated, navigate]);
 
   const onSubmit = async (data: SignupFormValues) => {
+    setAuthError(null);
     try {
       const { confirmPassword, ...userData } = data;
       await registerUser({
         ...userData,
-        role: "cliente"
+        role: "cliente" // Usa "cliente" que es lo que espera el backend
       });
       toast.success("Account created successfully!");
       navigate("/");
     } catch (error) {
       console.error("Signup error:", error);
+      setAuthError("Failed to create account. Please try again.");
       toast.error("Failed to create account. Please try again.");
     }
   };
@@ -59,6 +63,11 @@ const Signup = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              {authError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded text-red-600 text-sm">
+                  {authError}
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>
                 <Input 
@@ -100,8 +109,8 @@ const Signup = () => {
                   {...register("password", { 
                     required: "Password is required",
                     minLength: {
-                      value: 6,
-                      message: "Password must be at least 6 characters"
+                      value: 3, // Reducido a 3 caracteres para test
+                      message: "Password must be at least 3 characters"
                     }
                   })}
                 />

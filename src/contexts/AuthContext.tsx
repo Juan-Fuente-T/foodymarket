@@ -53,9 +53,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const token = getToken();
         if (token) {
           const userData = await authAPI.getCurrentUser();
-          setUser(userData);
-          // Update stored user
-          localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userData));
+          if (userData) {
+            setUser(userData);
+            // Update stored user
+            localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userData));
+          } else {
+            // Si userData es null, limpia el token y el usuario
+            removeToken();
+            setUser(null);
+          }
         }
       } catch (error) {
         console.error("Failed to fetch current user:", error);
@@ -74,18 +80,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(true);
     try {
       const response = await authAPI.login(email, password);
-      if (response.token) {
-        storeToken(response.token);
-        setUser(response.user);
-        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(response.user));
-        toast.success("Login successful!");
-        return response.user;
+      // Verificar si se recibió un token o usuario válido
+      if (response) {
+        if (response.token) {
+          storeToken(response.token);
+          setUser(response.user || response);
+          localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(response.user || response));
+        } else if (response.user) {
+          // Si no hay token pero hay usuario
+          setUser(response.user);
+          localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(response.user));
+        } else {
+          // Si el response mismo es el usuario
+          setUser(response);
+          localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(response));
+        }
+        return response;
       } else {
-        throw new Error("No token received");
+        throw new Error("Invalid response from server");
       }
     } catch (error) {
       console.error("Login failed:", error);
-      toast.error("Login failed. Please check your credentials.");
       throw error;
     } finally {
       setIsLoading(false);
@@ -96,18 +111,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(true);
     try {
       const response = await authAPI.register(userData);
-      if (response.token) {
-        storeToken(response.token);
-        setUser(response.user);
-        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(response.user));
-        toast.success("Registration successful!");
-        return response.user;
+      if (response) {
+        if (response.token) {
+          storeToken(response.token);
+          setUser(response.user || response);
+          localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(response.user || response));
+        } else if (response.user) {
+          setUser(response.user);
+          localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(response.user));
+        } else {
+          setUser(response);
+          localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(response));
+        }
+        return response;
       } else {
-        throw new Error("No token received");
+        throw new Error("Invalid response from server");
       }
     } catch (error) {
       console.error("Registration failed:", error);
-      toast.error("Registration failed. Please try again.");
       throw error;
     } finally {
       setIsLoading(false);
@@ -120,13 +141,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       await authAPI.logout();
       removeToken();
       setUser(null);
-      toast.success("Logged out successfully!");
     } catch (error) {
       console.error("Logout failed:", error);
       // Still remove token and user even if logout API fails
       removeToken();
       setUser(null);
-      toast.error("Failed to log out properly.");
     } finally {
       setIsLoading(false);
     }
