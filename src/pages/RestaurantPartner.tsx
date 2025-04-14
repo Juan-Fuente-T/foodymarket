@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -74,14 +73,13 @@ const RestaurantPartner = () => {
         description: data.restaurantDescription,
         address: data.restaurantAddress,
         phone: data.restaurantPhone,
-        email: data.restaurantEmail,
-        ownerId: ownerId,
+        category: data.restaurantCategory,
         logo: "https://via.placeholder.com/150",
+        ownerId: ownerId,
         coverImage: "https://via.placeholder.com/800x400",
         rating: 0,
         reviewCount: 0,
         openingHours: "9:00 AM - 10:00 PM",
-        category: data.restaurantCategory // Ahora es solo un string
       });
       
       toast.success("Restaurant partnership application submitted successfully!");

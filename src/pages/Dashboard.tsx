@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -34,7 +33,7 @@ const Dashboard = () => {
     );
   }
   
-  if (!isAuthenticated || (user && user.role !== "owner")) {
+  if (!isAuthenticated || (user && user.role !== "restaurante")) {
     return <Navigate to="/login" replace />;
   }
   

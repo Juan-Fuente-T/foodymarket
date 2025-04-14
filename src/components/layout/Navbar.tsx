@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -38,7 +37,7 @@ export function Navbar() {
   ];
 
   // Add owner dashboard link for restaurant owners
-  if (user?.role === "owner") {
+  if (user?.role === "restaurante") {
     navLinks.push({ name: "My Restaurant", path: "/dashboard" });
   }
 
@@ -133,7 +132,7 @@ export function Navbar() {
                       <span>Profile</span>
                     </Link>
                   </DropdownMenuItem>
-                  {user?.role === "owner" && (
+                  {user?.role === "restaurante" && (
                     <DropdownMenuItem asChild>
                       <Link
                         to="/dashboard"
@@ -249,7 +248,7 @@ export function Navbar() {
                   <User className="h-5 w-5 mr-3 text-gray-500" />
                   Profile
                 </Link>
-                {user?.role === "owner" && (
+                {user?.role === "restaurante" && (
                   <Link
                     to="/dashboard"
                     className="flex items-center py-2 px-3 text-base font-medium rounded-md text-gray-700 hover:bg-gray-50"

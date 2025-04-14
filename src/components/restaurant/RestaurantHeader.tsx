@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Star, MapPin, Clock, Phone } from 'lucide-react'; // o el icon library que uses
 import { Badge } from '@/components/ui/badge'; // Ajusta la ruta según tu estructura
@@ -7,7 +8,7 @@ import { Restaurant } from '@/types/models'; // Ajusta la ruta de tus tipos
 const RestaurantHeader = ({ restaurant }: { restaurant: Restaurant }) => (
   <div className="relative rounded-2xl overflow-hidden mb-8">
     <img
-      src={restaurant.coverImage}
+      src={restaurant.coverImage || "https://via.placeholder.com/800x400"}
       alt={restaurant.name}
       className="w-full h-80 object-cover"
     />
@@ -21,8 +22,7 @@ const RestaurantHeader = ({ restaurant }: { restaurant: Restaurant }) => (
       {/* Rating inline */}
       <div className="flex items-center text-white mt-2">
         <Star className="h-5 w-5 mr-1 fill-yellow-400 stroke-yellow-400" />
-        {/* <span>{restaurant.rating?.toFixed(1) || 'N/A'}</span> */}
-        <span>FALLA</span>
+        <span>{restaurant.rating?.toFixed(1) || 'N/A'}</span>
       </div>
     </div>
   </div>
@@ -41,8 +41,7 @@ const RestaurantInfoSidebar = ({ restaurant }: { restaurant: Restaurant }) => (
       </div>
       <div className="flex items-center text-gray-600">
         <Clock className="h-4 w-4 mr-2" />
-        {/* <span>{restaurant.openingHours || 'Opening hours not available'}</span> */}
-        <span>FALLA</span>
+        <span>{restaurant.openingHours || 'Opening hours not available'}</span>
       </div>
       <div className="flex items-center text-gray-600">
         <Phone className="h-4 w-4 mr-2" />
@@ -54,3 +53,5 @@ const RestaurantInfoSidebar = ({ restaurant }: { restaurant: Restaurant }) => (
     </Button>
   </div>
 );
+
+export { RestaurantHeader, RestaurantInfoSidebar };

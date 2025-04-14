@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -102,7 +101,7 @@ const RestaurantDetails = () => {
         {/* Header del restaurante (inline) */}
         <div className="relative rounded-2xl overflow-hidden mb-8">
           <img
-            src={restaurant.coverImage}
+            src={restaurant.coverImage || "https://via.placeholder.com/800x400"}
             alt={restaurant.name}
             className="w-full h-80 object-cover"
           />
@@ -115,8 +114,7 @@ const RestaurantDetails = () => {
             <h1 className="text-3xl font-bold text-white">{restaurant.name}</h1>
             <div className="flex items-center text-white mt-2">
               <Star className="h-5 w-5 mr-1 fill-yellow-400 stroke-yellow-400" />
-              {/* <span>{restaurant.rating?.toFixed(1) || 'N/A'}</span> */}
-              <span>FALLA</span>
+              <span>{restaurant.rating?.toFixed(1) || 'N/A'}</span>
             </div>
           </div>
         </div>
@@ -168,8 +166,7 @@ const RestaurantDetails = () => {
                 </div>
                 <div className="flex items-center text-gray-600">
                   <Clock className="h-4 w-4 mr-2" />
-                  {/* <span>{restaurant.openingHours || 'Horario no disponible'}</span> */}
-                  <span>FALLA</span>
+                  <span>{restaurant.openingHours || 'Horario no disponible'}</span>
                 </div>
                 <div className="flex items-center text-gray-600">
                   <Phone className="h-4 w-4 mr-2" />

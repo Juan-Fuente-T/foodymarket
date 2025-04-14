@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Link, useNavigate } from "react-router-dom";
@@ -38,7 +37,7 @@ const Signup = () => {
       const { confirmPassword, ...userData } = data;
       await registerUser({
         ...userData,
-        role: "customer"
+        role: "cliente"
       });
       toast.success("Account created successfully!");
       navigate("/");
