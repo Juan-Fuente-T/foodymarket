@@ -16,7 +16,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Token storage key
+// Token storage key - must match the one used in api.ts
 const TOKEN_STORAGE_KEY = "food_delivery_token";
 const USER_STORAGE_KEY = "food_delivery_user";
 
@@ -52,13 +52,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // If we have a token, verify with backend
         const token = getToken();
         if (token) {
+          console.log("Found stored token, trying to fetch current user");
           const userData = await authAPI.getCurrentUser();
           if (userData) {
+            console.log("Successfully retrieved user data:", userData);
             setUser(userData);
             // Update stored user
             localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userData));
           } else {
-            // Si userData es null, limpia el token y el usuario
+            // If userData is null, clear the token and user
+            console.log("No user data returned despite having token, clearing auth state");
             removeToken();
             setUser(null);
           }
@@ -79,19 +82,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
+      console.log("AuthContext: Attempting login with email:", email);
       const response = await authAPI.login(email, password);
+      console.log("Login response:", response);
+      
       // Verificar si se recibió un token o usuario válido
       if (response) {
         if (response.token) {
+          console.log("Token received, storing token");
           storeToken(response.token);
           setUser(response.user || response);
           localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(response.user || response));
         } else if (response.user) {
           // Si no hay token pero hay usuario
+          console.log("No token but user object received");
           setUser(response.user);
           localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(response.user));
         } else {
           // Si el response mismo es el usuario
+          console.log("Response is the user object itself");
           setUser(response);
           localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(response));
         }
@@ -110,16 +119,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const register = async (userData: Partial<User>) => {
     setIsLoading(true);
     try {
+      console.log("AuthContext: Registering with data:", userData);
       const response = await authAPI.register(userData);
+      console.log("Registration response:", response);
+      
       if (response) {
         if (response.token) {
+          console.log("Token received from registration, storing token");
           storeToken(response.token);
           setUser(response.user || response);
           localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(response.user || response));
         } else if (response.user) {
+          console.log("No token but user object received from registration");
           setUser(response.user);
           localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(response.user));
         } else {
+          console.log("Registration response is the user object itself");
           setUser(response);
           localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(response));
         }

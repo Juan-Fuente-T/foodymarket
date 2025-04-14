@@ -30,6 +30,7 @@ const Login = () => {
   const onSubmit = async (data: LoginFormValues) => {
     setAuthError(null);
     try {
+      console.log("Attempting login with:", data);
       await login(data.email, data.password);
       toast.success("Login successful!");
       navigate("/");
@@ -87,7 +88,6 @@ const Login = () => {
                   type="password" 
                   {...register("password", { 
                     required: "Password is required"
-                    // Se ha eliminado la validación de longitud mínima para permitir contraseñas más cortas
                   })}
                 />
                 {errors.password && (

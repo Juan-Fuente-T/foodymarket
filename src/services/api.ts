@@ -1,3 +1,4 @@
+
 import { toast } from "@/lib/toast";
 import {
   User,
@@ -18,7 +19,7 @@ import { dataTagSymbol } from "@tanstack/react-query";
 // Base URL for API requests
 const API_BASE_URL = "http://localhost:8080/api";
 
-// Token storage key
+// Token storage key - IMPORTANT: must match the one in AuthContext.tsx
 const TOKEN_STORAGE_KEY = "food_delivery_token";
 
 // Helper function to get auth token
@@ -28,11 +29,37 @@ const getAuthToken = () => {
 
 // Helper function for handling fetch responses
 const handleResponse = async (response: Response) => {
+  const contentType = response.headers.get("content-type");
+  
   if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.message || `API error: ${response.status}`);
+    let errorMessage = `API error: ${response.status}`;
+    
+    try {
+      if (contentType && contentType.includes("application/json")) {
+        const error = await response.json();
+        errorMessage = error.message || errorMessage;
+      } else {
+        const textError = await response.text();
+        if (textError) errorMessage = textError;
+      }
+    } catch (e) {
+      console.error("Error parsing error response:", e);
+    }
+    
+    throw new Error(errorMessage);
   }
-  return response.json();
+  
+  // If response has no content, return empty object
+  if (response.status === 204 || response.headers.get("content-length") === "0") {
+    return {};
+  }
+  
+  // Parse response based on content type
+  if (contentType && contentType.includes("application/json")) {
+    return response.json();
+  } else {
+    return response.text();
+  }
 };
 
 // Generic fetch with error handling
@@ -72,7 +99,9 @@ const fetchWithError = async (
     });
 
     console.log(`Response status: ${response.status}`);
-    return await handleResponse(response);
+    const data = await handleResponse(response);
+    console.log('Response data:', data);
+    return data;
   } catch (error) {
     console.error(`API request failed: ${error}`);
     console.error(`Failed URL: ${API_BASE_URL}${endpoint}`);
@@ -128,6 +157,7 @@ export const userAPI = {
 export const authAPI = {
   login: async (email: string, password: string) => {
     try {
+      console.log("API: Login attempt with:", { email });
       const data = await userAPI.login(email, password);
       console.log("Login response:", data);
       
@@ -144,7 +174,7 @@ export const authAPI = {
   
   register: async (userData: Partial<User>) => {
     try {
-      console.log("Register request data:", userData);
+      console.log("API: Register attempt with:", userData);
       const data = await userAPI.register(userData);
       console.log("Register response:", data);
       

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -34,11 +33,9 @@ export function Navbar() {
   const navLinks = [
     { name: "Home", path: "/" },
     { name: "Restaurants", path: "/restaurants" },
-    // Cambiado de "Categories" a "Menu" y actualizado el path
     { name: "Menu", path: "/restaurants" },
   ];
 
-  // Add owner dashboard link for restaurant owners
   if (user?.role === "restaurante") {
     navLinks.push({ name: "My Restaurant", path: "/dashboard" });
   }
@@ -53,7 +50,6 @@ export function Navbar() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
           <Link 
             to="/" 
             className="flex items-center space-x-2 text-food-600 font-bold text-xl"
@@ -65,7 +61,6 @@ export function Navbar() {
             </span>
           </Link>
 
-          {/* Desktop navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             {navLinks.map((link) => (
               <Link
@@ -82,7 +77,6 @@ export function Navbar() {
             ))}
           </nav>
 
-          {/* Desktop right actions */}
           <div className="hidden md:flex items-center space-x-4">
             <Link to="/cart">
               <Button
@@ -177,13 +171,12 @@ export function Navbar() {
                   <Link to="/login">Log in</Link>
                 </Button>
                 <Button asChild>
-                  <Link to="/register">Sign up</Link>
+                  <Link to="/signup">Sign up</Link>
                 </Button>
               </div>
             )}
           </div>
 
-          {/* Mobile menu button */}
           <div className="flex md:hidden">
             <button
               type="button"
@@ -201,7 +194,6 @@ export function Navbar() {
         </div>
       </div>
 
-      {/* Mobile menu */}
       <div
         className={`md:hidden transition-all duration-300 ease-in-out ${
           isMenuOpen
@@ -286,7 +278,7 @@ export function Navbar() {
                   className="justify-start"
                   asChild
                 >
-                  <Link to="/register" onClick={closeMenu}>
+                  <Link to="/signup" onClick={closeMenu}>
                     Sign up
                   </Link>
                 </Button>

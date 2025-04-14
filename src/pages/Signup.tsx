@@ -37,6 +37,7 @@ const Signup = () => {
   const onSubmit = async (data: SignupFormValues) => {
     setAuthError(null);
     try {
+      console.log("Attempting to register with:", data);
       const { confirmPassword, ...userData } = data;
       await registerUser({
         ...userData,
