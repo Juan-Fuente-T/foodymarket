@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { useForm } from "react-hook-form";
 import { toast } from "@/lib/toast";
+import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 
 interface LoginFormValues {
   email: string;
@@ -20,6 +21,7 @@ const Login = () => {
   const { login, isAuthenticated } = useAuth();
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginFormValues>();
   const [authError, setAuthError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   React.useEffect(() => {
     if (isAuthenticated) {
@@ -30,7 +32,7 @@ const Login = () => {
   const onSubmit = async (data: LoginFormValues) => {
     setAuthError(null);
     try {
-      console.log("Attempting login with:", data);
+      console.log("Login page: Attempting login with:", data);
       await login(data.email, data.password);
       toast.success("Login successful!");
       navigate("/");
@@ -40,6 +42,8 @@ const Login = () => {
       toast.error("Login failed. Please check your credentials.");
     }
   };
+
+  const toggleShowPassword = () => setShowPassword(!showPassword);
 
   return (
     <Layout>
@@ -60,18 +64,22 @@ const Login = () => {
               )}
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input 
-                  id="email" 
-                  type="email" 
-                  placeholder="name@example.com" 
-                  {...register("email", { 
-                    required: "Email is required",
-                    pattern: {
-                      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                      message: "Invalid email address"
-                    }
-                  })}
-                />
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input 
+                    id="email" 
+                    type="email" 
+                    placeholder="name@example.com" 
+                    className="pl-10"
+                    {...register("email", { 
+                      required: "Email is required",
+                      pattern: {
+                        value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                        message: "Invalid email address"
+                      }
+                    })}
+                  />
+                </div>
                 {errors.email && (
                   <p className="text-sm text-red-500">{errors.email.message}</p>
                 )}
@@ -83,13 +91,24 @@ const Login = () => {
                     Forgot password?
                   </Link>
                 </div>
-                <Input 
-                  id="password" 
-                  type="password" 
-                  {...register("password", { 
-                    required: "Password is required"
-                  })}
-                />
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input 
+                    id="password" 
+                    type={showPassword ? "text" : "password"}
+                    className="pl-10 pr-10"
+                    {...register("password", { 
+                      required: "Password is required"
+                    })}
+                  />
+                  <button 
+                    type="button"
+                    onClick={toggleShowPassword}
+                    className="absolute right-3 top-3 text-gray-400"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
                 {errors.password && (
                   <p className="text-sm text-red-500">{errors.password.message}</p>
                 )}

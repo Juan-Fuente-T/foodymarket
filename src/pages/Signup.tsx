@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { useForm } from "react-hook-form";
 import { toast } from "@/lib/toast";
+import { Eye, EyeOff, Mail, Lock, User, Phone, Home } from "lucide-react";
 
 interface SignupFormValues {
   name: string;
@@ -24,6 +25,8 @@ const Signup = () => {
   const { register: registerUser, isAuthenticated } = useAuth();
   const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<SignupFormValues>();
   const [authError, setAuthError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   const password = React.useRef({});
   password.current = watch("password", "");
@@ -71,13 +74,17 @@ const Signup = () => {
               )}
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>
-                <Input 
-                  id="name" 
-                  placeholder="John Doe" 
-                  {...register("name", { 
-                    required: "Name is required" 
-                  })}
-                />
+                <div className="relative">
+                  <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input 
+                    id="name" 
+                    placeholder="John Doe"
+                    className="pl-10"
+                    {...register("name", { 
+                      required: "Name is required" 
+                    })}
+                  />
+                </div>
                 {errors.name && (
                   <p className="text-sm text-red-500">{errors.name.message}</p>
                 )}
@@ -85,18 +92,22 @@ const Signup = () => {
               
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input 
-                  id="email" 
-                  type="email" 
-                  placeholder="name@example.com" 
-                  {...register("email", { 
-                    required: "Email is required",
-                    pattern: {
-                      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                      message: "Invalid email address"
-                    }
-                  })}
-                />
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input 
+                    id="email" 
+                    type="email" 
+                    placeholder="name@example.com"
+                    className="pl-10"
+                    {...register("email", { 
+                      required: "Email is required",
+                      pattern: {
+                        value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                        message: "Invalid email address"
+                      }
+                    })}
+                  />
+                </div>
                 {errors.email && (
                   <p className="text-sm text-red-500">{errors.email.message}</p>
                 )}
@@ -104,17 +115,28 @@ const Signup = () => {
               
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
-                <Input 
-                  id="password" 
-                  type="password" 
-                  {...register("password", { 
-                    required: "Password is required",
-                    minLength: {
-                      value: 3, // Reducido a 3 caracteres para test
-                      message: "Password must be at least 3 characters"
-                    }
-                  })}
-                />
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input 
+                    id="password" 
+                    type={showPassword ? "text" : "password"}
+                    className="pl-10 pr-10"
+                    {...register("password", { 
+                      required: "Password is required",
+                      minLength: {
+                        value: 3, // Reducido a 3 caracteres para test
+                        message: "Password must be at least 3 characters"
+                      }
+                    })}
+                  />
+                  <button 
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-3 text-gray-400"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
                 {errors.password && (
                   <p className="text-sm text-red-500">{errors.password.message}</p>
                 )}
@@ -122,14 +144,25 @@ const Signup = () => {
               
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <Input 
-                  id="confirmPassword" 
-                  type="password" 
-                  {...register("confirmPassword", { 
-                    required: "Please confirm your password",
-                    validate: value => value === password.current || "Passwords do not match"
-                  })}
-                />
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input 
+                    id="confirmPassword" 
+                    type={showConfirmPassword ? "text" : "password"}
+                    className="pl-10 pr-10"
+                    {...register("confirmPassword", { 
+                      required: "Please confirm your password",
+                      validate: value => value === password.current || "Passwords do not match"
+                    })}
+                  />
+                  <button 
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-3 text-gray-400"
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
                 {errors.confirmPassword && (
                   <p className="text-sm text-red-500">{errors.confirmPassword.message}</p>
                 )}
@@ -137,20 +170,28 @@ const Signup = () => {
               
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone (optional)</Label>
-                <Input 
-                  id="phone" 
-                  placeholder="+1 (555) 123-4567" 
-                  {...register("phone")}
-                />
+                <div className="relative">
+                  <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input 
+                    id="phone" 
+                    placeholder="+1 (555) 123-4567"
+                    className="pl-10" 
+                    {...register("phone")}
+                  />
+                </div>
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="address">Address (optional)</Label>
-                <Input 
-                  id="address" 
-                  placeholder="123 Main St, City, Country" 
-                  {...register("address")}
-                />
+                <div className="relative">
+                  <Home className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input 
+                    id="address" 
+                    placeholder="123 Main St, City, Country"
+                    className="pl-10" 
+                    {...register("address")}
+                  />
+                </div>
               </div>
               
               <Button 

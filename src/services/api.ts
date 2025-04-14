@@ -14,7 +14,6 @@ import { adaptProduct } from '../services/api/adapters/product.adapter';
 import { adaptOrder } from '../services/api/adapters/order.adapter';
 import { adaptReview } from '../services/api/adapters/review.adapter';
 import { adaptUser } from '../services/api/adapters/user.adapter';
-import { dataTagSymbol } from "@tanstack/react-query";
 
 // Base URL for API requests
 const API_BASE_URL = "http://localhost:8080/api";
@@ -99,6 +98,8 @@ const fetchWithError = async (
     });
 
     console.log(`Response status: ${response.status}`);
+    console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+    
     const data = await handleResponse(response);
     console.log('Response data:', data);
     return data;

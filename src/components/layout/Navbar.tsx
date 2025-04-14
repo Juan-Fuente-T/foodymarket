@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -64,7 +65,7 @@ export function Navbar() {
           <nav className="hidden md:flex items-center space-x-8">
             {navLinks.map((link) => (
               <Link
-                key={link.path}
+                key={link.name}
                 to={link.path}
                 className={`nav-item text-base font-medium transition-colors ${
                   location.pathname === link.path
@@ -204,7 +205,7 @@ export function Navbar() {
         <div className="pt-20 pb-6 px-4 space-y-4">
           {navLinks.map((link) => (
             <Link
-              key={link.path}
+              key={link.name}
               to={link.path}
               className={`block py-2 px-3 text-base font-medium rounded-md ${
                 location.pathname === link.path

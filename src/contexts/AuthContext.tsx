@@ -86,25 +86,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const response = await authAPI.login(email, password);
       console.log("Login response:", response);
       
-      // Verificar si se recibió un token o usuario válido
+      // Store token and user data
       if (response) {
         if (response.token) {
           console.log("Token received, storing token");
           storeToken(response.token);
-          setUser(response.user || response);
-          localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(response.user || response));
-        } else if (response.user) {
-          // Si no hay token pero hay usuario
-          console.log("No token but user object received");
-          setUser(response.user);
-          localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(response.user));
+          const userData = response.user || response;
+          setUser(userData);
+          localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userData));
         } else {
-          // Si el response mismo es el usuario
-          console.log("Response is the user object itself");
-          setUser(response);
-          localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(response));
+          console.error("No token received in login response");
+          throw new Error("Authentication failed: No token received");
         }
-        return response;
       } else {
         throw new Error("Invalid response from server");
       }
@@ -127,18 +120,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (response.token) {
           console.log("Token received from registration, storing token");
           storeToken(response.token);
-          setUser(response.user || response);
-          localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(response.user || response));
-        } else if (response.user) {
-          console.log("No token but user object received from registration");
-          setUser(response.user);
-          localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(response.user));
+          const userObj = response.user || response;
+          setUser(userObj);
+          localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userObj));
+          return userObj;
         } else {
-          console.log("Registration response is the user object itself");
-          setUser(response);
-          localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(response));
+          console.error("No token received in registration response");
+          throw new Error("Authentication failed: No token received");
         }
-        return response;
       } else {
         throw new Error("Invalid response from server");
       }
