@@ -1,3 +1,4 @@
+
 // export type UserRole = 'cliente' | 'restaurante' | 'admin';
 export type UserRole = 'cliente' | 'restaurante';
 
@@ -9,7 +10,7 @@ export interface User {
   phone?: string;
   address?: string;
   createdAt: string;
-  avatar?: string; // Add avatar property for Navbar
+  avatar?: string;
 }
 
 export interface Category {
@@ -25,16 +26,15 @@ export interface Restaurant {
   id: number;
   name: string;
   description: string;
-  category: string; // Simple string según tu modelo
+  category: string;
   phone: string;
   address: string;
   logo: string;
-  ownerId: string; // Relación con User
+  ownerId: string;
   createdAt: string;
   updatedAt: string;
-  coverImage?: string; // Add coverImage property
-  email?: string; // Add email property for RestaurantPartner
-  // Nota: rating y reviewCount serían calculados
+  coverImage?: string;
+  email?: string;
   rating?: number;
   openingHours?: string;
   reviewCount?: number;

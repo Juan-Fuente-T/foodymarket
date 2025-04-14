@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -75,7 +76,6 @@ const RestaurantPartner = () => {
         phone: data.restaurantPhone,
         category: data.restaurantCategory,
         logo: "https://via.placeholder.com/150",
-        ownerId: ownerId,
         coverImage: "https://via.placeholder.com/800x400",
         rating: 0,
         reviewCount: 0,

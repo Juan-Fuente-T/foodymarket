@@ -369,7 +369,7 @@ export const restaurantAPI = {
     return data.map(adaptRestaurant);
   },
 
-  create: async (data: Omit<Restaurant, 'id' | 'ownerId' | 'createdAt' | 'updatedAt'>) => {
+  create: async (data: Omit<Restaurant, 'id' | 'createdAt' | 'updatedAt'>) => {
     const response = await fetchWithError("/restaurant", {
       method: "POST",
       body: JSON.stringify({
@@ -587,6 +587,7 @@ export const reviewAPI = {
     });
   }
 };
+
 // Users
 // export const userAPI = {
 //   update: (id: string, data: Partial<User>) =>
