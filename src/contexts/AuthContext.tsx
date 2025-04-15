@@ -1,7 +1,6 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useNavigate } from 'react-router-dom';
-import { User } from "@/types/models";
+import { User, UserRole } from "@/types/models";
 import { toast } from "@/lib/toast";
 import { authAPI, userAPI } from "@/services/api";
 
@@ -12,7 +11,7 @@ export interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (userData: Partial<User>) => Promise<User | void>;
   logout: () => Promise<void>;
-  updateUser: (userData: Partial<User>) => void;
+  updateUser: (userData: Partial<User>) => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -189,11 +188,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const updateUser = (userData: Partial<User>) => {
-    if (user) {
-      const updatedUser = { ...user, ...userData };
+  const updateUser = async (userData: Partial<User>) => {
+    try {
+      setIsLoading(true);
+      // If we're updating the role, we need to update the backend
+      if (user && userData.role && userData.role !== user.role) {
+        console.log("Updating user role from", user.role, "to", userData.role);
+        // Here you would normally call an API to update the user role
+        // For now, we'll just update the local state
+      }
+
+      const updatedUser = { ...user, ...userData } as User;
       setUser(updatedUser);
       localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(updatedUser));
+      console.log("User updated successfully:", updatedUser);
+      return updatedUser;
+    } catch (error) {
+      console.error("Failed to update user:", error);
+      toast.error("Failed to update user profile");
+      throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -213,4 +228,3 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     </AuthContext.Provider>
   );
 };
-

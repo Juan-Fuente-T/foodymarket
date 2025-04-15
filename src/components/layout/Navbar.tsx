@@ -34,9 +34,15 @@ export function Navbar() {
   const navLinks = [
     { name: "Home", path: "/" },
     { name: "Restaurants", path: "/restaurants" },
-    { name: "Menu", path: "/restaurants" },
+    // Removed "Menu" link and replaced with Become Partner link for non-restaurant users
   ];
 
+  // If user is not a restaurant owner, show the partner link
+  if (user?.role !== "restaurante") {
+    navLinks.push({ name: "Become Partner", path: "/partner" });
+  }
+
+  // If user is a restaurant owner, show dashboard link
   if (user?.role === "restaurante") {
     navLinks.push({ name: "My Restaurant", path: "/dashboard" });
   }

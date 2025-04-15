@@ -17,16 +17,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { restaurantAPI } from "@/services/api";
+import { UserRole } from "@/types/models";
 
 interface PartnerFormValues {
-  name: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-  phone?: string;
-  address?: string;
   restaurantName: string;
   restaurantDescription: string;
   restaurantAddress: string;
@@ -42,59 +37,67 @@ const CATEGORIES = [
 
 const RestaurantPartner = () => {
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, updateUser } = useAuth();
   const { register, handleSubmit, watch, setValue, formState: { errors, isSubmitting } } = useForm<PartnerFormValues>({
     defaultValues: {
       restaurantCategory: "Other"
     }
   });
   
-  const password = React.useRef({});
-  password.current = watch("password", "");
-  
+  React.useEffect(() => {
+    // If user is already a restaurant owner, redirect to dashboard
+    if (isAuthenticated && user?.role === "restaurante") {
+      navigate("/dashboard");
+    }
+  }, [isAuthenticated, user, navigate]);
+
   const onSubmit = async (data: PartnerFormValues) => {
     try {
-      let ownerId = user?.id;
-      
-      // If not logged in, register a new user
       if (!isAuthenticated) {
-        // No tenemos acceso a registerUser en AuthContext, mostrar un error
         toast.error("You need to be logged in to register a restaurant");
-        navigate("/login");
+        navigate("/login", { state: { from: "/partner" } });
         return;
       }
       
-      if (!ownerId) {
-        throw new Error("Owner ID is required");
+      if (!user?.id) {
+        throw new Error("User ID is required");
       }
       
-      // Then create the restaurant
+      console.log("Creating restaurant with data:", data);
+      
+      // Create the restaurant
       await restaurantAPI.create({
         name: data.restaurantName,
         description: data.restaurantDescription,
         address: data.restaurantAddress,
         phone: data.restaurantPhone,
         category: data.restaurantCategory,
+        email: data.restaurantEmail,
         logo: "https://via.placeholder.com/150",
-        ownerId: ownerId, // Add ownerId back to match the expected type
+        ownerId: user.id,
         coverImage: "https://via.placeholder.com/800x400",
         rating: 0,
         reviewCount: 0,
         openingHours: "9:00 AM - 10:00 PM",
       });
       
-      toast.success("Restaurant partnership application submitted successfully!");
+      // Update user role to "restaurante"
+      if (user.role !== "restaurante") {
+        updateUser({ ...user, role: "restaurante" as UserRole });
+      }
+      
+      toast.success("Restaurant registration successful!");
       navigate("/dashboard");
       
     } catch (error) {
       console.error("Partner registration error:", error);
-      toast.error("Failed to register as a partner");
+      toast.error("Failed to register as a partner. Please try again.");
     }
   };
 
   return (
     <Layout>
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12 mt-16">
         <Card>
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-center">Become a Restaurant Partner</CardTitle>
