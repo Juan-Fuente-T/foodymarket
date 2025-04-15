@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "../hooks/use-auth";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 

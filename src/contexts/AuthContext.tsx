@@ -1,10 +1,11 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { useNavigate } from 'react-router-dom';
 import { User } from "@/types/models";
-import { authAPI } from "@/services/api";
 import { toast } from "@/lib/toast";
+import { authAPI, userAPI } from "@/services/api";
 
-interface AuthContextType {
+export interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
@@ -14,7 +15,7 @@ interface AuthContextType {
   updateUser: (userData: Partial<User>) => void;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Token storage key - must match the one used in api.ts
 const TOKEN_STORAGE_KEY = "food_delivery_token";
@@ -23,6 +24,7 @@ const USER_STORAGE_KEY = "food_delivery_user";
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
   // Helper to store token
   const storeToken = (token: string) => {
@@ -42,6 +44,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const initAuth = async () => {
+      setIsLoading(true);
       try {
         // Try to get user from localStorage first for quick init
         const storedUser = localStorage.getItem(USER_STORAGE_KEY);
@@ -83,53 +86,83 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(true);
     try {
       console.log("AuthContext: Attempting login with email:", email);
-      const response = await authAPI.login(email, password);
-      console.log("Login response:", response);
-      
-      // Store token and user data
+      const response = await authAPI.login(email, password); // response = { access_token: "...", message: "...", user: {...} }
+      console.log("Login response received in AuthContext:", response);
+
       if (response) {
-        if (response.token) {
-          console.log("Token received, storing token");
-          storeToken(response.token);
-          const userData = response.user || response;
-          setUser(userData);
-          localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userData));
+        // --- CORRECCIÓN AQUÍ ---
+        if (response.access_token) { // <-- Comprueba la propiedad correcta 'access_token'
+          console.log("Access Token received, storing token:", response.access_token.substring(0, 10) + "...");
+          storeToken(response.access_token); // <-- Usa la propiedad correcta para guardar
+
+          // Asumiendo que la info del usuario está en response.user
+          const userData = response.user;
+          if (userData) {
+              console.log("User data received:", userData);
+              setUser(userData); // Actualiza el estado del usuario en el contexto
+              localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userData)); // Guarda el usuario también
+          } else {
+              console.warn("Login successful but no user data found in response.user field. Fetching profile...");
+              // Si el login no devuelve user, intenta obtenerlo con otra llamada
+              try {
+                  const profileData = await userAPI.getProfile(); // Llama a GET /api/user
+                  if (profileData) {
+                      setUser(profileData);
+                      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(profileData));
+                  } else {
+                       console.error("Could not fetch user profile after login.");
+                       // Quizás limpiar token si no se puede obtener perfil? O dejarlo y que la app maneje un user null?
+                  }
+              } catch (profileError) {
+                   console.error("Error fetching profile after login:", profileError);
+                   // Limpiar token si falla la obtención del perfil podría ser una opción
+                   // removeToken();
+                   // setUser(null);
+              }
+          }
         } else {
-          console.error("No token received in login response");
-          throw new Error("Authentication failed: No token received");
+          // Ya no debería entrar aquí si el backend envía 'access_token'
+          console.error("No 'access_token' property found in login response object:", response);
+          throw new Error("Authentication failed: No access_token received");
         }
       } else {
         throw new Error("Invalid response from server");
       }
     } catch (error) {
-      console.error("Login failed:", error);
-      throw error;
+      console.error("Login failed in AuthContext:", error);
+      // Limpiar estado en caso de error
+      removeToken();
+      setUser(null);
+      throw error; // Relanza para que el componente Login pueda manejarlo (mostrar mensaje, etc.)
     } finally {
       setIsLoading(false);
     }
   };
-
   const register = async (userData: Partial<User>) => {
     setIsLoading(true);
     try {
-      console.log("AuthContext: Registering with data:", userData);
+      // ... (llamada a authAPI.register) ...
       const response = await authAPI.register(userData);
-      console.log("Registration response:", response);
-      
-      if (response) {
-        if (response.token) {
-          console.log("Token received from registration, storing token");
-          storeToken(response.token);
-          const userObj = response.user || response;
-          setUser(userObj);
-          localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userObj));
-          return userObj;
+      console.log("Registration response received in AuthContext:", response);
+
+      if (response && response.access_token) {
+        console.log("Access Token received from registration, storing token");
+        storeToken(response.access_token);
+
+        const userObj = response.user;
+        if (userObj) {
+            console.log("User data received from registration:", userObj);
+            setUser(userObj);
+            localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userObj));
+            return userObj;
         } else {
-          console.error("No token received in registration response");
-          throw new Error("Authentication failed: No token received");
+            console.warn("Registration successful but no user data found in response.user field");
+            // Podrías intentar obtener perfil aquí también si fuera necesario
+            return undefined;
         }
       } else {
-        throw new Error("Invalid response from server");
+        console.error("No valid 'access_token' or 'user' received in registration response object:", response);
+        throw new Error("Registration failed: No valid access token or user received");
       }
     } catch (error) {
       console.error("Registration failed:", error);
@@ -138,13 +171,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(false);
     }
   };
-
   const logout = async () => {
     setIsLoading(true);
     try {
       await authAPI.logout();
       removeToken();
       setUser(null);
+      console.log("Local state cleared.");
     } catch (error) {
       console.error("Logout failed:", error);
       // Still remove token and user even if logout API fails
@@ -152,6 +185,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(null);
     } finally {
       setIsLoading(false);
+      navigate('/', { replace: true });
     }
   };
 
@@ -180,10 +214,3 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
-};

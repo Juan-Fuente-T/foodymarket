@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useSearchParams, Link, Navigate } from "react-router-dom";
 import { Search, Filter, Star } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "../hooks/use-auth";
 
 const Restaurants = () => {
   const [searchParams, setSearchParams] = useSearchParams();

@@ -1,6 +1,6 @@
 import React from "react";
 import { Layout } from "@/components/layout/Layout";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "../hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { restaurantAPI, orderAPI, productAPI } from "@/services/api";
 import { Link, Navigate, useNavigate } from "react-router-dom";

@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Layout } from "@/components/layout/Layout";
 import { useQuery } from "@tanstack/react-query";
 import { orderAPI } from "@/services/api";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "../hooks/use-auth";
 import { Order, OrderStatus } from "@/types/models";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";

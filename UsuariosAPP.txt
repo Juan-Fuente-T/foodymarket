@@ -1,0 +1,6 @@
+test000@test.com   
+test   $2a$10$EUq4Y7BMFp2Www68KL5SGueZ1JcGxlKn2LIiYt8vdnmGgb1bAxQZy
+usuario1@example.com
+password1   $2a$12$aMsavbgjfIX2KDljiXtwYOeIK5TR2Ah8gM.xbsPUEG4t1mRGJKr8i
+usuario2@example.com
+password2   $2a$12$DPyi.q3iT5p2ttBbvvH.refPn3OMalmuLoE3fpE45FbXpzy.Jro8O

@@ -116,13 +116,13 @@ const fetchWithError = async (
 // Users
 export const userAPI = {
   login: (email: string, password: string) =>
-    fetchWithError("/login", {
+    fetchWithError("/auth/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
     }),
   
   register: (userData: Partial<User>) =>
-    fetchWithError("/register", {
+    fetchWithError("/auth/register", {
       method: "POST",
       body: JSON.stringify(userData),
     }),
@@ -163,8 +163,9 @@ export const authAPI = {
       console.log("Login response:", data);
       
       // Store token in localStorage
-      if (data.token) {
-        localStorage.setItem(TOKEN_STORAGE_KEY, data.token);
+      if (data.access_token) {
+        console.log("data.message", data.message);
+        localStorage.setItem(TOKEN_STORAGE_KEY, data.access_token);
       }
       return data;
     } catch (error) {

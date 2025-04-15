@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "../../hooks/use-auth";
 import { useCart } from "@/contexts/CartContext";
 import { Menu, X, ShoppingBag, User, LogOut, Home, ChefHat, Settings } from "lucide-react";
 import { Badge } from "@/components/ui/badge";

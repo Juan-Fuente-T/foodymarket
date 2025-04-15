@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useCart } from '@/contexts/CartContext';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from "../hooks/use-auth";
 import { restaurantAPI, productAPI } from '@/services/api';
 import { Product, Restaurant, GroupedProduct } from '@/types/models';
 import { Badge } from '@/components/ui/badge';

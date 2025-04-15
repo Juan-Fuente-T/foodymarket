@@ -1,7 +1,7 @@
 import React from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useCart } from "@/contexts/CartContext";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "../hooks/use-auth";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Minus, Plus, Trash2, ArrowLeft, ShoppingCart } from "lucide-react";
