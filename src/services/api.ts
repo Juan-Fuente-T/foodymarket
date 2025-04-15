@@ -1,4 +1,3 @@
-
 import { toast } from "@/lib/toast";
 import {
   User,
@@ -15,8 +14,12 @@ import { adaptOrder } from '../services/api/adapters/order.adapter';
 import { adaptReview } from '../services/api/adapters/review.adapter';
 import { adaptUser } from '../services/api/adapters/user.adapter';
 
-// Base URL for API requests
-const API_BASE_URL = "http://localhost:8080/api";
+// Base URL for API requests - Updated to use a deployed backend URL
+// You should replace this with your actual deployed backend URL
+const API_BASE_URL = "https://foodymarket-backend.onrender.com/api";
+
+// For development, uncomment this line instead:
+// const API_BASE_URL = "http://localhost:8080/api";
 
 // Token storage key - IMPORTANT: must match the one in AuthContext.tsx
 const TOKEN_STORAGE_KEY = "food_delivery_token";

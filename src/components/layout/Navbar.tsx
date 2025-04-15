@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "../../hooks/use-auth";
 import { useCart } from "@/contexts/CartContext";
-import { Menu, X, ShoppingBag, User, LogOut, Home, ChefHat, Settings } from "lucide-react";
+import { Menu, X, ShoppingBag, User, LogOut, Home, ChefHat, Settings, History, ClipboardList } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export function Navbar() {
@@ -31,20 +31,15 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Define base navigation links that all users see
   const navLinks = [
     { name: "Home", path: "/" },
     { name: "Restaurants", path: "/restaurants" },
-    // Removed "Menu" link and replaced with Become Partner link for non-restaurant users
   ];
 
-  // If user is not a restaurant owner, show the partner link
-  if (user?.role !== "restaurante") {
+  // Only add "Partner" link if user is not logged in or is not a restaurant owner
+  if (!isAuthenticated || (user && user.role !== "restaurante")) {
     navLinks.push({ name: "Become Partner", path: "/partner" });
-  }
-
-  // If user is a restaurant owner, show dashboard link
-  if (user?.role === "restaurante") {
-    navLinks.push({ name: "My Restaurant", path: "/dashboard" });
   }
 
   const closeMenu = () => setIsMenuOpen(false);
@@ -135,6 +130,12 @@ export function Navbar() {
                       <span>Profile</span>
                     </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/orders" className="w-full cursor-pointer">
+                      <History className="mr-2 h-4 w-4" />
+                      <span>My Orders</span>
+                    </Link>
+                  </DropdownMenuItem>
                   {user?.role === "restaurante" && (
                     <DropdownMenuItem asChild>
                       <Link
@@ -146,12 +147,6 @@ export function Navbar() {
                       </Link>
                     </DropdownMenuItem>
                   )}
-                  <DropdownMenuItem asChild>
-                    <Link to="/orders" className="w-full cursor-pointer">
-                      <ShoppingBag className="mr-2 h-4 w-4" />
-                      <span>My Orders</span>
-                    </Link>
-                  </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/settings" className="w-full cursor-pointer">
                       <Settings className="mr-2 h-4 w-4" />
@@ -184,6 +179,7 @@ export function Navbar() {
             )}
           </div>
 
+          {/* Mobile menu button */}
           <div className="flex md:hidden">
             <button
               type="button"
@@ -201,6 +197,7 @@ export function Navbar() {
         </div>
       </div>
 
+      {/* Mobile menu */}
       <div
         className={`md:hidden transition-all duration-300 ease-in-out ${
           isMenuOpen
@@ -248,6 +245,14 @@ export function Navbar() {
                 >
                   <User className="h-5 w-5 mr-3 text-gray-500" />
                   Profile
+                </Link>
+                <Link
+                  to="/orders"
+                  className="flex items-center py-2 px-3 text-base font-medium rounded-md text-gray-700 hover:bg-gray-50"
+                  onClick={closeMenu}
+                >
+                  <History className="h-5 w-5 mr-3 text-gray-500" />
+                  My Orders
                 </Link>
                 {user?.role === "restaurante" && (
                   <Link

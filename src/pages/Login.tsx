@@ -32,14 +32,15 @@ const Login = () => {
   const onSubmit = async (data: LoginFormValues) => {
     setAuthError(null);
     try {
-      console.log("Login page: Attempting login with:", data);
+      console.log("Login page: Attempting login with:", data.email);
       await login(data.email, data.password);
       toast.success("Login successful!");
       navigate("/");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login error:", error);
-      setAuthError("Login failed. Please check your credentials.");
-      toast.error("Login failed. Please check your credentials.");
+      const errorMessage = error?.message || "Login failed. Please check your credentials.";
+      setAuthError(errorMessage);
+      toast.error(errorMessage);
     }
   };
 
