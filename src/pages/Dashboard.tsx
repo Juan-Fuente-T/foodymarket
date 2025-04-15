@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useAuth } from "../hooks/use-auth";
@@ -10,13 +11,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CheckCircle, Clock, PlusCircle, RefreshCcw, TrendingUp, Users, DollarSign, ShoppingBag } from "lucide-react";
+import { CheckCircle, Clock, PlusCircle, RefreshCcw, TrendingUp, Users, DollarSign, ShoppingBag, User, Settings } from "lucide-react";
 
 const Dashboard = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
   
-  // Check if user is authenticated and has owner role
+  // Show loading state while auth is being checked
   if (isLoading) {
     return (
       <Layout>
@@ -33,9 +34,162 @@ const Dashboard = () => {
     );
   }
   
-  if (!isAuthenticated || (user && user.role !== "restaurante")) {
+  // Redirect to login if not authenticated
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
+  
+  // Render different dashboards based on user role
+  if (user?.role === "restaurante") {
+    return <RestaurantDashboard />;
+  }
+  
+  // Default to customer dashboard
+  return <CustomerDashboard />;
+};
+
+const CustomerDashboard = () => {
+  const { user } = useAuth();
+  
+  // Fetch customer orders
+  const { data: orders = [], isLoading: isLoadingOrders } = useQuery({
+    queryKey: ["customerOrders", user?.id],
+    queryFn: () => orderAPI.getByClient(user?.id as string),
+    enabled: !!user?.id,
+  });
+  
+  return (
+    <Layout>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">My Dashboard</h1>
+            <p className="text-gray-600 mt-1">Welcome back, {user?.name}</p>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-500">Total Orders</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center">
+                <ShoppingBag className="h-6 w-6 text-blue-500 mr-2" />
+                <span className="text-3xl font-bold">{orders.length}</span>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-500">Profile</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center">
+                <User className="h-6 w-6 text-purple-500 mr-2" />
+                <span className="text-lg font-medium">{user?.email}</span>
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/profile">Edit Profile</Link>
+              </Button>
+            </CardFooter>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-500">Settings</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center">
+                <Settings className="h-6 w-6 text-gray-500 mr-2" />
+                <span className="text-lg font-medium">Account Settings</span>
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/settings">Manage Settings</Link>
+              </Button>
+            </CardFooter>
+          </Card>
+        </div>
+        
+        <Card>
+          <CardHeader>
+            <div className="flex justify-between">
+              <CardTitle>Recent Orders</CardTitle>
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/orders">View All Orders</Link>
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {isLoadingOrders ? (
+              <div className="space-y-4">
+                {Array(5).fill(0).map((_, i) => (
+                  <Skeleton key={i} className="h-12 w-full" />
+                ))}
+              </div>
+            ) : orders.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Order ID</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Restaurant</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                    <TableHead></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {orders.slice(0, 5).map((order) => (
+                    <TableRow key={order.id}>
+                      <TableCell className="font-medium">{order.id.slice(0, 8)}</TableCell>
+                      <TableCell>
+                        {new Date(order.createdAt).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>{order.restaurantId}</TableCell>
+                      <TableCell>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          order.status === 'delivered' ? 'bg-green-100 text-green-800' :
+                          order.status === 'preparing' ? 'bg-blue-100 text-blue-800' :
+                          order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right">${order.total.toFixed(2)}</TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="sm">
+                          View
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-gray-600 mb-4">You haven't placed any orders yet.</p>
+                <Button asChild className="bg-food-600 hover:bg-food-700">
+                  <Link to="/restaurants">Browse Restaurants</Link>
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </Layout>
+  );
+};
+
+const RestaurantDashboard = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   
   // Get restaurant owned by user
   const { data: restaurants = [], isLoading: isLoadingRestaurants } = useQuery({

@@ -1,277 +1,230 @@
-
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { RestaurantCard } from "@/components/restaurant/RestaurantCard";
-import { Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { useQuery } from "@tanstack/react-query";
 import { restaurantAPI } from "@/services/api";
-import { Restaurant } from "@/types/models";
+import { RestaurantCard } from "@/components/restaurant/RestaurantCard";
 import { Skeleton } from "@/components/ui/skeleton";
 
-
-const Index = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-
-  const { data: restaurants = [], isLoading: isLoadingRestaurants, error: restaurantsError } = useQuery({
-    queryKey: ["restaurant/all"],
+// Add a "Become a Partner" section to the home page
+export default function Home() {
+  const { data: restaurants = [], isLoading: isLoadingRestaurants } = useQuery({
+    queryKey: ["restaurants"],
     queryFn: () => restaurantAPI.getAll(),
   });
   
-  // Para debugging - puede ser eliminado en producción
-  useEffect(() => {
-    if (restaurantsError) {
-      console.error("Error fetching restaurants:", restaurantsError);
-    }
-  }, [restaurantsError]);
-
-  // Agrupar restaurantes por categoría (ahora es solo un string)
-  const restaurantsByCategory = React.useMemo(() => {
-    if (!restaurants.length) return {};
-    
-    return restaurants.reduce((acc, restaurant) => {
-      const categoryName = restaurant.category || 'Uncategorized';
-      if (!acc[categoryName]) {
-        acc[categoryName] = [];
-      }
-      acc[categoryName].push(restaurant);
-      return acc;
-    }, {} as Record<string, Restaurant[]>);
-  }, [restaurants]);
-
-  // Obtener categorías únicas
-  const categories = Object.keys(restaurantsByCategory);
-
   return (
     <Layout>
-      {/* Hero Section */}
-      <section className="hero-section">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
-          <div className="max-w-3xl mx-auto text-center">
-            <h1 className="animate-fade-in text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
-              Delicious Food, 
-              <span className="text-food-600"> Delivered Fast</span>
-            </h1>
-            <p className="animate-fade-in animation-delay-100 text-xl text-gray-600 mb-8">
-              Order from your favorite local restaurants with free delivery on your first order.
-            </p>
-            
-            <div className="animate-fade-in animation-delay-200 flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4 mb-8">
-              <div className="relative w-full sm:w-auto sm:flex-grow max-w-xl">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <Input
-                  type="text"
-                  placeholder="Search for restaurants or food..."
-                  className="pl-10 pr-4 py-6 w-full rounded-full shadow-sm border border-gray-200 focus:border-food-500 focus:ring-food-500"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-              <Button 
-                asChild
-                size="lg" 
-                className="bg-food-600 hover:bg-food-700 text-white rounded-full py-6 button-hover"
-              >
-                <Link to={`/restaurants${searchTerm ? `?search=${searchTerm}` : ''}`}>
-                  Find Food
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Categories Section */}
-      <section className="py-16 bg-gray-50">
+      {/* Hero section */}
+      <section className="relative bg-food-50 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
-              Browse By Category
-            </h2>
-            <Button asChild variant="ghost" className="text-food-600 hover:text-food-700">
-              <Link to="/restaurants">View All</Link>
-            </Button>
-          </div>
-          
-          {isLoadingRestaurants ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
-              {Array(4).fill(null).map((_, i) => (
-                <Skeleton key={i} className="aspect-square rounded-xl" />
-              ))}
-            </div>
-          ) : restaurantsError ? (
-            <div className="text-center py-10">
-              <p className="text-red-500">Failed to load categories</p>
-              <Button onClick={() => window.location.reload()} className="mt-4">Retry</Button>
-            </div>
-          ) : categories.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
-              {categories.slice(0, 4).map((category, index) => {
-                const firstRestaurantWithCategory = restaurantsByCategory[category][0];
-                return (
-                  <Link 
-                    key={index}
-                    to={`/restaurants?category=${category}`}
-                    className="group relative overflow-hidden rounded-xl bg-white shadow-sm transition-all duration-300 hover:shadow-lg"
-                  >
-                    <div className="aspect-square overflow-hidden">
-                      {/* Usar una imagen del primer restaurante con esta categoría */}
-                      <img 
-                        src={firstRestaurantWithCategory?.coverImage || "https://via.placeholder.com/300?text=Category"}
-                        alt={category}
-                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
-                    </div>
-                    <div className="absolute bottom-0 left-0 right-0 p-4">
-                      <h3 className="text-xl font-bold text-white drop-shadow-md">
-                        {category}
-                      </h3>
-                      <p className="mt-1 text-sm text-white/90 line-clamp-2">
-                        {restaurantsByCategory[category].length} restaurants
-                      </p>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-gray-500">No categories available</p>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* Featured Restaurants Section */}
-      <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
-              Popular Restaurants
-            </h2>
-            <Button asChild variant="ghost" className="text-food-600 hover:text-food-700">
-              <Link to="/restaurants">View All</Link>
-            </Button>
-          </div>
-
-          {isLoadingRestaurants ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {Array(3).fill(null).map((_, i) => (
-                <Skeleton key={i} className="h-72 rounded-xl" />
-              ))}
-            </div>
-          ) : restaurantsError ? (
-            <div className="text-center py-10">
-              <p className="text-red-500">Failed to load restaurants</p>
-              <Button onClick={() => window.location.reload()} className="mt-4">Retry</Button>
-            </div>
-          ) : restaurants.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {restaurants.slice(0, 3).map((restaurant) => {
-                console.log(`Restaurant ID: ${restaurant.id}`, restaurant);
-                return <RestaurantCard key={restaurant.id} restaurant={restaurant} />;
-              })}
-              {/* {restaurants.slice(0, 3).map((restaurant) => (
-                <RestaurantCard key={restaurant.id} restaurant={restaurant} />
-              ))} */}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-gray-500">No restaurants available</p>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* How It Works Section */}
-      <section className="py-16 bg-gradient-to-b from-white to-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
-              How It Works
-            </h2>
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Order your favorite food in just a few easy steps
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Step 1 */}
-            <div className="flex flex-col items-center text-center p-6 hover:transform hover:scale-105 transition-transform duration-300">
-              <div className="w-16 h-16 bg-food-100 rounded-full flex items-center justify-center mb-4">
-                <span className="text-food-600 text-2xl font-bold">1</span>
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Browse Restaurants</h3>
-              <p className="text-gray-600">
-                Find your favorite restaurants or discover new ones nearby
-              </p>
-            </div>
-
-            {/* Step 2 */}
-            <div className="flex flex-col items-center text-center p-6 hover:transform hover:scale-105 transition-transform duration-300">
-              <div className="w-16 h-16 bg-food-100 rounded-full flex items-center justify-center mb-4">
-                <span className="text-food-600 text-2xl font-bold">2</span>
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Choose Your Food</h3>
-              <p className="text-gray-600">
-                Select from a wide variety of delicious meals and add to cart
-              </p>
-            </div>
-
-            {/* Step 3 */}
-            <div className="flex flex-col items-center text-center p-6 hover:transform hover:scale-105 transition-transform duration-300">
-              <div className="w-16 h-16 bg-food-100 rounded-full flex items-center justify-center mb-4">
-                <span className="text-food-600 text-2xl font-bold">3</span>
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Enjoy Your Meal</h3>
-              <p className="text-gray-600">
-                Your food will be prepared and delivered right to your door
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-16 bg-food-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-            <div className="grid grid-cols-1 md:grid-cols-2">
-              <div className="p-8 md:p-12 flex flex-col justify-center">
-                <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
-                  Become a Restaurant Partner
-                </h2>
-                <p className="text-lg text-gray-600 mb-6">
-                  Reach more customers, grow your business and let us handle the delivery. Join our network of restaurant partners today.
+          <div className="relative z-10 pt-16 pb-32 sm:pb-40 lg:pb-48">
+            <main className="mt-8 sm:mt-16 md:mt-24 lg:mt-32">
+              <div className="text-center">
+                <h1 className="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
+                  <span className="block xl:inline">Delicious food, delivered to</span>
+                  <span className="block text-food-600 xl:inline">your door</span>
+                </h1>
+                <p className="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
+                  Order from the best restaurants in town and get your food delivered quickly and easily.
                 </p>
-                <div>
-                  <Button 
-                    asChild
-                    size="lg"
-                    className="bg-food-600 hover:bg-food-700 text-white button-hover"
-                  >
-                    <Link to="/partner">
-                      Join Now
+                <div className="mt-5 sm:mt-8 flex justify-center">
+                  <div className="rounded-md shadow">
+                    <Link to="/restaurants">
+                      <Button className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-food-600 hover:bg-food-700 md:py-4 md:text-lg md:px-10">
+                        Order Now
+                      </Button>
                     </Link>
-                  </Button>
+                  </div>
                 </div>
               </div>
-              <div className="relative h-64 md:h-auto">
-                <img
-                  src="https://images.unsplash.com/photo-1484972759836-b93f9b778036?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1000&q=80"
-                  alt="Restaurant kitchen"
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
+            </main>
+          </div>
+        </div>
+        <div className="absolute inset-x-0 bottom-0 h-32 bg-gray-100"></div>
+      </section>
+      
+      {/* Featured restaurants section */}
+      <section className="py-12 md:py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-extrabold text-gray-900 mb-8">Featured Restaurants</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {isLoadingRestaurants ? (
+              Array(6).fill(0).map((_, i) => (
+                <Skeleton key={i} className="h-72 rounded-xl" />
+              ))
+            ) : (
+              restaurants.slice(0, 6).map(restaurant => (
+                <RestaurantCard key={restaurant.id} restaurant={restaurant} />
+              ))
+            )}
+          </div>
+          <div className="mt-8 text-center">
+            <Link to="/restaurants">
+              <Button variant="outline">View All Restaurants</Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+      
+      {/* How it works section */}
+      <section className="py-12 md:py-20 bg-food-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <h2 className="text-3xl font-extrabold text-gray-900 mb-4">How It Works</h2>
+            <p className="text-lg text-gray-600">
+              Get your favorite food in just a few simple steps.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className="w-20 h-20 bg-food-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-food-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
               </div>
+              <h3 className="text-xl font-semibold mb-2">Find a Restaurant</h3>
+              <p className="text-gray-600">Browse restaurants near you and explore their menus.</p>
+            </div>
+            <div className="text-center">
+              <div className="w-20 h-20 bg-food-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-food-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Place Your Order</h3>
+              <p className="text-gray-600">Add your favorite items to your cart and place your order.</p>
+            </div>
+            <div className="text-center">
+              <div className="w-20 h-20 bg-food-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-food-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Enjoy Your Meal</h3>
+              <p className="text-gray-600">Your order will be delivered to your door in no time.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      {/* Partner section - NEW */}
+      <section className="py-12 md:py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Become a Restaurant Partner
+            </h2>
+            <p className="text-lg text-gray-600">
+              Grow your business, reach new customers, and increase your revenue by partnering with us.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="bg-white rounded-lg shadow-md p-6 text-center">
+              <div className="w-12 h-12 bg-food-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-food-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Reach More Customers</h3>
+              <p className="text-gray-600">Expand your customer base and serve more people in your area.</p>
+            </div>
+            
+            <div className="bg-white rounded-lg shadow-md p-6 text-center">
+              <div className="w-12 h-12 bg-food-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-food-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Increase Revenue</h3>
+              <p className="text-gray-600">Boost your sales with online ordering and delivery services.</p>
+            </div>
+            
+            <div className="bg-white rounded-lg shadow-md p-6 text-center">
+              <div className="w-12 h-12 bg-food-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-food-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Easy Management</h3>
+              <p className="text-gray-600">Manage your menu, orders, and customer feedback all in one place.</p>
+            </div>
+          </div>
+          
+          <div className="text-center mt-10">
+            <Button asChild size="lg" className="bg-food-600 hover:bg-food-700">
+              <Link to="/partner">
+                Join as a Partner
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+      
+      {/* Testimonials section */}
+      <section className="py-12 md:py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <h2 className="text-3xl font-extrabold text-gray-900 mb-4">What Our Customers Say</h2>
+            <p className="text-lg text-gray-600">
+              Read what our customers have to say about their experience with FoodDelivery.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <div className="flex items-center mb-4">
+                <img className="w-12 h-12 rounded-full mr-4" src="https://images.unsplash.com/photo-1494790108377-be9c29b2933e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=4&w=256&h=256&q=60" alt="" />
+                <div>
+                  <h4 className="text-lg font-semibold">Jane Doe</h4>
+                  <p className="text-gray-500">Customer</p>
+                </div>
+              </div>
+              <p className="text-gray-700">
+                "I love FoodDelivery! It's so easy to order from my favorite restaurants and the delivery is always fast."
+              </p>
+            </div>
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <div className="flex items-center mb-4">
+                <img className="w-12 h-12 rounded-full mr-4" src="https://images.unsplash.com/photo-1500648767791-00d56c3f6955?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=4&w=256&h=256&q=60" alt="" />
+                <div>
+                  <h4 className="text-lg font-semibold">John Smith</h4>
+                  <p className="text-gray-500">Customer</p>
+                </div>
+              </div>
+              <p className="text-gray-700">
+                "FoodDelivery has made my life so much easier. I can order food from anywhere and have it delivered right to my door."
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      {/* Download app section */}
+      <section className="py-12 md:py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+            <div>
+              <h2 className="text-3xl font-extrabold text-gray-900 mb-4">Download Our App</h2>
+              <p className="text-lg text-gray-600 mb-6">
+                Get the best experience with our app. Available on iOS and Android.
+              </p>
+              <div className="flex">
+                <a href="#" className="mr-4">
+                  <img src="https://tailwindui.com/img/logos/apple-app-store.svg" className="h-12" alt="Download on the App Store" />
+                </a>
+                <a href="#">
+                  <img src="https://tailwindui.com/img/logos/google-play-store.svg" className="h-12" alt="Get it on Google Play" />
+                </a>
+              </div>
+            </div>
+            <div>
+              <img className="w-full rounded-lg shadow-lg" src="https://images.unsplash.com/photo-1555071958-07437918155f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=500&q=60" alt="" />
             </div>
           </div>
         </div>
       </section>
     </Layout>
   );
-};
-
-export default Index;
+}

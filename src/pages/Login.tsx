@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Link, useNavigate } from "react-router-dom";
@@ -24,7 +25,7 @@ const Login = () => {
 
   React.useEffect(() => {
     if (isAuthenticated) {
-      navigate("/");
+      navigate("/dashboard");
     }
   }, [isAuthenticated, navigate]);
 
@@ -34,7 +35,7 @@ const Login = () => {
       console.log("Login page: Attempting login with:", data.email);
       await login(data.email, data.password);
       toast.success("Login successful!");
-      navigate("/");
+      navigate("/dashboard");
     } catch (error: any) {
       console.error("Login error:", error);
       const errorMessage = error?.message || "Login failed. Please check your credentials.";
@@ -127,6 +128,11 @@ const Login = () => {
               Don't have an account?{" "}
               <Link to="/signup" className="text-food-600 hover:text-food-800 font-medium">
                 Sign up
+              </Link>
+            </div>
+            <div className="text-center text-sm text-gray-600">
+              <Link to="/partner" className="text-food-600 hover:text-food-800 font-medium">
+                Become a Restaurant Partner
               </Link>
             </div>
           </CardFooter>

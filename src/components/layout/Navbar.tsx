@@ -31,15 +31,18 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Define base navigation links that all users see
+  // Simplified navigation links for all users
   const navLinks = [
     { name: "Home", path: "/" },
     { name: "Restaurants", path: "/restaurants" },
   ];
 
-  // Only add "Partner" link if user is not logged in or is not a restaurant owner
-  if (!isAuthenticated || (user && user.role !== "restaurante")) {
-    navLinks.push({ name: "Become Partner", path: "/partner" });
+  // Add Dashboard link only for authenticated users
+  if (isAuthenticated) {
+    navLinks.push({
+      name: user?.role === "restaurante" ? "Restaurant Dashboard" : "My Account",
+      path: "/dashboard"
+    });
   }
 
   const closeMenu = () => setIsMenuOpen(false);
@@ -254,16 +257,6 @@ export function Navbar() {
                   <History className="h-5 w-5 mr-3 text-gray-500" />
                   My Orders
                 </Link>
-                {user?.role === "restaurante" && (
-                  <Link
-                    to="/dashboard"
-                    className="flex items-center py-2 px-3 text-base font-medium rounded-md text-gray-700 hover:bg-gray-50"
-                    onClick={closeMenu}
-                  >
-                    <ChefHat className="h-5 w-5 mr-3 text-gray-500" />
-                    Restaurant Dashboard
-                  </Link>
-                )}
                 <button
                   className="flex items-center w-full py-2 px-3 text-base font-medium rounded-md text-gray-700 hover:bg-gray-50"
                   onClick={() => {
