@@ -32,7 +32,7 @@ public class Restaurant {
     private String description;
 
     @Column(name = "rst_categoria", nullable = false)
-    private String categoria;
+    private String category;
 
     @Column(name = "rst_telefono", nullable = false)
     private String phone;
@@ -51,11 +51,4 @@ public class Restaurant {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
-    public Restaurant(RestaurantRequestDto restaurantRequestDto) {
-        this.name = restaurantRequestDto.name();
-        this.description = restaurantRequestDto.description();
-        this.phone = restaurantRequestDto.phone();
-        this.address = restaurantRequestDto.address();
-        this.logo = restaurantRequestDto.logo();
-    }
 }

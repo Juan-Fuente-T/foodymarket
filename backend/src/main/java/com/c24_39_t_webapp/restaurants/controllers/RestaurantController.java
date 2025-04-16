@@ -70,7 +70,7 @@ public class RestaurantController {
         restaurant.setPhone(restaurantRequestDto.phone());
         restaurant.setAddress(restaurantRequestDto.address());
         restaurant.setLogo(restaurantRequestDto.logo());
-        restaurant.setCategoria(restaurantRequestDto.categoria());
+        restaurant.setCategory(restaurantRequestDto.categoria());
 
         RestaurantResponseDto restaurantResponseDto = restaurantService.
                 registerRestaurant(restaurant, userDetails.getUsername());
@@ -138,7 +138,7 @@ public class RestaurantController {
 
         restaurant.setName(restaurantRequestDto.name());
         restaurant.setDescription(restaurantRequestDto.description());
-        restaurant.setCategoria(restaurantRequestDto.categoria());
+        restaurant.setCategory(restaurantRequestDto.categoria());
         restaurant.setPhone(restaurantRequestDto.phone());
         restaurant.setAddress(restaurantRequestDto.address());
         restaurant.setLogo(restaurantRequestDto.logo());
@@ -146,6 +146,22 @@ public class RestaurantController {
         RestaurantResponseDto updatedRestaurant = restaurantService.updateRestaurant(restaurant);
             log.info("Restaurante con ID: {} actualizado exitosamente", rst_id);
             return ResponseEntity.ok(updatedRestaurant);
+    }
+    @GetMapping("/byOwnerId/{ownerId}")
+    @PreAuthorize("hasAuthority('restaurante')")
+//    public int updateRestaurant(@RequestBody RestaurantResponseDto restaurantResponseDto) {
+    public ResponseEntity<List<RestaurantResponseDto>> getByOwnerId(
+            @PathVariable Long ownerId
+    ) {
+        log.info("Solicitud recibida para obtener todos los restaurantes del dueno {}", ownerId);
+        List<RestaurantResponseDto> restaurants = restaurantService.findRestaurantEntityByOwnerId(ownerId);
+
+        log.info("Se recuperaron {} restaurantes exitosamente para el dueño {}.", restaurants.size(), ownerId);
+        return ResponseEntity.ok(restaurants);
+
+//        RestaurantResponseDto updatedRestaurant = restaurantService.updateRestaurant(restaurant);
+//            log.info("Restaurante con ID: {} actualizado exitosamente", ownerId);
+//            return ResponseEntity.ok(updatedRestaurant);
     }
 
     /**

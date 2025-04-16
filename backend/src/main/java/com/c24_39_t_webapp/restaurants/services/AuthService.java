@@ -24,8 +24,8 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
-
     public AuthResponse register(RegisterRequest request){
+
         if (userRepository.existsByEmail(request.email())){
             throw new RuntimeException("Usuario ya existe");
         }
@@ -41,8 +41,8 @@ public class AuthService {
 
         var savedUser = userRepository.save(newUser);
         UserResponseDto userResponse = new UserResponseDto(savedUser);
-
-        return new AuthResponse("", "Usuario creado exitosamente", userResponse);
+        String token = jwtUtil.generateToken(request.email(), userResponse.getRole(), userResponse.getId());
+        return new AuthResponse(token, "Usuario creado exitosamente", userResponse);
     }
 
     public AuthResponse login(LoginRequest request){

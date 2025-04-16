@@ -45,9 +45,10 @@ public class RestaurantServiceImpl implements IRestaurantService {
         log.info("¡Restaurante creado Exitosamente!");
         return new RestaurantResponseDto(
                 restaurant.getId(),
+                restaurant.getUserEntity().getId(),
                 restaurant.getName(),
                 restaurant.getDescription(),
-                restaurant.getCategoria(),
+                restaurant.getCategory(),
                 restaurant.getPhone(),
                 restaurant.getAddress(),
                 restaurant.getLogo()
@@ -66,9 +67,10 @@ public class RestaurantServiceImpl implements IRestaurantService {
         return restaurants.stream()
                 .map(restaurant -> new RestaurantResponseDto(
                         restaurant.getId(),
+                        restaurant.getUserEntity().getId(),
                         restaurant.getName(),
                         restaurant.getDescription(),
-                        restaurant.getCategoria(),
+                        restaurant.getCategory(),
                         restaurant.getPhone(),
                         restaurant.getAddress(),
                         restaurant.getLogo()
@@ -87,9 +89,10 @@ public class RestaurantServiceImpl implements IRestaurantService {
         return restaurantRepository.findById(id)
                 .map(restaurant -> new RestaurantResponseDto(
                         restaurant.getId(),
+                        restaurant.getUserEntity().getId(),
                         restaurant.getName(),
                         restaurant.getDescription(),
-                        restaurant.getCategoria(),
+                        restaurant.getCategory(),
                         restaurant.getPhone(),
                         restaurant.getAddress(),
                         restaurant.getLogo()
@@ -112,9 +115,10 @@ public class RestaurantServiceImpl implements IRestaurantService {
         log.info("Restaurante actualizado exitosamente: {}", updatedRestaurant);
         return new RestaurantResponseDto(
                 updatedRestaurant.getId(),
+                updatedRestaurant.getUserEntity().getId(),
                 updatedRestaurant.getName(),
                 updatedRestaurant.getDescription(),
-                restaurant.getCategoria(),
+                restaurant.getCategory(),
                 updatedRestaurant.getPhone(),
                 updatedRestaurant.getAddress(),
                 updatedRestaurant.getLogo()
@@ -139,5 +143,28 @@ public class RestaurantServiceImpl implements IRestaurantService {
                     log.warn("No se encontró un restaurante con ese ID para editar: {}", id);
                     return new RestaurantNotFoundException(("No se encontró un restaurante con ese ID para editar: " + id));
                 });
+    }
+    @Override
+    public List<RestaurantResponseDto> findRestaurantEntityByOwnerId(Long ownerId) { // Este devuelve un array de  Restaurant
+        log.info("Buscando los restaurantes del dueño con id {}", ownerId);
+
+        List<Restaurant> restaurants = restaurantRepository.findByUserEntityId(ownerId);
+
+        if (restaurants.isEmpty()) {
+            throw new RuntimeException("No se encontraron restaurantes.");
+        }
+
+        return restaurants.stream()
+                .map(restaurant -> new RestaurantResponseDto(
+                        restaurant.getId(),
+                        restaurant.getUserEntity().getId(),
+                        restaurant.getName(),
+                        restaurant.getDescription(),
+                        restaurant.getCategory(),
+                        restaurant.getPhone(),
+                        restaurant.getAddress(),
+                        restaurant.getLogo()
+                ))
+                .collect(Collectors.toList());
     }
 }

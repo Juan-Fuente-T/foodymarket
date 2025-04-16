@@ -1,5 +1,10 @@
 package com.c24_39_t_webapp.restaurants.config.segurity;
 
+// --- Importaciones para CORS ---
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import java.util.List;
 import com.c24_39_t_webapp.restaurants.services.CustomUserDetailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -28,29 +33,43 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf(AbstractHttpConfigurer::disable).sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)).authorizeHttpRequests(auth -> auth.requestMatchers("/api/public/**", "/auth/**", "/h2-console", "/api/restaurant/testMethod", "/api/restaurant/testPostMethod",
+        http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/register").permitAll()
+                        .requestMatchers(
+                                "/api/public/**", "/auth/**", "/h2-console/**", "/api/restaurant/testMethod",
+                                "/api/restaurant/testPostMethod",
 //                        Swagger paths
-                        "/swagger-ui.html",
-                        "/api-docs/**",
-                        "/swagger-ui/**",
-                        "/v3/api-docs/**",
-                        "/swagger-ui.html",
-                        "/webjars/**").permitAll()
-                // Consultas públicas (lectura para todos)
-                .requestMatchers(HttpMethod.GET, "/api/category/**", "/api/restaurant/**", "/api/product/**").permitAll()
-                .requestMatchers("/api/category/**", "/api/restaurant/**", "/api/product/**").hasRole("RESTAURANTE")  // Orders: Cliente solo crea (POST)
-                .requestMatchers(HttpMethod.POST, "/api/order/**").hasRole("CLIENTE")
-                // Orders: Cliente solo consulta (GET) por fecha y cliente
-                .requestMatchers(HttpMethod.GET, "/api/order/byClientDate", "/api/order/byClientId/{cln_id}").hasRole("CLIENTE")
-                // Orders: Restaurante gestiona lo demás (GET, PATCH, DELETE)
-                .requestMatchers(HttpMethod.GET, "/api/order/**").hasRole("RESTAURANTE")
-                .requestMatchers(HttpMethod.PATCH, "/api/order/**").hasRole("RESTAURANTE")
-                .requestMatchers(HttpMethod.DELETE, "/api/order/**").hasRole("RESTAURANTE")
-                // Rutas exclusivas de restaurante, salvo GET
-                .requestMatchers("/api/category/**", "/api/restaurant/**", "/api/product/**").hasRole(
-                        "RESTAURANTE")
-                // Rutas exclusivas de cliente
-                .requestMatchers("/api/user/**").hasRole("CLIENTE").anyRequest().authenticated()).addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class);
+                                "/swagger-ui.html",
+                                "/api-docs/**",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/swagger-ui.html",
+                                "/webjars/**").permitAll()
+                        // Consultas públicas (lectura para todos)
+                        .requestMatchers(HttpMethod.GET, "/api/category/**", "/api/restaurant/**",
+                                "/api/product/**").permitAll()
+                        .requestMatchers("/api/category/**", "/api/restaurant/**",
+                                "/api/product/**").hasRole("restaurante")  // Orders: Cliente solo crea (POST)
+                        .requestMatchers(HttpMethod.POST, "/api/order/**").hasRole("cliente")
+                        // Orders: Cliente solo consulta (GET) por fecha y cliente
+                        .requestMatchers(HttpMethod.GET, "/api/order/byClientDate",
+                                "/api/order/byClientId/{cln_id}").hasRole("cliente")
+                        // Orders: Restaurante gestiona lo demás (GET, PATCH, DELETE)
+                        .requestMatchers(HttpMethod.GET, "/api/order/**").hasRole("restaurante")
+                        .requestMatchers(HttpMethod.PATCH, "/api/order/**").hasRole("restaurante")
+                        .requestMatchers(HttpMethod.DELETE, "/api/order/**").hasRole("restaurante")
+                        // Rutas exclusivas de restaurante, salvo GET
+                        .requestMatchers("/api/category/**", "/api/restaurant/**", "/api/product/**").hasRole(
+                                "restaurante")
+                        // Rutas exclusivas de cliente
+                        .requestMatchers("/api/user/**").hasRole("cliente")
+                        .anyRequest().authenticated()).
+                addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -68,4 +87,19 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(List.of(
+                "https://studious-disco-v4x4pw67g9g2pxvp-8080.app.github.dev", // URL de Codespaces
+                "http://localhost:8081", "http://localhost:8080"
+        ));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Cache-Control", "X-Requested-With")); // Cabeceras comunes
+        configuration.setAllowCredentials(true); // Importante para que el navegador envíe el token en la cabecera Auth
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/api/**", configuration); // Aplica la configuración a todas las rutas bajo /api/**
+        return source;
+    }
 }
+

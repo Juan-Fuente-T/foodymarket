@@ -11,6 +11,7 @@ public interface IRestaurantService {
     List<RestaurantResponseDto> findAll();
     RestaurantResponseDto findById(Long id);
     Restaurant findRestaurantEntityById(Long id);
+    List<RestaurantResponseDto> findRestaurantEntityByOwnerId(Long ownerId);
     void deleteById(Long id);
 
 }

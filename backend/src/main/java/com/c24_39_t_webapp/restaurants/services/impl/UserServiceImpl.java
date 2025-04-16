@@ -25,17 +25,17 @@ public class UserServiceImpl implements IUserService {
     private UserRepository userRepository;
     @Autowired
     private PasswordEncoder passwordEncoder;
-    @Override
-    @Transactional
-    public UserResponseDto createUser(UserEntity user) {
-        log.info("Creando un nuevo usuario con email: {}", user.getEmail());
-        // Codifica la contraseña antes de guardarla
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-//        user.setCreatedAt();
-        UserEntity savedUser = userRepository.save(user);
-        log.info("Usuario creado exitosamente con ID: {}", savedUser.getId());
-        return new UserResponseDto(savedUser);
-    }
+//    @Override
+//    @Transactional
+//    public UserResponseDto createUser(UserEntity user) {
+//        log.info("Creando un nuevo usuario con email: {}", user.getEmail());
+//        // Codifica la contraseña antes de guardarla
+//        user.setPassword(passwordEncoder.encode(user.getPassword()));
+////        user.setCreatedAt();
+//        UserEntity savedUser = userRepository.save(user);
+//        log.info("Usuario creado exitosamente con ID: {}", savedUser.getId());
+//        return new UserResponseDto(savedUser);
+//    }
 
     @Override
     @Transactional
@@ -62,7 +62,7 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
-    public UserEntity getUserByEmail(String email) {
+public UserEntity getUserProfile(String email) {
         log.info("Obteniendo usuario por email: {}", email);
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("El Usuario no Existe!"));

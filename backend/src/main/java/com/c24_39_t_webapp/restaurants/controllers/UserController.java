@@ -21,26 +21,25 @@ public class UserController {
     @Autowired
     private IUserService userService;
 
-    @PostMapping
-    @PreAuthorize("hasAnyAuthority('cliente')")
-    public ResponseEntity<UserResponseDto> createUser(@Valid @RequestBody final UserRequestDto userCreateRequestDto) {
-    UserEntity user = new UserEntity();
-        user.setEmail(userCreateRequestDto.email());
-        user.setPassword(userCreateRequestDto.password());
-        user.setName(userCreateRequestDto.name());
-        user.setPhone(userCreateRequestDto.phone());
-        user.setAddress(userCreateRequestDto.address());
-        UserResponseDto newUser = userService.createUser(user);
-//        return ResponseEntity.ok(newUser);
-        return ResponseEntity.status(HttpStatus.CREATED).body(newUser);
-    }
+//    @PostMapping
+//    public ResponseEntity<UserResponseDto> createUser(@Valid @RequestBody final UserRequestDto userCreateRequestDto) {
+//    UserEntity user = new UserEntity();
+//        user.setEmail(userCreateRequestDto.email());
+//        user.setPassword(userCreateRequestDto.password());
+//        user.setName(userCreateRequestDto.name());
+//        user.setPhone(userCreateRequestDto.phone());
+//        user.setAddress(userCreateRequestDto.address());
+//        UserResponseDto newUser = userService.createUser(user);
+////        return ResponseEntity.ok(newUser);
+//        return ResponseEntity.status(HttpStatus.CREATED).body(newUser);
+//    }
 
     @PutMapping
     @PreAuthorize("hasAnyAuthority('cliente')")
     public ResponseEntity<UserResponseDto> updateUser(@RequestBody final UserRequestDto userRequestDto,
                                                       @AuthenticationPrincipal final UserDetailsImpl userDetails) {
         String username = userDetails.getUsername();
-        UserEntity user = userService.getUserByEmail(username); // Obtiene el usuario actual
+        UserEntity user = userService.getUserProfile(username); // Obtiene el usuario actual
         user.setName(userRequestDto.name() != null ? userRequestDto.name() : user.getName());
         user.setEmail(userRequestDto.email() != null ? userRequestDto.email() : user.getEmail());
         user.setAddress(userRequestDto.address() != null ? userRequestDto.address() : user.getAddress());
@@ -52,22 +51,23 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<UserResponseDto> getUserByEmail(@AuthenticationPrincipal final UserDetailsImpl userDetails) {
-        UserResponseDto user = new UserResponseDto(userService.getUserByEmail(userDetails.getUsername()));
+    public ResponseEntity<UserResponseDto> getUserProfile(@AuthenticationPrincipal final UserDetailsImpl userDetails) {
+        UserResponseDto user = new UserResponseDto(userService.getUserProfile(userDetails.getUsername()));
         return ResponseEntity.ok(user);
     }
 
-    //    @DeleteMapping
-//    public ResponseEntity<Void> deleteUser(@AuthenticationPrincipal final UserDetailsImpl userDetails) {
-//        userService.deleteUser(userDetails.getId());
-//        return ResponseEntity.noContent().build();
-//    }
-    @DeleteMapping("/{id}")
+    @DeleteMapping
     @PreAuthorize("hasAnyAuthority('cliente')")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        userService.deleteUser(id);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    public ResponseEntity<Void> deleteUser(@AuthenticationPrincipal final UserDetailsImpl userDetails) {
+        userService.deleteUser(userDetails.getId());
+        return ResponseEntity.noContent().build();
     }
+//    @DeleteMapping("/{id}")
+//    @PreAuthorize("hasAnyAuthority('cliente')")
+//    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+//        userService.deleteUser(id);
+//        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+//    }
 //    @GetMapping
 //    public ResponseEntity<List<UserResponseDto>> getAllUsers() {
 //        return new ResponseEntity<>(userService.getAllUsers(), HttpStatus.OK);

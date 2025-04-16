@@ -79,7 +79,7 @@ public class ReviewController {
      * with the updated entity.
      */
 
-    @PutMapping()
+    @PatchMapping()
     public ResponseEntity<?> updateReview(@RequestBody final UpdateReviewDto updateReviewDto,
                  @AuthenticationPrincipal UserDetailsImpl userDetails) {
         ReviewResponseDto reviewResponseDto = iReviewService.updateReview(updateReviewDto, userDetails);

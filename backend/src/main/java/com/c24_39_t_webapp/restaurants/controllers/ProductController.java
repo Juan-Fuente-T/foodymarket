@@ -207,7 +207,7 @@ public class ProductController {
     public ResponseEntity<List<GroupedProductsResponseDto>> findProductsByRestaurantAndCategory(@PathVariable Long restaurantId) {
         log.info("Solicitud recibida para obtener productos del restaurante: {}", restaurantId);
         List<GroupedProductsResponseDto> products = productService.findProductsByRestaurantIdAndCategory(restaurantId);
-        log.info("Se recuperaron {} productos del restaurante: {} exitosamente.", products.size(), restaurantId);
+        log.info("Se recuperaron productos de {} categorias del restaurante: {} exitosamente.", products.size(), restaurantId);
         return ResponseEntity.ok(products);
     }
 }
