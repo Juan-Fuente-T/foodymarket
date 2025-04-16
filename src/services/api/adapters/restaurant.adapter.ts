@@ -8,7 +8,7 @@ export const adaptRestaurant = (data: any): Restaurant => ({
   phone: data.phone || '',
   address: data.address || '',
   logo: data.logo || '',
-  ownerId: data.userEntity?.id?.toString() || '',
+  ownerId: data.rst_user_id?.toString() || '',
   createdAt: data.createdAt?.toString() || new Date().toISOString(),
   updatedAt: data.updatedAt?.toString() || new Date().toISOString()
 //   coverImage: '', // Valor por defecto

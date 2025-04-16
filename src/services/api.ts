@@ -222,13 +222,19 @@ export const authAPI = {
 
 // Restaurants
 export const restaurantAPI = {
-  getAll: async () => {
+  getAll: async (): Promise<Restaurant[]> => {
     const data = await fetchWithError("/restaurant/all");
+    console.log("Data received from API GetAll:", data);
     return data.map(adaptRestaurant);
   },
 
   getById: async (id: string) => {
     const data = await fetchWithError(`/restaurant/${id}`);
+    return adaptRestaurant(data);
+  },
+  getByOwnerId: async (id: string) => {
+    const data = await fetchWithError(`/restaurant/byOwnerId/${id}`);
+    console.log("Data received from API getByOwnerId:", data);
     return adaptRestaurant(data);
   },
 

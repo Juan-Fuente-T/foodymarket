@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useAuth } from "../hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
@@ -12,11 +12,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CheckCircle, Clock, PlusCircle, RefreshCcw, TrendingUp, Users, DollarSign, ShoppingBag, User, Settings } from "lucide-react";
+import { Restaurant } from "@/types/models";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 const Dashboard = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
-  
+
   // Show loading state while auth is being checked
   if (isLoading) {
     return (
@@ -33,31 +36,31 @@ const Dashboard = () => {
       </Layout>
     );
   }
-  
+
   // Redirect to login if not authenticated
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
-  
+
   // Render different dashboards based on user role
   if (user?.role === "restaurante") {
     return <RestaurantDashboard />;
   }
-  
+
   // Default to customer dashboard
   return <CustomerDashboard />;
 };
 
 const CustomerDashboard = () => {
   const { user } = useAuth();
-  
+
   // Fetch customer orders
   const { data: orders = [], isLoading: isLoadingOrders } = useQuery({
     queryKey: ["customerOrders", user?.id],
     queryFn: () => orderAPI.getByClient(user?.id as string),
     enabled: !!user?.id,
   });
-  
+
   return (
     <Layout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -67,7 +70,7 @@ const CustomerDashboard = () => {
             <p className="text-gray-600 mt-1">Welcome back, {user?.name}</p>
           </div>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card>
             <CardHeader className="pb-2">
@@ -80,7 +83,7 @@ const CustomerDashboard = () => {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-gray-500">Profile</CardTitle>
@@ -97,7 +100,7 @@ const CustomerDashboard = () => {
               </Button>
             </CardFooter>
           </Card>
-          
+
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-gray-500">Settings</CardTitle>
@@ -115,7 +118,7 @@ const CustomerDashboard = () => {
             </CardFooter>
           </Card>
         </div>
-        
+
         <Card>
           <CardHeader>
             <div className="flex justify-between">
@@ -153,12 +156,11 @@ const CustomerDashboard = () => {
                       </TableCell>
                       <TableCell>{order.restaurantId}</TableCell>
                       <TableCell>
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          order.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                          order.status === 'preparing' ? 'bg-blue-100 text-blue-800' :
-                          order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${order.status === 'delivered' ? 'bg-green-100 text-green-800' :
+                            order.status === 'preparing' ? 'bg-blue-100 text-blue-800' :
+                              order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-gray-100 text-gray-800'
+                          }`}>
                           {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                         </span>
                       </TableCell>
@@ -188,316 +190,227 @@ const CustomerDashboard = () => {
 };
 
 const RestaurantDashboard = () => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  
-  // Get restaurant owned by user
-  const { data: restaurants = [], isLoading: isLoadingRestaurants } = useQuery({
-    queryKey: ["userRestaurants", user?.id],
-    queryFn: () => restaurantAPI.getAll().then(restaurants => 
-      restaurants.filter(restaurant => restaurant.ownerId === user?.id)
-    ),
-    enabled: !!user?.id,
-  });
-  
-  const restaurant = restaurants[0];
-  
-  // Get orders for the restaurant
+  const { user } = useAuth(); // Obtiene el usuario logueado del contexto
+
+  // --- Estado para guardar el restaurante seleccionado ---
+  const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
+
+  // --- Query para obtener los restaurantes PROPIEDAD del usuario ---
+  const { data: ownedRestaurants = [], isLoading: isLoadingRestaurants, error: errorRestaurants } =
+    useQuery<Restaurant[], Error>({ // <-- TIPADO EXPLÍCITO AQUÍ
+      queryKey: ["userRestaurants", user?.id],
+      // Asegúrate que la función SIEMPRE devuelve Promise<Restaurant[]>
+      queryFn: async (): Promise<Restaurant[]> => { // <-- Tipa el retorno de la función
+        if (!user?.id) return [];
+        try {
+          // Asume que getAll devuelve Promise<Restaurant[]> o Promise<any>
+          const allRestaurants = await restaurantAPI.getAll();
+          console.log("Data received from API getAll:", allRestaurants);
+          // Comprobación robusta por si la API devuelve algo inesperado
+          if (!Array.isArray(allRestaurants)) {
+            console.error("API did not return an array for getAll:", allRestaurants);
+            return []; // Devuelve array vacío en caso de respuesta inesperada
+          }
+          const ownerIdString = String(user.id);
+          // El filter siempre devuelve un array
+          const filtered = allRestaurants.filter((restaurant: Restaurant) => String(restaurant.ownerId) === ownerIdString);
+          return filtered;
+        } catch (apiError) {
+          console.error("Error fetching or filtering restaurants", apiError);
+          return []; // Devuelve array vacío en caso de error en la llamada/filtro
+        }
+      },
+      enabled: !!user?.id,
+    });
+
+  // --- Efecto para auto-seleccionar si solo hay un restaurante ---
+  useEffect(() => {
+    // No hacer nada si ya hay uno seleccionado o si aún está cargando/error
+    if (selectedRestaurant || isLoadingRestaurants || errorRestaurants) return;
+
+    if (ownedRestaurants.length === 1) {
+      // Si solo hay uno, selecciónalo
+      console.log("Auto-selecting the only restaurant:", ownedRestaurants[0]);
+      setSelectedRestaurant(ownedRestaurants[0]);
+    } else if (ownedRestaurants.length > 1) {
+      // Si hay varios, selecciona el primero por defecto (o null si prefieres)
+      console.log("Multiple restaurants found, selecting first by default:", ownedRestaurants[0]);
+      setSelectedRestaurant(ownedRestaurants[0]);
+    } else {
+      // Si no hay restaurantes, asegúrate que no hay nada seleccionado
+      setSelectedRestaurant(null);
+    }
+    // OJO: Añadir selectedRestaurant a las dependencias puede causar bucles si no se maneja bien.
+    // Lo quitamos para que solo se ejecute cuando cambien los restaurantes o el estado de carga/error.
+  }, [ownedRestaurants, isLoadingRestaurants, errorRestaurants]); // Dependencias clave
+
+
+  // --- Queries dependientes del restaurante SELECCIONADO ---
   const { data: orders = [], isLoading: isLoadingOrders } = useQuery({
-    queryKey: ["restaurantOrders", restaurant?.id],
-    queryFn: () => orderAPI.getByRestaurant(restaurant.id),
-    enabled: !!restaurant?.id,
+    queryKey: ["restaurantOrders", selectedRestaurant?.id], // Key depende del ID seleccionado
+    queryFn: () => orderAPI.getByRestaurant(selectedRestaurant!.id.toString()), // Llama solo si selectedRestaurant tiene ID
+    enabled: !!selectedRestaurant?.id, // Habilitado solo si hay un restaurante seleccionado
   });
-  
-  // Get products for the restaurant
+
   const { data: products = [], isLoading: isLoadingProducts } = useQuery({
-    queryKey: ["restaurantProducts", restaurant?.id],
-    queryFn: () => productAPI.getByRestaurant(restaurant.id),
-    enabled: !!restaurant?.id,
+    queryKey: ["restaurantProducts", selectedRestaurant?.id], // Key depende del ID seleccionado
+    queryFn: () => productAPI.getByRestaurant(selectedRestaurant!.id.toString()), // Llama solo si selectedRestaurant tiene ID
+    enabled: !!selectedRestaurant?.id, // Habilitado solo si hay un restaurante seleccionado
   });
-  
-  // Calculate statistics
-  const pendingOrders = orders.filter(order => ["pending", "accepted", "preparing"].includes(order.status));
-  const completedOrders = orders.filter(order => order.status === "delivered");
-  const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
-  
-  // Data for sales chart
-  const last7Days = Array.from({ length: 7 }, (_, i) => {
-    const date = new Date();
-    date.setDate(date.getDate() - i);
-    return date.toISOString().split('T')[0];
-  }).reverse();
-  
-  const salesData = last7Days.map(date => {
-    const dayOrders = orders.filter(order => 
-      order.createdAt.split('T')[0] === date
-    );
-    const totalSales = dayOrders.reduce((sum, order) => sum + order.total, 0);
-    
-    return {
-      date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      sales: totalSales
-    };
-  });
-  
-  // If user has no restaurants, show a page to create one
-  if (restaurants.length === 0 && !isLoadingRestaurants) {
-    return (
-      <Layout>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">Welcome to your Dashboard</h1>
-          <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
-            You don't have any restaurants yet. Create your first restaurant to start receiving orders.
-          </p>
-          <Button asChild className="bg-food-600 hover:bg-food-700">
-            <Link to="/partner">Create Restaurant</Link>
-          </Button>
-        </div>
-      </Layout>
-    );
+
+  // --- Cálculos basados en 'orders' (ajusta según tu estructura de datos real) ---
+  const pendingOrders = useMemo(() => orders.filter((o: any) => o.status === 'pending' || o.status === 'preparing'), [orders]);
+  const completedOrders = useMemo(() => orders.filter((o: any) => o.status === 'delivered' || o.status === 'completed'), [orders]);
+  const totalRevenue = useMemo(() => completedOrders.reduce((sum: number, o: any) => sum + (o.total || 0), 0), [completedOrders]);
+
+  // --- Manejador para cambiar el restaurante seleccionado ---
+  const handleRestaurantChange = (restaurantId: string) => {
+    // Busca el restaurante completo en la lista de los poseídos
+    // Compara como string por si acaso los IDs son numéricos
+    const restaurant = ownedRestaurants.find(r => String(r.id) === restaurantId) || null;
+    console.log("User selected restaurant:", restaurant);
+    setSelectedRestaurant(restaurant);
+  };
+
+  // --- Renderizado ---
+
+  // Estado de carga inicial (mientras se obtienen los restaurantes del usuario)
+  if (isLoadingRestaurants) {
+    return <Layout><div className="p-8">Loading your restaurants...</div></Layout>;
   }
-  
+
+  // Si hubo un error cargando los restaurantes del usuario
+  if (errorRestaurants) {
+    return <Layout><div className="p-8 text-red-600">Error loading your restaurants: {(errorRestaurants as Error).message}</div></Layout>;
+  }
+
+  // Si el usuario no tiene restaurantes
+  if (!isLoadingRestaurants && ownedRestaurants.length === 0) {
+    return <Layout><div className="p-8">You currently don't manage any restaurants. <Link to="/partner/create-restaurant" className="text-blue-600 hover:underline">Register your first one?</Link></div></Layout>; // Enlace a crear restaurante
+  }
+
+  // UI Principal (cuando ya sabemos qué restaurantes tiene)
   return (
     <Layout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+        {/* --- Cabecera y Selector (si aplica) --- */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">          {/* Título y nombre del restaurante seleccionado */}
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Restaurant Dashboard</h1>
-            {restaurant && (
-              <p className="text-gray-600 mt-1">{restaurant.name}</p>
+            {selectedRestaurant && (
+              <p className="text-gray-600 mt-1">{selectedRestaurant.name}</p>
+            )}
+            {!selectedRestaurant && ownedRestaurants.length > 1 && (
+              <p className="text-gray-500 mt-1">Select a restaurant to manage</p>
             )}
           </div>
-          <div className="mt-4 md:mt-0 space-x-2">
-            <Button asChild variant="outline">
-              <Link to={`/restaurants/${restaurant?.id}`}>
+
+          {/* Selector si hay más de 1 restaurante */}
+          {ownedRestaurants.length > 1 && (
+           <div className="w-full md:w-auto md:min-w-[280px] lg:min-w-[320px] space-y-1.5 mt-4 md:mt-0"> {/* Ajusta ancho mínimo y añade margen superior en móvil */}
+           {/* 1. Añadir Etiqueta (Label) */}
+           <Label htmlFor="restaurant-select" className="text-sm font-medium text-gray-700">
+             Gestionando Restaurante:
+           </Label>
+           <Select
+               value={selectedRestaurant ? String(selectedRestaurant.id) : ""}
+               onValueChange={handleRestaurantChange}
+           >
+             {/* 2. Trigger con ID para el Label y altura estándar */}
+             <SelectTrigger id="restaurant-select" className="h-10 text-base"> {/* Aumentado text-base */}
+               {/* 3. Placeholder (si llegara a usarse) */}
+               <SelectValue placeholder="Selecciona tu restaurante..." />
+             </SelectTrigger>
+             <SelectContent>
+               {ownedRestaurants.map((r) => (
+                 <SelectItem key={r.id} value={String(r.id)} className="text-base"> {/* Aumentado text-base */}
+                   {r.name}
+                 </SelectItem>
+               ))}
+             </SelectContent>
+           </Select>
+         </div>
+       )}
+
+          {/* Botones de acción (deshabilitados si no hay selección) */}
+          <div className="mt-4 md:mt-0 space-x-2 self-end md:self-center"> {/* Alineación botones */}
+            <Button asChild variant="outline" disabled={!selectedRestaurant}>
+              <Link to={selectedRestaurant ? `/restaurants/${selectedRestaurant.id}` : '#'}>
                 View Restaurant
               </Link>
             </Button>
-            <Button asChild className="bg-food-600 hover:bg-food-700">
-              <Link to="/dashboard/edit-restaurant">
+            <Button asChild className="bg-food-600 hover:bg-food-700" disabled={!selectedRestaurant}>
+              {/* Considera si la ruta de edición necesita el ID */}
+              <Link to={selectedRestaurant ? `/dashboard/edit-restaurant/${selectedRestaurant.id}` : '#'}>
                 Edit Restaurant
               </Link>
             </Button>
           </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-500">Pending Orders</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center">
-                <Clock className="h-6 w-6 text-yellow-500 mr-2" />
-                <span className="text-3xl font-bold">{pendingOrders.length}</span>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-500">Completed Orders</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center">
-                <CheckCircle className="h-6 w-6 text-green-500 mr-2" />
-                <span className="text-3xl font-bold">{completedOrders.length}</span>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-500">Total Revenue</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center">
-                <DollarSign className="h-6 w-6 text-green-500 mr-2" />
-                <span className="text-3xl font-bold">${totalRevenue.toFixed(2)}</span>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        
-        <Tabs defaultValue="orders" className="w-full">
-          <TabsList className="mb-6">
-            <TabsTrigger value="orders">Orders</TabsTrigger>
-            <TabsTrigger value="products">Products</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="orders">
-            <Card>
-              <CardHeader>
-                <div className="flex justify-between">
-                  <CardTitle>Recent Orders</CardTitle>
-                  <Button variant="outline" size="sm" className="flex items-center">
-                    <RefreshCcw className="h-4 w-4 mr-2" />
-                    Refresh
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {isLoadingOrders ? (
-                  <div className="space-y-4">
-                    {Array(5).fill(0).map((_, i) => (
-                      <Skeleton key={i} className="h-12 w-full" />
-                    ))}
-                  </div>
-                ) : orders.length > 0 ? (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Order ID</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Customer</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Amount</TableHead>
-                        <TableHead></TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {orders.slice(0, 5).map((order) => (
-                        <TableRow key={order.id}>
-                          <TableCell className="font-medium">{order.id.slice(0, 8)}</TableCell>
-                          <TableCell>
-                            {new Date(order.createdAt).toLocaleDateString()}
-                          </TableCell>
-                          <TableCell>{order.userId}</TableCell>
-                          <TableCell>
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              order.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                              order.status === 'preparing' ? 'bg-blue-100 text-blue-800' :
-                              order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-gray-100 text-gray-800'
-                            }`}>
-                              {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-right">${order.total.toFixed(2)}</TableCell>
-                          <TableCell>
-                            <Button variant="ghost" size="sm">
-                              View
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                ) : (
-                  <div className="text-center py-8">
-                    <p className="text-gray-600 mb-4">No orders yet.</p>
-                  </div>
-                )}
-              </CardContent>
-              <CardFooter className="flex justify-center">
-                <Button variant="outline">View All Orders</Button>
-              </CardFooter>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="products">
-            <Card>
-              <CardHeader>
-                <div className="flex justify-between">
-                  <CardTitle>Products</CardTitle>
-                  <Button className="bg-food-600 hover:bg-food-700" size="sm">
-                    <PlusCircle className="h-4 w-4 mr-2" />
-                    Add New Product
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {isLoadingProducts ? (
-                  <div className="space-y-4">
-                    {Array(5).fill(0).map((_, i) => (
-                      <Skeleton key={i} className="h-12 w-full" />
-                    ))}
-                  </div>
-                ) : products.length > 0 ? (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Image</TableHead>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Category</TableHead>
-                        <TableHead>Price</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead></TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {products.map((product) => (
-                        <TableRow key={product.id}>
-                          <TableCell>
-                            <img 
-                              src={product.image || "https://via.placeholder.com/40"} 
-                              alt={product.name} 
-                              className="w-10 h-10 object-cover rounded-md" 
-                            />
-                          </TableCell>
-                          <TableCell className="font-medium">{product.name}</TableCell>
-                          <TableCell>{product.categoryId}</TableCell>
-                          <TableCell>${product.price.toFixed(2)}</TableCell>
-                          <TableCell>
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              product.available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                            }`}>
-                              {product.available ? "Available" : "Unavailable"}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex space-x-2">
-                              <Button variant="ghost" size="sm">
-                                Edit
-                              </Button>
-                              <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-700">
-                                Delete
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                ) : (
-                  <div className="text-center py-8">
-                    <p className="text-gray-600 mb-4">No products yet. Add your first product to start selling.</p>
-                    <Button className="bg-food-600 hover:bg-food-700">
-                      <PlusCircle className="h-4 w-4 mr-2" />
-                      Add Product
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="analytics">
-            <Card>
-              <CardHeader>
-                <CardTitle>Sales Overview</CardTitle>
-                <CardDescription>Sales performance in the last 7 days</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={salesData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="date" />
-                      <YAxis />
-                      <Tooltip />
-                      <Bar dataKey="sales" fill="#f97316" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+        </div> {/* Fin Cabecera */}
+
+        {/* --- Contenido Principal del Dashboard (depende de selectedRestaurant) --- */}
+        {!selectedRestaurant ? (
+          // Mensaje si aún no se ha seleccionado (y hay > 1)
+          <div className="text-center py-16 text-gray-500">
+            Please select one of your restaurants above to see the dashboard.
+          </div>
+        ) : (
+          // Muestra el dashboard una vez que hay un restaurante seleccionado
+          <>
+            {/* Cards de Resumen */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              {/* Usa isLoadingOrders para mostrar Skeletons si los datos aún no están */}
+              <Card>
+                <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-gray-500">Pending Orders</CardTitle></CardHeader>
+                <CardContent><div className="flex items-center"><Clock className="h-6 w-6 text-yellow-500 mr-2" /><span className="text-3xl font-bold">{isLoadingOrders ? <Skeleton className="h-8 w-12 inline-block" /> : pendingOrders.length}</span></div></CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-gray-500">Completed Orders</CardTitle></CardHeader>
+                <CardContent><div className="flex items-center"><CheckCircle className="h-6 w-6 text-green-500 mr-2" /><span className="text-3xl font-bold">{isLoadingOrders ? <Skeleton className="h-8 w-12 inline-block" /> : completedOrders.length}</span></div></CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-gray-500">Total Revenue</CardTitle></CardHeader>
+                <CardContent><div className="flex items-center"><DollarSign className="h-6 w-6 text-green-500 mr-2" /><span className="text-3xl font-bold">{isLoadingOrders ? <Skeleton className="h-8 w-20 inline-block" /> : `$${totalRevenue.toFixed(2)}`}</span></div></CardContent>
+              </Card>
+            </div>
+
+            {/* Pestañas (Tabs) */}
+            <Tabs defaultValue="orders" className="w-full">
+              <TabsList className="mb-6">
+                <TabsTrigger value="orders">Orders</TabsTrigger>
+                <TabsTrigger value="products">Products</TabsTrigger>
+                <TabsTrigger value="analytics">Analytics</TabsTrigger>
+              </TabsList>
+
+              {/* Contenido Pestaña Orders */}
+              <TabsContent value="orders">
+                {/* Adapta tu tabla/contenido aquí usando 'orders' y 'isLoadingOrders' */}
+                <Card>
+                  {/* ... tu CardHeader, CardContent con Table ... */}
+                </Card>
+              </TabsContent>
+
+              {/* Contenido Pestaña Products */}
+              <TabsContent value="products">
+                {/* Adapta tu tabla/contenido aquí usando 'products' y 'isLoadingProducts' */}
+                <Card>
+                  {/* ... tu CardHeader, CardContent con Table ... */}
+                </Card>
+              </TabsContent>
+
+              {/* Contenido Pestaña Analytics */}
+              <TabsContent value="analytics">
+                {/* Adapta tu contenido aquí */}
+                <Card>
+                  {/* ... tu CardHeader, CardContent con Gráfica ... */}
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </>
+        )} {/* Fin bloque condicional selectedRestaurant */}
       </div>
     </Layout>
   );
 };
 
-export default Dashboard;
+export default RestaurantDashboard; // O tu exportación

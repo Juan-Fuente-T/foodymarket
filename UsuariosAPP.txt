@@ -4,3 +4,16 @@ usuario1@example.com
 password1   $2a$12$aMsavbgjfIX2KDljiXtwYOeIK5TR2Ah8gM.xbsPUEG4t1mRGJKr8i
 usuario2@example.com
 password2   $2a$12$DPyi.q3iT5p2ttBbvvH.refPn3OMalmuLoE3fpE45FbXpzy.Jro8O
+
+dueno1@example.com
+password3   $2a$12$iv5FoOHHe5dB5PhLI8fyY.bMxa8i1Sz2XwL8UXTr3RhObG344zeia
+dueno2@example.com
+password4   $2a$12$b5NHNSknZAd9MmcosOPdW.KCzJF55vfzFJelqtOM2tUkZX1GVey62
+
+usuario3@example.com
+password3   $2a$12$iv5FoOHHe5dB5PhLI8fyY.bMxa8i1Sz2XwL8UXTr3RhObG344zeia
+usuario4@example.com
+password4   $2a$12$ae9QwXkXaiSUNUx7c6F.oOpiBJyQ.4wBQuc96T0ZpjB2uXqxWyeM2
+usuario5@example.com
+password5   $2a$12$P1R/8/L2sSLrGiTBr.M/c.BSwvx9a7J9wfNw4QOfL5eg6rVS1qrTS
+
