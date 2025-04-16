@@ -13,7 +13,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 //import java.net.URI;
 import java.util.List;
@@ -148,20 +147,15 @@ public class RestaurantController {
             return ResponseEntity.ok(updatedRestaurant);
     }
     @GetMapping("/byOwnerId/{ownerId}")
-    @PreAuthorize("hasAuthority('restaurante')")
-//    public int updateRestaurant(@RequestBody RestaurantResponseDto restaurantResponseDto) {
+//    @PreAuthorize("hasAuthority('restaurante')")
     public ResponseEntity<List<RestaurantResponseDto>> getByOwnerId(
             @PathVariable Long ownerId
     ) {
         log.info("Solicitud recibida para obtener todos los restaurantes del dueno {}", ownerId);
-        List<RestaurantResponseDto> restaurants = restaurantService.findRestaurantEntityByOwnerId(ownerId);
+        List<RestaurantResponseDto> restaurants = restaurantService.findRestaurantsByOwnerId(ownerId);
 
         log.info("Se recuperaron {} restaurantes exitosamente para el dueño {}.", restaurants.size(), ownerId);
         return ResponseEntity.ok(restaurants);
-
-//        RestaurantResponseDto updatedRestaurant = restaurantService.updateRestaurant(restaurant);
-//            log.info("Restaurante con ID: {} actualizado exitosamente", ownerId);
-//            return ResponseEntity.ok(updatedRestaurant);
     }
 
     /**

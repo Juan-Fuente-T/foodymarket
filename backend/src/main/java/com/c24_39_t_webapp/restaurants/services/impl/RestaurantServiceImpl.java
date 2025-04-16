@@ -55,7 +55,7 @@ public class RestaurantServiceImpl implements IRestaurantService {
         );
     }
 
-
+    @Transactional(readOnly = true)
     @Override
     public List<RestaurantResponseDto> findAll() {
         List<Restaurant> restaurants = restaurantRepository.findAll();
@@ -78,6 +78,7 @@ public class RestaurantServiceImpl implements IRestaurantService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     @Override
     public RestaurantResponseDto findById(Long id) {
         log.info("Buscando restaurante con ID: {}", id);
@@ -103,6 +104,7 @@ public class RestaurantServiceImpl implements IRestaurantService {
                 });
     }
 
+    @Transactional
     @Override
     public RestaurantResponseDto updateRestaurant(Restaurant restaurant) {
         if (!restaurantRepository.existsById(restaurant.getId())) {
@@ -124,6 +126,7 @@ public class RestaurantServiceImpl implements IRestaurantService {
                 updatedRestaurant.getLogo()
         );
     }
+    @Transactional
     @Override
     public void deleteById(Long id) {
         if (!restaurantRepository.existsById(id)) {
@@ -135,6 +138,7 @@ public class RestaurantServiceImpl implements IRestaurantService {
         return restaurantRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("El restaurante no existe!"));
     }
+    @Transactional(readOnly = true)
     @Override
     public Restaurant findRestaurantEntityById(Long id) { // Este devuelve un Restaurant
         log.info("Buscando el restaurante con ID: {} para actualización", id);
@@ -143,28 +147,13 @@ public class RestaurantServiceImpl implements IRestaurantService {
                     log.warn("No se encontró un restaurante con ese ID para editar: {}", id);
                     return new RestaurantNotFoundException(("No se encontró un restaurante con ese ID para editar: " + id));
                 });
-    }
+    }@Transactional(readOnly = true)
     @Override
-    public List<RestaurantResponseDto> findRestaurantEntityByOwnerId(Long ownerId) { // Este devuelve un array de  Restaurant
+    public List<RestaurantResponseDto> findRestaurantsByOwnerId(Long ownerId) { // Este devuelve un array de  Restaurant
         log.info("Buscando los restaurantes del dueño con id {}", ownerId);
+        List<RestaurantResponseDto> dtos = restaurantRepository.findRestaurantsByOwnerId(ownerId);
 
-        List<Restaurant> restaurants = restaurantRepository.findByUserEntityId(ownerId);
-
-        if (restaurants.isEmpty()) {
-            throw new RuntimeException("No se encontraron restaurantes.");
-        }
-
-        return restaurants.stream()
-                .map(restaurant -> new RestaurantResponseDto(
-                        restaurant.getId(),
-                        restaurant.getUserEntity().getId(),
-                        restaurant.getName(),
-                        restaurant.getDescription(),
-                        restaurant.getCategory(),
-                        restaurant.getPhone(),
-                        restaurant.getAddress(),
-                        restaurant.getLogo()
-                ))
-                .collect(Collectors.toList());
+        log.info("Se encontraron {} DTOs de restaurantes para el propietario {}", dtos.size(), ownerId);
+        return dtos;
     }
 }
