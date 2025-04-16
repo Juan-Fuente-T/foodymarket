@@ -66,7 +66,8 @@ const handleResponse = async (response: Response) => {
 // Generic fetch with error handling
 const fetchWithError = async (
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  sendAuth = true
 ): Promise<any> => {
   try {
     const url = `${API_BASE_URL}${endpoint}`;
@@ -78,7 +79,7 @@ const fetchWithError = async (
 
     // Añadir token de autenticación si existe
     const token = getAuthToken();
-    if (token) {
+    if (token && sendAuth) {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
@@ -232,16 +233,18 @@ export const restaurantAPI = {
     const data = await fetchWithError(`/restaurant/${id}`);
     return adaptRestaurant(data);
   },
-  getByOwnerId: async (id: string) => {
-    const data = await fetchWithError(`/restaurant/byOwnerId/${id}`);
+  getByOwnerId: async (ownerId: string): Promise<Restaurant[]>  => {
+    // const data = await fetchWithError(`/restaurant/byOwnerId/${ownerId}`);
+    const endpoint = `/restaurant/byOwnerId/${ownerId}`;
+    const data = await fetchWithError(endpoint, {}, false); // <-- Añade false
     console.log("Data received from API getByOwnerId:", data);
-    return adaptRestaurant(data);
-  },
-
-  getByCategory: async (categoryId: string) => {
-    const data = await fetchWithError(`/restaurant/byCategory/${categoryId}`);
     return data.map(adaptRestaurant);
   },
+
+  // getByCategory: async (categoryId: string) => {
+  //   const data = await fetchWithError(`/restaurant/byCategory/${categoryId}`);
+  //   return data.map(adaptRestaurant);
+  // },
 
   create: async (data: Omit<Restaurant, 'id' | 'createdAt' | 'updatedAt'>) => {
     const response = await fetchWithError("/restaurant", {
@@ -316,7 +319,7 @@ export const productAPI = {
     return data.map(adaptProduct);
   },
 
-  getByRestaurantAndCategory: async (restaurantId: number) => {
+  getByRestaurantAndCategory: async (restaurantId: string) => {
     const response = await fetchWithError(`/product/byRestaurantAndCategory/${restaurantId}`);
     // Verifica si la respuesta es un array de categorías con productos
     if (!Array.isArray(response)) {

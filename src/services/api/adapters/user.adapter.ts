@@ -2,7 +2,7 @@ import { User } from "@/types/models";
 
 // Exporta la función como "named export"
 export const adaptUser = (data: any): User => ({
-    id: data.id?.toString() || '',
+    id: data.id || '',
     name: data.usr_nombre || '',
     email: data.usr_email || '',
     role: data.usr_tipo as User['role'] || 'cliente',
