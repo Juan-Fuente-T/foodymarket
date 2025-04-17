@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -7,7 +8,7 @@ import { restaurantAPI, productAPI } from '@/services/api';
 import { Product, Restaurant, GroupedProduct } from '@/types/models';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Star, MapPin, Clock, Phone, ArrowLeft } from 'lucide-react';  // Iconos
+import { Star, MapPin, Clock, Phone, ArrowLeft } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { ProductCard } from '@/components/product/ProductCard';
 import { ProductDetailModal } from '../components/product/ProductDetailModal';
@@ -18,25 +19,25 @@ const RestaurantDetails = () => {
   const [selectedProduct, setSelectedProduct] = useState<null | Product>(null);
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
 
-  // Redirigir a login si no está autenticado
+  // Redirect to login if not authenticated
   if (!authLoading && !isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  // Obtener restaurante
+  // Get restaurant
   const { data: restaurant, isLoading: isLoadingRestaurant } = useQuery({
     queryKey: ["restaurant", id],
     queryFn: () => restaurantAPI.getById(id as string),
     enabled: !!id && isAuthenticated,
   });
 
-  // Obtener productos
+  // Get products
   const { data: categoriesWithProducts = [], isLoading: isLoadingProducts, error } = useQuery({
     queryKey: ["products", id],
     queryFn: async () => {
       const response = await productAPI.getByRestaurantAndCategory(id);
       console.log("Categories", response);
-      return response || []; // Asegura array vacío si response es undefined
+      return response || []; // Ensure empty array if response is undefined
     },
     enabled: !!id && !!restaurant && isAuthenticated
   });
@@ -46,12 +47,12 @@ const RestaurantDetails = () => {
     0
   );
 
-  // Setear restaurante en el carrito
+  // Set restaurant in cart
   useEffect(() => {
     if (restaurant) setRestaurant(restaurant);
   }, [restaurant]);
 
-  // --- Renderizado simplificado ---
+  // --- Simplified rendering ---
   if (authLoading) {
     return (
       <Layout>
@@ -92,13 +93,13 @@ const RestaurantDetails = () => {
   return (
     <Layout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Botón de volver (inline) */}
+        {/* Back button (inline) */}
         <Link to="/restaurants" className="inline-flex items-center text-food-600 hover:text-food-800 mb-6">
           <ArrowLeft className="h-4 w-4 mr-1" />
           Volver
         </Link>
 
-        {/* Header del restaurante (inline) */}
+        {/* Restaurant header (inline) */}
         <div className="relative rounded-2xl overflow-hidden mb-8">
           <img
             src={restaurant.coverImage || "https://via.placeholder.com/800x400"}
@@ -119,7 +120,7 @@ const RestaurantDetails = () => {
           </div>
         </div>
 
-        {/* Menú y productos */}
+        {/* Menu and products */}
         <div className="md:grid md:grid-cols-3 md:gap-8">
           <div className="md:col-span-2">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Menú</h2>
@@ -137,7 +138,7 @@ const RestaurantDetails = () => {
                     <h3 className="text-xl font-semibold mb-4">
                       {categoryGroup.categoryName}
                     </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       {categoryGroup.products.map((product) => (
                         <ProductCard
                           key={product.id}
@@ -156,7 +157,7 @@ const RestaurantDetails = () => {
               </>
             )}
           </div>
-            {/* Información del restaurante (inline) */}
+            {/* Restaurant information (inline) */}
             <div className="bg-gray-50 rounded-2xl p-6 sticky top-20">
               <h3 className="text-xl font-semibold text-gray-900 mb-4">Información</h3>
               <div className="space-y-4">

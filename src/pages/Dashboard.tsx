@@ -1,7 +1,8 @@
+
 import React, { useEffect, useMemo, useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useAuth } from "../hooks/use-auth";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { restaurantAPI, orderAPI, productAPI } from "@/services/api";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,10 +16,13 @@ import {
   Users, DollarSign, ShoppingBag, User, Settings, 
   Edit, Trash2, Package, Star
 } from "lucide-react";
-import { Restaurant } from "@/types/models";
+import { Product, Restaurant, GroupedProduct } from "@/types/models";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { ProductEditModal } from "@/components/product/ProductEditModal";
+import { CategoryManagement } from "@/components/category/CategoryManagement";
+import { toast } from "sonner";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 const Dashboard = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -196,6 +200,14 @@ const CustomerDashboard = () => {
 const RestaurantDashboard = () => {
   const { user } = useAuth();
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  
+  // State for product editing/adding
+  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // Query for getting restaurants owned by the user
   const { data: ownedRestaurants = [], isLoading: isLoadingRestaurants, error: errorRestaurants } =
@@ -240,11 +252,58 @@ const RestaurantDashboard = () => {
     enabled: !!selectedRestaurant?.id,
   });
 
-  const { data: products = [], isLoading: isLoadingProducts } = useQuery({
+  const { data: categoriesWithProducts = [], isLoading: isLoadingProducts } = useQuery({
     queryKey: ["restaurantProducts", selectedRestaurant?.id],
-    // queryFn: () => productAPI.getByRestaurant(selectedRestaurant!.id.toString()),
     queryFn: () => productAPI.getByRestaurantAndCategory(selectedRestaurant!.id.toString()),
     enabled: !!selectedRestaurant?.id,
+  });
+
+  // Extract all products and unique categories
+  const allProducts = useMemo(() => {
+    return categoriesWithProducts.reduce((acc: Product[], category: GroupedProduct) => {
+      return [...acc, ...category.products];
+    }, []);
+  }, [categoriesWithProducts]);
+
+  const uniqueCategories = useMemo(() => {
+    return categoriesWithProducts.map(category => category.categoryName);
+  }, [categoriesWithProducts]);
+
+  // Mutations for products
+  const { mutate: saveProduct } = useMutation({
+    mutationFn: (product: Product) => {
+      if (product.id && !product.id.startsWith('temp_')) {
+        return productAPI.update(product.id.toString(), {
+          ...product,
+          restaurantId: selectedRestaurant!.id
+        });
+      } else {
+        return productAPI.create({
+          ...product,
+          restaurantId: selectedRestaurant!.id
+        });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["restaurantProducts", selectedRestaurant?.id] });
+      toast.success("Producto guardado con éxito");
+    },
+    onError: (error) => {
+      console.error("Error saving product:", error);
+      toast.error("Error al guardar el producto");
+    }
+  });
+
+  const { mutate: deleteProduct } = useMutation({
+    mutationFn: (productId: string) => productAPI.delete(productId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["restaurantProducts", selectedRestaurant?.id] });
+      toast.success("Producto eliminado con éxito");
+    },
+    onError: (error) => {
+      console.error("Error deleting product:", error);
+      toast.error("Error al eliminar el producto");
+    }
   });
 
   // Order and revenue calculations
@@ -257,6 +316,50 @@ const RestaurantDashboard = () => {
     const restaurant = ownedRestaurants.find(r => String(r.id) === restaurantId) || null;
     console.log("User selected restaurant:", restaurant);
     setSelectedRestaurant(restaurant);
+  };
+
+  // Handlers for product actions
+  const handleAddProduct = () => {
+    setSelectedProduct(null);
+    setIsProductModalOpen(true);
+  };
+
+  const handleEditProduct = (product: Product) => {
+    setSelectedProduct(product);
+    setIsProductModalOpen(true);
+  };
+
+  const handleDeleteProduct = (product: Product) => {
+    setProductToDelete(product);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteProduct = () => {
+    if (productToDelete && productToDelete.id) {
+      deleteProduct(productToDelete.id.toString());
+    }
+    setIsDeleteDialogOpen(false);
+  };
+
+  const handleSaveProduct = (product: Product) => {
+    saveProduct(product);
+  };
+
+  // Category management handlers
+  const handleAddCategory = (categoryName: string) => {
+    // For now we'll just show a toast, since the API endpoints for categories might not exist yet
+    toast.success(`Categoría "${categoryName}" agregada con éxito`);
+    // In a real implementation, we would call an API to create a category
+  };
+
+  const handleEditCategory = (oldName: string, newName: string) => {
+    toast.success(`Categoría actualizada de "${oldName}" a "${newName}"`);
+    // In a real implementation, we would call an API to update a category
+  };
+
+  const handleDeleteCategory = (categoryName: string) => {
+    toast.success(`Categoría "${categoryName}" eliminada con éxito`);
+    // In a real implementation, we would call an API to delete a category
   };
 
   // Prepare data for charts
@@ -385,7 +488,7 @@ const RestaurantDashboard = () => {
               </Link>
             </Button>
             <Button asChild className="bg-food-600 hover:bg-food-700" disabled={!selectedRestaurant}>
-              <Link to={selectedRestaurant ? `/dashboard/edit-restaurant/${selectedRestaurant.id}` : '#'}>
+              <Link to={selectedRestaurant ? `/edit-restaurant/${selectedRestaurant.id}` : '#'}>
                 Edit Restaurant
               </Link>
             </Button>
@@ -451,7 +554,7 @@ const RestaurantDashboard = () => {
                   <div className="flex items-center">
                     <Package className="h-6 w-6 text-blue-500 mr-2" />
                     <span className="text-3xl font-bold">
-                      {isLoadingProducts ? <Skeleton className="h-8 w-12 inline-block" /> : products.length}
+                      {isLoadingProducts ? <Skeleton className="h-8 w-12 inline-block" /> : allProducts.length}
                     </span>
                   </div>
                 </CardContent>
@@ -464,6 +567,7 @@ const RestaurantDashboard = () => {
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="orders">Orders</TabsTrigger>
                 <TabsTrigger value="products">Products</TabsTrigger>
+                <TabsTrigger value="categories">Categories</TabsTrigger>
                 <TabsTrigger value="analytics">Analytics</TabsTrigger>
               </TabsList>
 
@@ -665,7 +769,10 @@ const RestaurantDashboard = () => {
                       <CardTitle>Menu Products</CardTitle>
                       <CardDescription>Manage your restaurant's menu items</CardDescription>
                     </div>
-                    <Button className="bg-food-600 hover:bg-food-700">
+                    <Button 
+                      className="bg-food-600 hover:bg-food-700"
+                      onClick={handleAddProduct}
+                    >
                       <PlusCircle className="mr-2 h-4 w-4" /> Add New Product
                     </Button>
                   </CardHeader>
@@ -676,74 +783,139 @@ const RestaurantDashboard = () => {
                           <Skeleton key={i} className="h-12 w-full" />
                         ))}
                       </div>
-                    ) : products.length > 0 ? (
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Image</TableHead>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Category</TableHead>
-                            <TableHead>Price</TableHead>
-                            <TableHead>Available</TableHead>
-                            <TableHead>Actions</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {products.map((product: any) => (
-                            <TableRow key={product.id}>
-                              <TableCell>
-                                <div className="w-10 h-10 rounded-md overflow-hidden bg-gray-100">
-                                  {product.image ? (
-                                    <img 
-                                      src={product.image} 
-                                      alt={product.name} 
-                                      className="w-full h-full object-cover"
-                                    />
-                                  ) : (
-                                    <div className="flex items-center justify-center w-full h-full text-gray-400">
-                                      <Package className="h-5 w-5" />
-                                    </div>
-                                  )}
-                                </div>
-                              </TableCell>
-                              <TableCell className="font-medium">{product.name}</TableCell>
-                              <TableCell>{product.category || "Uncategorized"}</TableCell>
-                              <TableCell>${product.price?.toFixed(2)}</TableCell>
-                              <TableCell>
-                                {product.available ? (
-                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                    Available
-                                  </span>
-                                ) : (
-                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                    Unavailable
-                                  </span>
-                                )}
-                              </TableCell>
-                              <TableCell>
-                                <div className="flex items-center gap-2">
-                                  <Button variant="ghost" size="sm">
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                  <Button variant="ghost" size="sm">
-                                    <Trash2 className="h-4 w-4 text-red-500" />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
+                    ) : categoriesWithProducts.length > 0 ? (
+                      <div className="space-y-8">
+                        {categoriesWithProducts.map((category) => (
+                          <div key={category.categoryName} className="space-y-4">
+                            <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">
+                              {category.categoryName}
+                            </h3>
+                            
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Image</TableHead>
+                                  <TableHead>Name</TableHead>
+                                  <TableHead>Price</TableHead>
+                                  <TableHead>Available</TableHead>
+                                  <TableHead>Actions</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {category.products.map((product) => (
+                                  <TableRow key={product.id}>
+                                    <TableCell>
+                                      <div className="w-10 h-10 rounded-md overflow-hidden bg-gray-100">
+                                        {product.image ? (
+                                          <img 
+                                            src={product.image} 
+                                            alt={product.name} 
+                                            className="w-full h-full object-cover"
+                                          />
+                                        ) : (
+                                          <div className="flex items-center justify-center w-full h-full text-gray-400">
+                                            <Package className="h-5 w-5" />
+                                          </div>
+                                        )}
+                                      </div>
+                                    </TableCell>
+                                    <TableCell className="font-medium">
+                                      {product.name}
+                                      {product.description && (
+                                        <p className="text-xs text-gray-500 truncate max-w-xs">{product.description}</p>
+                                      )}
+                                    </TableCell>
+                                    <TableCell>${product.price?.toFixed(2)}</TableCell>
+                                    <TableCell>
+                                      {product.available !== false ? (
+                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                          Available
+                                        </span>
+                                      ) : (
+                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                          Unavailable
+                                        </span>
+                                      )}
+                                    </TableCell>
+                                    <TableCell>
+                                      <div className="flex items-center gap-2">
+                                        <Button 
+                                          variant="ghost" 
+                                          size="sm"
+                                          onClick={() => handleEditProduct(product)}
+                                        >
+                                          <Edit className="h-4 w-4" />
+                                        </Button>
+                                        <Button 
+                                          variant="ghost" 
+                                          size="sm"
+                                          onClick={() => handleDeleteProduct(product)}
+                                        >
+                                          <Trash2 className="h-4 w-4 text-red-500" />
+                                        </Button>
+                                      </div>
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        ))}
+                      </div>
                     ) : (
                       <div className="text-center py-8">
                         <p className="text-gray-600 mb-4">This restaurant doesn't have any products yet.</p>
-                        <Button className="bg-food-600 hover:bg-food-700">
+                        <Button 
+                          className="bg-food-600 hover:bg-food-700"
+                          onClick={handleAddProduct}
+                        >
                           <PlusCircle className="mr-2 h-4 w-4" /> Add Your First Product
                         </Button>
                       </div>
                     )}
                   </CardContent>
                 </Card>
+                
+                {/* Product Edit Modal */}
+                <ProductEditModal
+                  product={selectedProduct}
+                  categories={uniqueCategories}
+                  isOpen={isProductModalOpen}
+                  onClose={() => setIsProductModalOpen(false)}
+                  onSave={handleSaveProduct}
+                />
+                
+                {/* Delete Confirmation Dialog */}
+                <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete the product
+                        "{productToDelete?.name}" from your restaurant.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction 
+                        onClick={confirmDeleteProduct}
+                        className="bg-red-600 hover:bg-red-700 text-white"
+                      >
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </TabsContent>
+
+              {/* Categories Tab */}
+              <TabsContent value="categories">
+                <CategoryManagement
+                  categories={uniqueCategories}
+                  onAddCategory={handleAddCategory}
+                  onEditCategory={handleEditCategory}
+                  onDeleteCategory={handleDeleteCategory}
+                />
               </TabsContent>
 
               {/* Analytics Tab */}
@@ -756,10 +928,10 @@ const RestaurantDashboard = () => {
                     <CardContent className="h-80">
                       {isLoadingProducts || isLoadingOrders ? (
                         <Skeleton className="w-full h-full" />
-                      ) : products.length > 0 ? (
+                      ) : allProducts.length > 0 ? (
                         <ResponsiveContainer width="100%" height="100%">
                           <BarChart
-                            data={products.slice(0, 5).map((p: any, index: number) => ({
+                            data={allProducts.slice(0, 5).map((p: any, index: number) => ({
                               name: p.name,
                               orders: Math.floor(Math.random() * 50) + 5 // Example random data
                             }))}

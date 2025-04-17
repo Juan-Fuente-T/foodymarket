@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,6 @@ import { restaurantAPI } from "@/services/api";
 import { RestaurantCard } from "@/components/restaurant/RestaurantCard";
 import { Skeleton } from "@/components/ui/skeleton";
 
-// Add a "Become a Partner" section to the home page
 export default function Home() {
   const { data: restaurants = [], isLoading: isLoadingRestaurants } = useQuery({
     queryKey: ["restaurants"],
@@ -109,7 +109,7 @@ export default function Home() {
         </div>
       </section>
       
-      {/* Partner section - NEW */}
+      {/* Partner section */}
       <section className="py-12 md:py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-12">
@@ -175,7 +175,11 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="bg-white rounded-lg shadow-md p-6">
               <div className="flex items-center mb-4">
-                <img className="w-12 h-12 rounded-full mr-4" src="https://images.unsplash.com/photo-1494790108377-be9c29b2933e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=4&w=256&h=256&q=60" alt="" />
+                <img 
+                  className="w-12 h-12 rounded-full mr-4 object-cover" 
+                  src="https://images.unsplash.com/photo-1494790108377-be9c29b2933e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=4&w=256&h=256&q=60" 
+                  alt="Customer avatar" 
+                />
                 <div>
                   <h4 className="text-lg font-semibold">Jane Doe</h4>
                   <p className="text-gray-500">Customer</p>
@@ -187,7 +191,11 @@ export default function Home() {
             </div>
             <div className="bg-white rounded-lg shadow-md p-6">
               <div className="flex items-center mb-4">
-                <img className="w-12 h-12 rounded-full mr-4" src="https://images.unsplash.com/photo-1500648767791-00d56c3f6955?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=4&w=256&h=256&q=60" alt="" />
+                <img 
+                  className="w-12 h-12 rounded-full mr-4 object-cover" 
+                  src="https://images.unsplash.com/photo-1500648767791-00d56c3f6955?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=4&w=256&h=256&q=60" 
+                  alt="Customer avatar" 
+                />
                 <div>
                   <h4 className="text-lg font-semibold">John Smith</h4>
                   <p className="text-gray-500">Customer</p>
@@ -196,31 +204,6 @@ export default function Home() {
               <p className="text-gray-700">
                 "FoodDelivery has made my life so much easier. I can order food from anywhere and have it delivered right to my door."
               </p>
-            </div>
-          </div>
-        </div>
-      </section>
-      
-      {/* Download app section */}
-      <section className="py-12 md:py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-            <div>
-              <h2 className="text-3xl font-extrabold text-gray-900 mb-4">Download Our App</h2>
-              <p className="text-lg text-gray-600 mb-6">
-                Get the best experience with our app. Available on iOS and Android.
-              </p>
-              <div className="flex">
-                <a href="#" className="mr-4">
-                  <img src="https://tailwindui.com/img/logos/apple-app-store.svg" className="h-12" alt="Download on the App Store" />
-                </a>
-                <a href="#">
-                  <img src="https://tailwindui.com/img/logos/google-play-store.svg" className="h-12" alt="Get it on Google Play" />
-                </a>
-              </div>
-            </div>
-            <div>
-              <img className="w-full rounded-lg shadow-lg" src="https://images.unsplash.com/photo-1555071958-07437918155f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=500&q=60" alt="" />
             </div>
           </div>
         </div>
