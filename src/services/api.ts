@@ -320,13 +320,13 @@ export const productAPI = {
   },
 
   getByRestaurantAndCategory: async (restaurantId: string) => {
-    const response = await fetchWithError(`/product/byRestaurantAndCategory/${restaurantId}`);
+    const resp = await fetchWithError(`/product/byRestaurantAndCategory/${restaurantId}`);
     // Verifica si la respuesta es un array de categorías con productos
-    if (!Array.isArray(response)) {
+    if (!Array.isArray(resp)) {
       throw new Error("Formato de respuesta inválido");
     }
-
-    return response.map((categoryGroup: any) => ({
+    console.log("PRODUCTS: ", resp);
+    const response =  resp.map((categoryGroup: any) => ({
       categoryName: categoryGroup.categoryName,
       categoryId: categoryGroup.categoryId,
       restaurantName: categoryGroup.restaurantName,
@@ -344,6 +344,8 @@ export const productAPI = {
         // Opcional: agregar más campos si los necesitas en Product
       })),
     }));
+    console.log("PRODUCTS 2: ", response);
+    return response;
   },
 
   create: async (data: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => {
@@ -373,25 +375,26 @@ export const productAPI = {
 // Órdenes (Order)
 export const orderAPI = {
   create: async (data: Omit<Order, 'id' | 'createdAt' | 'updatedAt'>, email: string) => {
-    const response = await fetchWithError(`/api/order?email=${encodeURIComponent(email)}`, {
+    const response = await fetchWithError(`/order?email=${encodeURIComponent(email)}`, {
       method: "POST",
       body: JSON.stringify(data),
     });
     return adaptOrder(response);
   },
-
+  
   getByRestaurant: async (restaurantId: string) => {
-    const data = await fetchWithError(`/api/order?restaurantId=${restaurantId}`);
+    console.log("RestaurantID en Order: ", restaurantId);
+    const data = await fetchWithError(`/order?restaurantId=${restaurantId}`);
     return data.map(adaptOrder);
   },
 
   getById: async (ord_id: string) => {
-    const data = await fetchWithError(`/api/order/${ord_id}`);
+    const data = await fetchWithError(`/order/${ord_id}`);
     return adaptOrder(data);
   },
 
   updateStatus: async (ord_id: string, status: OrderStatus) => {
-    const response = await fetchWithError(`/api/order/${ord_id}`, {
+    const response = await fetchWithError(`/order/${ord_id}`, {
       method: "PATCH",
       body: JSON.stringify(status),
     });
@@ -399,31 +402,31 @@ export const orderAPI = {
   },
 
   delete: async (ord_id: string) => {
-    await fetchWithError(`/api/order/${ord_id}`, { method: "DELETE" });
+    await fetchWithError(`/order/${ord_id}`, { method: "DELETE" });
   },
 
   getByClient: async (cln_id: string) => {
-    const data = await fetchWithError(`/api/order/byClientId/${cln_id}`);
+    const data = await fetchWithError(`/order/byClientId/${cln_id}`);
     return data.map(adaptOrder);
   },
 
   getByDateRange: async (restaurantId: string, start: string, end: string) => {
     const data = await fetchWithError(
-      `/api/order/byDate?restaurantId=${restaurantId}&start=${start}&end=${end}`
+      `/order/byDate?restaurantId=${restaurantId}&start=${start}&end=${end}`
     );
     return data.map(adaptOrder);
   },
 
   getByClientAndDate: async (clientId: string, start: string, end: string) => {
     const data = await fetchWithError(
-      `/api/order/byClientDate?clientId=${clientId}&start=${start}&end=${end}`
+      `/order/byClientDate?clientId=${clientId}&start=${start}&end=${end}`
     );
     return data.map(adaptOrder);
   },
 
   getByRestaurantAndState: async (restaurantId: string, state: OrderStatus) => {
     const data = await fetchWithError(
-      `/api/order/byRestaurantAndState?restaurantId=${restaurantId}&state=${state}`
+      `/order/byRestaurantAndState?restaurantId=${restaurantId}&state=${state}`
     );
     return data.map(adaptOrder);
   }
@@ -432,7 +435,7 @@ export const orderAPI = {
 // Reseñas (Review)
 export const reviewAPI = {
   create: async (data: Omit<Review, 'id'>, userEmail: string) => {
-    const response = await fetchWithError(`/api/review?email=${encodeURIComponent(userEmail)}`, {
+    const response = await fetchWithError(`/review?email=${encodeURIComponent(userEmail)}`, {
       method: "POST",
       body: JSON.stringify(data),
     });
@@ -440,17 +443,17 @@ export const reviewAPI = {
   },
 
   getByRestaurant: async (restaurantId: string) => {
-    const data = await fetchWithError(`/api/review/restaurant?restaurantId=${restaurantId}`);
+    const data = await fetchWithError(`/review/restaurant?restaurantId=${restaurantId}`);
     return data.map(adaptReview);
   },
 
   getById: async (id: string) => {
-    const data = await fetchWithError(`/api/review/id?id=${id}`);
+    const data = await fetchWithError(`/review/id?id=${id}`);
     return adaptReview(data);
   },
 
   // update: async (Omit<Review, 'id'>, userEmail: string) => {
-  //   const response = await fetchWithError(`/api/review?email=${encodeURIComponent(userEmail)}`, {
+  //   const response = await fetchWithError(`/review?email=${encodeURIComponent(userEmail)}`, {
   //     method: "PATCH",
   //     body: JSON.stringify(data),
   //   });
@@ -459,7 +462,7 @@ export const reviewAPI = {
 
   // Elimina reseña (para cliente dueño)
   delete: async (id: string, userEmail: string) => {
-    await fetchWithError(`/api/review?id=${id}&email=${encodeURIComponent(userEmail)}`, {
+    await fetchWithError(`/review?id=${id}&email=${encodeURIComponent(userEmail)}`, {
       method: "DELETE"
     });
   }
