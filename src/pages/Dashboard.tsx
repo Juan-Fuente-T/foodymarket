@@ -194,46 +194,34 @@ const CustomerDashboard = () => {
 };
 
 const RestaurantDashboard = () => {
-  const { user } = useAuth();
-  console.log("RestaurantDashboard Render - User:", user);
-  const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
-  
-  // Calcula el estado enabled fuera para claridad y log
-  const queryEnabled = !!user?.id;
-  console.log("RestaurantDashboard Render - Query Enabled:", queryEnabled, "User ID:", user?.id);
+  const { user } = useAuth(); // Obtiene el usuario logueado del contexto
 
-  // Query for getting restaurants owned by the user
+  // --- Estado para guardar el restaurante seleccionado ---
+  const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
+
+  // --- Query para obtener los restaurantes PROPIEDAD del usuario ---
   const { data: ownedRestaurants = [], isLoading: isLoadingRestaurants, error: errorRestaurants } =
     useQuery<Restaurant[], Error>({
       queryKey: ["userRestaurants", user?.id],
-      queryFn: async (): Promise<Restaurant[]> => {
-        console.log("USER ID?", user.id);
-        if (!user?.id){
-          console.warn("RestaurantDashboard: queryFn returning early, no user ID.");
-          return [];
-        } 
-        // try {
-        //   const allRestaurants = await restaurantAPI.getAll();
-        //   console.log("Data received from API getAll:", allRestaurants);
-        //   if (!Array.isArray(allRestaurants)) {
-          //     console.error("API did not return an array for getAll:", allRestaurants);
-          //     return [];
-        //   }
-        //   const ownerIdString = String(user.id);
-        //   const filtered = allRestaurants.filter((restaurant: Restaurant) => String(restaurant.ownerId) === ownerIdString);
-        //   return filtered;
-        // } catch (apiError) {
-          //   console.error("Error fetching or filtering restaurants", apiError);
-          //   return [];
-          // }
-          // ---- Idealmente: Llamar a un endpoint específico ----
+      // Asegúrate que la función SIEMPRE devuelve Promise<Restaurant[]>
+      queryFn: async (): Promise<Restaurant[]> => { // <-- Tipa el retorno de la función
+        if (!user?.id) return [];
         try {
-          const response = await restaurantAPI.getByOwnerId(user.id);
-          console.log("DATA from getByOwnerId", response);
-          return response; // Necesitarías crear esta función en api.ts y el endpoint en backend
-        } catch (e) {
-          console.error("Failed to fetch restaurants by owner", e); 
-          return [];
+          // Asume que getAll devuelve Promise<Restaurant[]> o Promise<any>
+          const allRestaurants = await restaurantAPI.getAll();
+          console.log("Data received from API getAll:", allRestaurants);
+          // Comprobación robusta por si la API devuelve algo inesperado
+          if (!Array.isArray(allRestaurants)) {
+            console.error("API did not return an array for getAll:", allRestaurants);
+            return []; // Devuelve array vacío en caso de respuesta inesperada
+          }
+          const ownerIdString = String(user.id);
+          // El filter siempre devuelve un array
+          const filtered = allRestaurants.filter((restaurant: Restaurant) => String(restaurant.ownerId) === ownerIdString);
+          return filtered;
+        } catch (apiError) {
+          console.error("Error fetching or filtering restaurants", apiError);
+          return []; // Devuelve array vacío en caso de error en la llamada/filtro
         }
       },
       enabled: !!user?.id,
@@ -242,10 +230,14 @@ const RestaurantDashboard = () => {
   // Auto-select first restaurant if there's only one or select the first one if there are multiple
   useEffect(() => {
     if (selectedRestaurant || isLoadingRestaurants || errorRestaurants) return;
-    console.log("Restaurant PRODUCTS:", products);
-    console.log("Owned restaurants: ", ownedRestaurants);
-    if (ownedRestaurants.length >= 1) {
-      console.log("Auto-selecting restaurant:", ownedRestaurants[0]);
+
+    if (ownedRestaurants.length === 1) {
+      // Si solo hay uno, selecciónalo
+      console.log("Auto-selecting the only restaurant:", ownedRestaurants[0]);
+      setSelectedRestaurant(ownedRestaurants[0]);
+    } else if (ownedRestaurants.length > 1) {
+      // Si hay varios, selecciona el primero por defecto (o null si prefieres)
+      console.log("Multiple restaurants found, selecting first by default:", ownedRestaurants[0]);
       setSelectedRestaurant(ownedRestaurants[0]);
     } else {
       setSelectedRestaurant(null);
@@ -260,10 +252,9 @@ const RestaurantDashboard = () => {
   });
 
   const { data: products = [], isLoading: isLoadingProducts } = useQuery({
-    queryKey: ["restaurantProducts", selectedRestaurant?.id],
-    // queryFn: () => productAPI.getByRestaurant(selectedRestaurant!.id.toString()),
-    queryFn: () => productAPI.getByRestaurantAndCategory(selectedRestaurant!.id.toString()),
-    enabled: !!selectedRestaurant?.id,
+    queryKey: ["restaurantProducts", selectedRestaurant?.id], // Key depende del ID seleccionado
+    queryFn: () => productAPI.getByRestaurant(selectedRestaurant!.id.toString()), // Llama solo si selectedRestaurant tiene ID
+    enabled: !!selectedRestaurant?.id, // Habilitado solo si hay un restaurante seleccionado
   });
 
   // Order and revenue calculations
@@ -679,89 +670,7 @@ const RestaurantDashboard = () => {
               {/* Products Tab */}
               <TabsContent value="products">
                 <Card>
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <div>
-                      <CardTitle>Menu Products</CardTitle>
-                      <CardDescription>Manage your restaurant's menu items</CardDescription>
-                    </div>
-                    <Button className="bg-food-600 hover:bg-food-700">
-                      <PlusCircle className="mr-2 h-4 w-4" /> Add New Product
-                    </Button>
-                  </CardHeader>
-                  <CardContent>
-                    {isLoadingProducts ? (
-                      <div className="space-y-4">
-                        {Array(8).fill(0).map((_, i) => (
-                          <Skeleton key={i} className="h-12 w-full" />
-                        ))}
-                      </div>
-                    ) : products.length > 0 ? (
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Image</TableHead>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Category</TableHead>
-                            <TableHead>Price</TableHead>
-                            <TableHead>Available</TableHead>
-                            <TableHead>Actions</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {products.map((product: any) => (
-                            <TableRow key={product.id}>
-                              <TableCell>
-                                <div className="w-10 h-10 rounded-md overflow-hidden bg-gray-100">
-                                  {product.image ? (
-                                    <img 
-                                      src={product.image} 
-                                      alt={product.name} 
-                                      className="w-full h-full object-cover"
-                                    />
-                                  ) : (
-                                    <div className="flex items-center justify-center w-full h-full text-gray-400">
-                                      <Package className="h-5 w-5" />
-                                    </div>
-                                  )}
-                                </div>
-                              </TableCell>
-                              <TableCell className="font-medium">{product.name}</TableCell>
-                              <TableCell>{product.category || "Uncategorized"}</TableCell>
-                              <TableCell>${product.price?.toFixed(2)}</TableCell>
-                              <TableCell>
-                                {product.available ? (
-                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                    Available
-                                  </span>
-                                ) : (
-                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                    Unavailable
-                                  </span>
-                                )}
-                              </TableCell>
-                              <TableCell>
-                                <div className="flex items-center gap-2">
-                                  <Button variant="ghost" size="sm">
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                  <Button variant="ghost" size="sm">
-                                    <Trash2 className="h-4 w-4 text-red-500" />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    ) : (
-                      <div className="text-center py-8">
-                        <p className="text-gray-600 mb-4">This restaurant doesn't have any products yet.</p>
-                        <Button className="bg-food-600 hover:bg-food-700">
-                          <PlusCircle className="mr-2 h-4 w-4" /> Add Your First Product
-                        </Button>
-                      </div>
-                    )}
-                  </CardContent>
+                  {/* ... tu CardHeader, CardContent con Table ... */}
                 </Card>
               </TabsContent>
 
