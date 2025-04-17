@@ -15,4 +15,3 @@ export const adaptRestaurant = (data: any): Restaurant => ({
   rating: data.reviews?.reduce((acc: number, r: any) => acc + r.rvw_puntaje, 0) / data.reviews?.length || 0,
   reviewCount: data.reviews?.length || 0,
 });
-
