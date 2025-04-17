@@ -34,7 +34,7 @@ const RestaurantDetails = () => {
   const { data: categoriesWithProducts = [], isLoading: isLoadingProducts, error } = useQuery({
     queryKey: ["products", id],
     queryFn: async () => {
-      const response = await productAPI.getByRestaurantAndCategory(Number(id));
+      const response = await productAPI.getByRestaurantAndCategory(id);
       console.log("Categories", response);
       return response || []; // Asegura array vacío si response es undefined
     },

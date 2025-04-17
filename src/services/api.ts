@@ -322,10 +322,10 @@ export const productAPI = {
   getByRestaurantAndCategory: async (restaurantId: string) => {
     const resp = await fetchWithError(`/product/byRestaurantAndCategory/${restaurantId}`);
     // Verifica si la respuesta es un array de categorías con productos
+    console.log("PRODUCTS: ", resp);
     if (!Array.isArray(resp)) {
       throw new Error("Formato de respuesta inválido");
     }
-    console.log("PRODUCTS: ", resp);
     const response =  resp.map((categoryGroup: any) => ({
       categoryName: categoryGroup.categoryName,
       categoryId: categoryGroup.categoryId,
@@ -385,6 +385,7 @@ export const orderAPI = {
   getByRestaurant: async (restaurantId: string) => {
     console.log("RestaurantID en Order: ", restaurantId);
     const data = await fetchWithError(`/order?restaurantId=${restaurantId}`);
+    console.log("ORDERS: ", data);
     return data.map(adaptOrder);
   },
 

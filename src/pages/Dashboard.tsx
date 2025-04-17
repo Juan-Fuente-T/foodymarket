@@ -153,14 +153,14 @@ const CustomerDashboard = () => {
                 </TableHeader>
                 <TableBody>
                   {orders.slice(0, 5).map((order) => (
-                    <TableRow key={order.id}>
+                    <TableRow key={order?.id}>
                       <TableCell className="font-medium">{order.id.slice(0, 8)}</TableCell>
                       <TableCell>
                         {new Date(order.createdAt).toLocaleDateString()}
                       </TableCell>
                       <TableCell>{order.restaurantId}</TableCell>
                       <TableCell>
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${order.status === 'delivered' ? 'bg-green-100 text-green-800' :
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${order?.status === 'delivered' ? 'bg-green-100 text-green-800' :
                             order.status === 'preparing' ? 'bg-blue-100 text-blue-800' :
                               order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                                 'bg-gray-100 text-gray-800'
@@ -168,7 +168,7 @@ const CustomerDashboard = () => {
                           {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                         </span>
                       </TableCell>
-                      <TableCell className="text-right">${order.total.toFixed(2)}</TableCell>
+                      <TableCell className="text-right">${order?.total.toFixed(2)}</TableCell>
                       <TableCell>
                         <Button variant="ghost" size="sm">
                           View
@@ -242,7 +242,8 @@ const RestaurantDashboard = () => {
 
   const { data: products = [], isLoading: isLoadingProducts } = useQuery({
     queryKey: ["restaurantProducts", selectedRestaurant?.id],
-    queryFn: () => productAPI.getByRestaurant(selectedRestaurant!.id.toString()),
+    // queryFn: () => productAPI.getByRestaurant(selectedRestaurant!.id.toString()),
+    queryFn: () => productAPI.getByRestaurantAndCategory(selectedRestaurant!.id.toString()),
     enabled: !!selectedRestaurant?.id,
   });
 
@@ -269,7 +270,7 @@ const RestaurantDashboard = () => {
     };
     
     orders.forEach((order: any) => {
-      if (order.status in statusCounts) {
+      if (order?.status in statusCounts) {
         statusCounts[order.status]++;
       }
     });
@@ -294,9 +295,9 @@ const RestaurantDashboard = () => {
     });
     
     completedOrders.forEach((order: any) => {
-      const orderDate = new Date(order.createdAt).toISOString().split('T')[0];
+      const orderDate = new Date(order?.createdAt).toISOString().split('T')[0];
       if (orderDate in dailyRevenue) {
-        dailyRevenue[orderDate] += order.total || 0;
+        dailyRevenue[orderDate] += order?.total || 0;
       }
     });
     
@@ -555,7 +556,7 @@ const RestaurantDashboard = () => {
                         </TableHeader>
                         <TableBody>
                           {orders.slice(0, 5).map((order: any) => (
-                            <TableRow key={order.id}>
+                            <TableRow key={order?.id}>
                               <TableCell className="font-medium">{order.id.slice(0, 8)}</TableCell>
                               <TableCell>
                                 {new Date(order.createdAt).toLocaleDateString()}
@@ -618,7 +619,7 @@ const RestaurantDashboard = () => {
                         </TableHeader>
                         <TableBody>
                           {orders.map((order: any) => (
-                            <TableRow key={order.id}>
+                            <TableRow key={order?.id}>
                               <TableCell className="font-medium">{order.id.slice(0, 8)}</TableCell>
                               <TableCell>
                                 {new Date(order.createdAt).toLocaleDateString()}
@@ -707,7 +708,7 @@ const RestaurantDashboard = () => {
                               </TableCell>
                               <TableCell className="font-medium">{product.name}</TableCell>
                               <TableCell>{product.category || "Uncategorized"}</TableCell>
-                              <TableCell>${product.price.toFixed(2)}</TableCell>
+                              <TableCell>${product.price?.toFixed(2)}</TableCell>
                               <TableCell>
                                 {product.available ? (
                                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
