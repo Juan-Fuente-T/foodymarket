@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -50,14 +49,12 @@ const EditRestaurant = () => {
   
   const { register, handleSubmit, setValue, watch, formState: { errors, isDirty } } = useForm<Restaurant>();
   
-  // Get restaurant data
   const { data: restaurant, isLoading } = useQuery({
     queryKey: ['restaurant', id],
     queryFn: () => restaurantAPI.getById(id as string),
     enabled: !!id,
   });
   
-  // Update mutation
   const { mutate: updateRestaurant, isPending: isUpdating } = useMutation({
     mutationFn: (data: Restaurant) => restaurantAPI.update(id as string, data),
     onSuccess: () => {
@@ -72,35 +69,35 @@ const EditRestaurant = () => {
     }
   });
   
-  // Set form values when restaurant data is loaded
   useEffect(() => {
     if (restaurant) {
       const fields = [
         'name', 'description', 'address', 'phone', 
         'email', 'category', 'openingHours', 'coverImage', 
-        'logoImage', 'minOrderAmount', 'deliveryFee'
+        'logo', 'minOrderAmount', 'deliveryFee'
       ];
       
       fields.forEach(field => {
-        setValue(field as keyof Restaurant, restaurant[field as keyof Restaurant]);
+        if (field in restaurant) {
+          setValue(field as keyof Restaurant, restaurant[field as keyof Restaurant]);
+        }
       });
       
       setCoverImagePreview(restaurant.coverImage || '');
-      setLogoImagePreview(restaurant.logoImage || '');
+      setLogoImagePreview(restaurant.logo || '');
     }
   }, [restaurant, setValue]);
   
-  // Watch for image URL changes to update previews
   const watchCoverImage = watch('coverImage');
-  const watchLogoImage = watch('logoImage');
+  const watchLogo = watch('logo');
   
   useEffect(() => {
     if (watchCoverImage) setCoverImagePreview(watchCoverImage);
   }, [watchCoverImage]);
   
   useEffect(() => {
-    if (watchLogoImage) setLogoImagePreview(watchLogoImage);
-  }, [watchLogoImage]);
+    if (watchLogo) setLogoImagePreview(watchLogo);
+  }, [watchLogo]);
   
   const onSubmit = (data: Restaurant) => {
     updateRestaurant({
@@ -156,7 +153,6 @@ const EditRestaurant = () => {
         
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-8">
-            {/* Basic Information Card */}
             <Card>
               <CardHeader>
                 <CardTitle>Información Básica</CardTitle>
@@ -252,7 +248,6 @@ const EditRestaurant = () => {
               </CardContent>
             </Card>
             
-            {/* Images Card */}
             <Card>
               <CardHeader>
                 <CardTitle>Imágenes</CardTitle>
@@ -282,11 +277,11 @@ const EditRestaurant = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="logoImage">Logo (URL)</Label>
+                  <Label htmlFor="logo">Logo (URL)</Label>
                   <Input
-                    id="logoImage"
+                    id="logo"
                     placeholder="https://ejemplo.com/logo.jpg"
-                    {...register('logoImage')}
+                    {...register('logo')}
                   />
                   {logoImagePreview && (
                     <div className="mt-4">
@@ -303,7 +298,6 @@ const EditRestaurant = () => {
               </CardContent>
             </Card>
             
-            {/* Delivery Information Card */}
             <Card>
               <CardHeader>
                 <CardTitle>Información de Entrega</CardTitle>

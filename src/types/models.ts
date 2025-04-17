@@ -38,6 +38,9 @@ export interface Restaurant {
   rating?: number;
   openingHours?: string;
   reviewCount?: number;
+  logoImage?: string; // Added for backward compatibility
+  minOrderAmount?: number; // Added for backward compatibility
+  deliveryFee?: number; // Added for backward compatibility
 }
 
 export interface Product {
@@ -52,6 +55,7 @@ export interface Product {
   categoryId: string;
   createdAt: string;
   updatedAt: string;
+  category?: string; // Added for backward compatibility
 }
 
 export interface GroupedProduct {

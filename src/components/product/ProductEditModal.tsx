@@ -41,6 +41,7 @@ export const ProductEditModal = ({
   const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm<Product>();
   const [available, setAvailable] = useState(true);
   const [isNewProduct, setIsNewProduct] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
 
   useEffect(() => {
     if (product) {
@@ -48,7 +49,8 @@ export const ProductEditModal = ({
       setValue('description', product.description || '');
       setValue('price', product.price || 0);
       setValue('image', product.image || '');
-      setValue('category', product.category || '');
+      // Use categoryId if available, otherwise fallback to category for compatibility
+      setSelectedCategory(product.categoryId || product.category || '');
       setAvailable(product.available !== false);
       setIsNewProduct(false);
     } else {
@@ -57,8 +59,9 @@ export const ProductEditModal = ({
         description: '',
         price: 0,
         image: '',
-        category: categories.length > 0 ? categories[0] : '',
+        categoryId: categories.length > 0 ? categories[0] : '',
       });
+      setSelectedCategory(categories.length > 0 ? categories[0] : '');
       setAvailable(true);
       setIsNewProduct(true);
     }
@@ -69,6 +72,8 @@ export const ProductEditModal = ({
       ...product,
       ...data,
       available,
+      categoryId: selectedCategory, // Use categoryId for the database
+      category: selectedCategory,  // Keep category for backward compatibility
       id: product?.id || Date.now().toString(),
     };
     
@@ -140,8 +145,8 @@ export const ProductEditModal = ({
           <div className="space-y-2">
             <Label htmlFor="category">Categoría</Label>
             <Select 
-              onValueChange={(value) => setValue('category', value)} 
-              defaultValue={product?.category || (categories.length > 0 ? categories[0] : '')}
+              value={selectedCategory}
+              onValueChange={(value) => setSelectedCategory(value)} 
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecciona una categoría" />

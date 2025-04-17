@@ -1,4 +1,3 @@
-
 import React, { useEffect, useMemo, useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useAuth } from "../hooks/use-auth";
@@ -28,7 +27,6 @@ const Dashboard = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
 
-  // Show loading state while auth is being checked
   if (isLoading) {
     return (
       <Layout>
@@ -45,24 +43,20 @@ const Dashboard = () => {
     );
   }
 
-  // Redirect to login if not authenticated
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  // Render different dashboards based on user role
   if (user?.role === "restaurante") {
     return <RestaurantDashboard />;
   }
 
-  // Default to customer dashboard
   return <CustomerDashboard />;
 };
 
 const CustomerDashboard = () => {
   const { user } = useAuth();
 
-  // Fetch customer orders
   const { data: orders = [], isLoading: isLoadingOrders } = useQuery({
     queryKey: ["customerOrders", user?.id],
     queryFn: () => orderAPI.getByClient(user?.id as string),
@@ -203,13 +197,11 @@ const RestaurantDashboard = () => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   
-  // State for product editing/adding
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  // Query for getting restaurants owned by the user
   const { data: ownedRestaurants = [], isLoading: isLoadingRestaurants, error: errorRestaurants } =
     useQuery<Restaurant[], Error>({
       queryKey: ["userRestaurants", user?.id],
@@ -233,7 +225,6 @@ const RestaurantDashboard = () => {
       enabled: !!user?.id,
     });
 
-  // Auto-select first restaurant if there's only one or select the first one if there are multiple
   useEffect(() => {
     if (selectedRestaurant || isLoadingRestaurants || errorRestaurants) return;
 
@@ -245,7 +236,6 @@ const RestaurantDashboard = () => {
     }
   }, [ownedRestaurants, isLoadingRestaurants, errorRestaurants]);
 
-  // Dependent queries based on the selected restaurant
   const { data: orders = [], isLoading: isLoadingOrders } = useQuery({
     queryKey: ["restaurantOrders", selectedRestaurant?.id],
     queryFn: () => orderAPI.getByRestaurant(selectedRestaurant!.id.toString()),
@@ -258,7 +248,6 @@ const RestaurantDashboard = () => {
     enabled: !!selectedRestaurant?.id,
   });
 
-  // Extract all products and unique categories
   const allProducts = useMemo(() => {
     return categoriesWithProducts.reduce((acc: Product[], category: GroupedProduct) => {
       return [...acc, ...category.products];
@@ -269,18 +258,17 @@ const RestaurantDashboard = () => {
     return categoriesWithProducts.map(category => category.categoryName);
   }, [categoriesWithProducts]);
 
-  // Mutations for products
   const { mutate: saveProduct } = useMutation({
     mutationFn: (product: Product) => {
       if (product.id && !product.id.startsWith('temp_')) {
         return productAPI.update(product.id.toString(), {
           ...product,
-          restaurantId: selectedRestaurant!.id
+          restaurantId: selectedRestaurant!.id.toString()
         });
       } else {
         return productAPI.create({
           ...product,
-          restaurantId: selectedRestaurant!.id
+          restaurantId: selectedRestaurant!.id.toString()
         });
       }
     },
@@ -306,19 +294,16 @@ const RestaurantDashboard = () => {
     }
   });
 
-  // Order and revenue calculations
   const pendingOrders = useMemo(() => orders.filter((o: any) => o.status === 'pending' || o.status === 'preparing'), [orders]);
   const completedOrders = useMemo(() => orders.filter((o: any) => o.status === 'delivered' || o.status === 'completed'), [orders]);
   const totalRevenue = useMemo(() => completedOrders.reduce((sum: number, o: any) => sum + (o.total || 0), 0), [completedOrders]);
 
-  // Handler for restaurant selection change
   const handleRestaurantChange = (restaurantId: string) => {
     const restaurant = ownedRestaurants.find(r => String(r.id) === restaurantId) || null;
     console.log("User selected restaurant:", restaurant);
     setSelectedRestaurant(restaurant);
   };
 
-  // Handlers for product actions
   const handleAddProduct = () => {
     setSelectedProduct(null);
     setIsProductModalOpen(true);
@@ -345,24 +330,18 @@ const RestaurantDashboard = () => {
     saveProduct(product);
   };
 
-  // Category management handlers
   const handleAddCategory = (categoryName: string) => {
-    // For now we'll just show a toast, since the API endpoints for categories might not exist yet
     toast.success(`Categoría "${categoryName}" agregada con éxito`);
-    // In a real implementation, we would call an API to create a category
   };
 
   const handleEditCategory = (oldName: string, newName: string) => {
     toast.success(`Categoría actualizada de "${oldName}" a "${newName}"`);
-    // In a real implementation, we would call an API to update a category
   };
 
   const handleDeleteCategory = (categoryName: string) => {
     toast.success(`Categoría "${categoryName}" eliminada con éxito`);
-    // In a real implementation, we would call an API to delete a category
   };
 
-  // Prepare data for charts
   const orderStatusData = useMemo(() => {
     const statusCounts: {[key: string]: number} = {
       pending: 0,
@@ -385,7 +364,6 @@ const RestaurantDashboard = () => {
   }, [orders]);
 
   const revenueData = useMemo(() => {
-    // This is a simplified example - in a real app you might want to group by day/week/month
     const last7Days = Array.from({ length: 7 }, (_, i) => {
       const date = new Date();
       date.setDate(date.getDate() - i);
@@ -410,20 +388,16 @@ const RestaurantDashboard = () => {
     }));
   }, [completedOrders]);
 
-  // Colors for charts
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
-  // Loading state while fetching restaurants
   if (isLoadingRestaurants) {
     return <Layout><div className="p-8">Loading your restaurants...</div></Layout>;
   }
 
-  // Error handling
   if (errorRestaurants) {
     return <Layout><div className="p-8 text-red-600">Error loading your restaurants: {errorRestaurants.message}</div></Layout>;
   }
 
-  // No restaurants message
   if (!isLoadingRestaurants && ownedRestaurants.length === 0) {
     return (
       <Layout>
@@ -440,11 +414,9 @@ const RestaurantDashboard = () => {
     );
   }
 
-  // Main dashboard UI
   return (
     <Layout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header and Restaurant Selector */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Restaurant Dashboard</h1>
@@ -456,7 +428,6 @@ const RestaurantDashboard = () => {
             )}
           </div>
 
-          {/* Restaurant Selector Dropdown */}
           {ownedRestaurants.length > 0 && (
             <div className="w-full md:w-auto md:min-w-[280px] lg:min-w-[320px] space-y-1.5 mt-4 md:mt-0">
               <Label htmlFor="restaurant-select" className="text-sm font-medium text-gray-700">
@@ -480,7 +451,6 @@ const RestaurantDashboard = () => {
             </div>
           )}
 
-          {/* Action Buttons */}
           <div className="mt-4 md:mt-0 space-x-2 self-end md:self-center">
             <Button asChild variant="outline" disabled={!selectedRestaurant}>
               <Link to={selectedRestaurant ? `/restaurants/${selectedRestaurant.id}` : '#'}>
@@ -495,14 +465,12 @@ const RestaurantDashboard = () => {
           </div>
         </div>
 
-        {/* Dashboard Content */}
         {!selectedRestaurant ? (
           <div className="text-center py-16 text-gray-500">
             Please select one of your restaurants to see the dashboard.
           </div>
         ) : (
           <>
-            {/* Metric Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
               <Card>
                 <CardHeader className="pb-2">
@@ -561,7 +529,6 @@ const RestaurantDashboard = () => {
               </Card>
             </div>
 
-            {/* Main Content Tabs */}
             <Tabs defaultValue="overview" className="w-full">
               <TabsList className="mb-6">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -571,10 +538,8 @@ const RestaurantDashboard = () => {
                 <TabsTrigger value="analytics">Analytics</TabsTrigger>
               </TabsList>
 
-              {/* Overview Tab */}
               <TabsContent value="overview">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Revenue Chart */}
                   <Card>
                     <CardHeader>
                       <CardTitle>Revenue (Last 7 Days)</CardTitle>
@@ -596,7 +561,6 @@ const RestaurantDashboard = () => {
                     </CardContent>
                   </Card>
 
-                  {/* Order Status Chart */}
                   <Card>
                     <CardHeader>
                       <CardTitle>Order Status</CardTitle>
@@ -629,7 +593,6 @@ const RestaurantDashboard = () => {
                   </Card>
                 </div>
 
-                {/* Recent Orders Table */}
                 <Card className="mt-6">
                   <CardHeader>
                     <div className="flex justify-between">
@@ -695,7 +658,6 @@ const RestaurantDashboard = () => {
                 </Card>
               </TabsContent>
 
-              {/* Orders Tab */}
               <TabsContent value="orders">
                 <Card>
                   <CardHeader>
@@ -761,7 +723,6 @@ const RestaurantDashboard = () => {
                 </Card>
               </TabsContent>
 
-              {/* Products Tab */}
               <TabsContent value="products">
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between">
@@ -876,7 +837,6 @@ const RestaurantDashboard = () => {
                   </CardContent>
                 </Card>
                 
-                {/* Product Edit Modal */}
                 <ProductEditModal
                   product={selectedProduct}
                   categories={uniqueCategories}
@@ -885,7 +845,6 @@ const RestaurantDashboard = () => {
                   onSave={handleSaveProduct}
                 />
                 
-                {/* Delete Confirmation Dialog */}
                 <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
                   <AlertDialogContent>
                     <AlertDialogHeader>
@@ -908,7 +867,6 @@ const RestaurantDashboard = () => {
                 </AlertDialog>
               </TabsContent>
 
-              {/* Categories Tab */}
               <TabsContent value="categories">
                 <CategoryManagement
                   categories={uniqueCategories}
@@ -918,7 +876,6 @@ const RestaurantDashboard = () => {
                 />
               </TabsContent>
 
-              {/* Analytics Tab */}
               <TabsContent value="analytics">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <Card>
