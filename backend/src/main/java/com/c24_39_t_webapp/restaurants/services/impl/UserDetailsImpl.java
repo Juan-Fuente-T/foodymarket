@@ -16,9 +16,15 @@ public class UserDetailsImpl implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singletonList(
-                new SimpleGrantedAuthority("ROLE_"+ userEntity.getRole())
-        );
+        String role = userEntity.getRole();
+        if (role == null || role.trim().isEmpty()) {
+            return Collections.emptyList();
+        }
+        SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role.toUpperCase());
+        return Collections.singletonList(authority);
+//        return Collections.singletonList(
+//                new SimpleGrantedAuthority("ROLE_"+ userEntity.getRole().toUpperCase())
+//        );
     }
 
     @Override

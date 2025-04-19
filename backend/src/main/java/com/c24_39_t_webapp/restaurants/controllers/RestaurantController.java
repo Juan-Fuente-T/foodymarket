@@ -58,7 +58,7 @@ public class RestaurantController {
      */
 
     @PostMapping("/create")
-    @PreAuthorize("hasAuthority('restaurante')")
+    @PreAuthorize("hasRole('RESTAURANTE')")
     public ResponseEntity<?> registerRestaurant(@RequestBody @Valid final RestaurantRequestDto restaurantRequestDto,
                                                 @AuthenticationPrincipal final UserDetailsImpl userDetails) {
         log.info("Solicitud recibida para registrar un restaurante para el usuario con email: {}", userDetails.getUsername());
@@ -125,7 +125,7 @@ public class RestaurantController {
      */
     //    @PutMapping("/{rst_id}")
     @PatchMapping("/{rst_id}")
-    @PreAuthorize("hasAuthority('restaurante')")
+    @PreAuthorize("hasRole('RESTAURANTE')")
 //    public int updateRestaurant(@RequestBody RestaurantResponseDto restaurantResponseDto) {
     public ResponseEntity<RestaurantResponseDto> updateRestaurant(
             @PathVariable Long rst_id,
@@ -147,7 +147,7 @@ public class RestaurantController {
             return ResponseEntity.ok(updatedRestaurant);
     }
     @GetMapping("/byOwnerId/{ownerId}")
-//    @PreAuthorize("hasAuthority('restaurante')")
+//    @PreAuthorize("hasRole('RESTAURANTE')")
     public ResponseEntity<List<RestaurantResponseDto>> getByOwnerId(
             @PathVariable Long ownerId
     ) {
@@ -166,7 +166,7 @@ public class RestaurantController {
      * @return A {@link ResponseEntity} object with a status of 204 No Content.
      */
     @DeleteMapping("/{rst_id}")
-    @PreAuthorize("hasAuthority('restaurante')")
+    @PreAuthorize("hasRole('RESTAURANTE')")
     public ResponseEntity<Void> deleteRestaurant(@PathVariable Long rst_id) {
             log.info("Solicitud recibida para eliminar el restaurante con ID: {}", rst_id);
             restaurantService.deleteById(rst_id);

@@ -49,9 +49,9 @@ public class OrderController {
      * @return A list of {@code OrderResponseDto} objects representing all orders in the system.
      */
     @GetMapping
-    @PreAuthorize("hasRole('RESTAURANTE')")
+    @PreAuthorize("hasRole('restaurante')")
     public ResponseEntity<List<OrderResponseDto>> findAllOrders(Long restaurantId) {
-        log.info("Solicitud recibida para obtener todos los pedidos.");
+        log.info("Solicitud recibida para obtener todos los pedidos del RESTAURANTE con id: {}", restaurantId);
         List<OrderResponseDto> orders = orderService.findAllOrders(restaurantId);
         log.info("Se recuperaron {} pedidos exitosamente.", orders.size());
         return ResponseEntity.ok(orders);

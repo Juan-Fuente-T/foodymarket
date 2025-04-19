@@ -105,10 +105,22 @@ public class OrderServiceImpl implements IOrderService {
 
         // Filtrar pedidos por restaurante
         List<Order> orders = orderRepository.findByRestaurantId(restaurant);
-        if (orders.isEmpty()) {
-            throw new OrderNotFoundException("No se encontraron pedidos para este restaurante.");
-        }
-        return orders.stream().map(order -> new OrderResponseDto(order.getOrd_id(), order.getClientId().getId(), order.getRestaurantId().getId(), order.getState(), order.getTotal(), order.getComments(), order.getDetails().stream().map(detail -> new OrderDetailsResponseDto(detail.getOdt_id(), detail.getProduct().getPrd_id(), detail.getQuantity(), detail.getSubtotal())).collect(Collectors.toList()))).collect(Collectors.toList());
+
+        log.info("Devolviendo {} órdenes para restaurantId: {}", orders.size(), restaurantId);
+        return orders.stream().map(order -> new OrderResponseDto(
+                order.getOrd_id(),
+                order.getClientId().getId(),
+                order.getRestaurantId().getId(),
+                order.getState(), order.getTotal(),
+                order.getComments(),
+                order.getDetails().stream().map(
+                        detail -> new OrderDetailsResponseDto(
+                                detail.getOdt_id(),
+                                detail.getProduct().getPrd_id(),
+                                detail.getQuantity(),
+                                detail.getSubtotal())).collect(Collectors.toList()))).collect(Collectors.toList(
+
+        ));
     }
 
     @Override
@@ -301,6 +313,7 @@ public class OrderServiceImpl implements IOrderService {
                                         detail.getSubtotal())).collect(
                                 Collectors.toList()))).collect(Collectors.toList());
     }
+
     @Override
     @Transactional(readOnly = true)
     public List<OrderResponseDto> findByStateAndRestaurantId(OrderState state, Long restaurantId) {

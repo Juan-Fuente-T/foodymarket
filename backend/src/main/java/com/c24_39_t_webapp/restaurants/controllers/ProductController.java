@@ -2,6 +2,7 @@ package com.c24_39_t_webapp.restaurants.controllers;
 
 
 import com.c24_39_t_webapp.restaurants.dtos.request.ProductRequestDto;
+import com.c24_39_t_webapp.restaurants.dtos.request.ProductUpdateDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.GroupedProductsResponseDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.ProductResponseDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.ProductSummaryResponseDto;
@@ -15,6 +16,7 @@ import com.c24_39_t_webapp.restaurants.services.IProductService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -42,28 +44,21 @@ public class ProductController {
 //    }
     /**
      * Endpoint to add a new {@link ResponseEntity} object to the system.
-     * Delegates the addition logic to {@link IProductService#addProduct(Product)}.
+     * Delegates the addition logic to {@link IProductService#addProduct(ProductRequestDto)}.
      *
      * @param requestDto The {@code CategoryRequestDto} object to add.
      * @return The {@code CategoryResponseDto} object representing the added category.
      */
     @PostMapping
-    @PreAuthorize("hasAuthority('restaurante')")
+    @PreAuthorize("hasRole('RESTAURANTE')")
     public ResponseEntity<ProductResponseDto> addProduct(@Valid @RequestBody ProductRequestDto requestDto) {
         log.info("Recibida solicitud para añadir un producto al restaurante con ID: {}", requestDto.restaurantId());
         log.info("Datos del producto: {}", requestDto);
 
-        Product product = new Product();
-        product.setName(requestDto.name());
-        product.setDescription(requestDto.description());
-        product.setPrice(requestDto.price());
-        product.setImage(requestDto.image());
-        product.setIsActive(requestDto.isActive());
-        product.setQuantity(requestDto.quantity());
-
-        ProductResponseDto responseDto = productService.addProduct(product);
+        ProductResponseDto responseDto = productService.addProduct(requestDto);
         log.info("Producto agregado exitosamente: {}", responseDto);
-        return ResponseEntity.ok(responseDto);
+//        return ResponseEntity.ok(responseDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
     }
 
     /**
@@ -97,36 +92,22 @@ public class ProductController {
 
     /**
      * Endpoint to update an existing {@link ProductResponseDto} object in the system.
-     * Delegates the update logic to {@link IProductService#updateProduct(Product)}.
+     * Delegates the update logic to {@link IProductService#updateProduct(Long, ProductUpdateDto)}.
      *
      * @param prd_id The ID of the product to update.
      * @param updateDto The {@code ProductRequestDto} object containing the updated product details.
      * @return The {@code ProductResponseDto} object representing the updated product.
      */
     @PatchMapping("/{prd_id}")
-    @PreAuthorize("hasAuthority('restaurante')")
-    public ResponseEntity<ProductResponseDto> updateProduct(@PathVariable Long prd_id, @RequestBody ProductRequestDto updateDto) {
+    @PreAuthorize("hasRole('RESTAURANTE')")
+    public ResponseEntity<ProductResponseDto> updateProduct(
+            @PathVariable Long prd_id,
+            @RequestBody @Valid ProductUpdateDto updateDto
+    ) {
         log.info("Solicitud recibida para actualizar el producto con ID: {}", prd_id);
-        Product product = productRepository.findById(prd_id)
-                .orElseThrow(() -> {
-                    log.warn("El ID del producto proporcionado es invalido: {}", prd_id);
-                    return new ProductNotFoundException("No se ha encontrado el producto con el ID " + prd_id);
-                });
-        Category category = categoryRepository.findById(updateDto.categoryId())
-                .orElseThrow(() -> {
-                    log.warn("El ID de la categoria proporcionada es invalido: {}", updateDto.categoryId());
-                    return new CategoryNotFoundException("No se ha encontrado la categoria con el ID " + updateDto.categoryId());
-                });
-        product.setCategory(category);
-        product.setName(updateDto.name());
-        product.setDescription(updateDto.description());
-        product.setPrice(updateDto.price());
-        product.setImage(updateDto.image());
-        product.setIsActive(updateDto.isActive());
-        product.setQuantity(updateDto.quantity());
-
-        ProductResponseDto updatedProduct = productService.updateProduct(product);
-        return ResponseEntity.ok(updatedProduct);
+        ProductResponseDto updatedDto = productService.updateProduct(prd_id, updateDto);
+        log.info("Controller: Producto actualizado, devolviendo DTO: {}", updatedDto);
+        return ResponseEntity.ok(updatedDto);
     }
 
     /**
@@ -137,7 +118,7 @@ public class ProductController {
      * @return A {@link ResponseEntity} object with no content to indicate a successful deletion.
      */
     @DeleteMapping("/{prd_id}")
-    @PreAuthorize("hasAuthority('restaurante')")
+    @PreAuthorize("hasRole('RESTAURANTE')")
     public ResponseEntity<Void> deleteProduct(@PathVariable Long prd_id) {
         log.info("Solicitud recibida para eliminar el producto con ID: {}", prd_id);
         productService.deleteProduct(prd_id);

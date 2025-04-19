@@ -1,10 +1,14 @@
 package com.c24_39_t_webapp.restaurants.config.segurity;
 
 // --- Importaciones para CORS ---
+
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
 import java.util.List;
+
 import com.c24_39_t_webapp.restaurants.services.CustomUserDetailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -53,22 +57,22 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/category/**", "/api/restaurant/**",
                                 "/api/product/**").permitAll()
                         .requestMatchers("/api/category/**", "/api/restaurant/**",
-                                "/api/product/**").hasRole("restaurante")  // Orders: Cliente solo crea (POST)
-                        .requestMatchers(HttpMethod.POST, "/api/order/**").hasRole("cliente")
+                                "/api/product/**").hasRole("RESTAURANTE")  // Orders: Cliente solo crea (POST)
+                        .requestMatchers(HttpMethod.POST, "/api/order/**").hasRole("CLIENTE")
                         // Orders: Cliente solo consulta (GET) por fecha y cliente
                         .requestMatchers(HttpMethod.GET, "/api/order/byClientDate",
-                                "/api/order/byClientId/{cln_id}").hasRole("cliente")
-                        // Orders: Restaurante gestiona lo demás (GET, PATCH, DELETE)
-                        .requestMatchers(HttpMethod.GET, "/api/order/**").hasRole("restaurante")
-                        .requestMatchers(HttpMethod.PATCH, "/api/order/**").hasRole("restaurante")
-                        .requestMatchers(HttpMethod.DELETE, "/api/order/**").hasRole("restaurante")
-                        // Rutas exclusivas de restaurante, salvo GET
+                                "/api/order/byClientId/{cln_id}").hasRole("CLIENTE")
+                        // Orders: RESTAURANTE gestiona lo demás (GET, PATCH, DELETE)
+                        .requestMatchers(HttpMethod.GET, "/api/order/**").hasRole("RESTAURANTE")
+                        .requestMatchers(HttpMethod.PATCH, "/api/order/**").hasRole("RESTAURANTE")
+                        .requestMatchers(HttpMethod.DELETE, "/api/order/**").hasRole("RESTAURANTE")
+                        // Rutas exclusivas de RESTAURANTE, salvo GET
                         .requestMatchers("/api/category/**", "/api/restaurant/**", "/api/product/**").hasRole(
-                                "restaurante")
+                                "RESTAURANTE")
                         // Rutas exclusivas de cliente
-                        .requestMatchers("/api/user/**").hasRole("cliente")
-                        .anyRequest().authenticated());
-//                .addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class);
+                        .requestMatchers("/api/user/**").hasRole("CLIENTE")
+                        .anyRequest().authenticated())
+                .addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

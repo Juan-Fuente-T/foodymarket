@@ -1,5 +1,7 @@
 package com.c24_39_t_webapp.restaurants.services.impl;
 
+import com.c24_39_t_webapp.restaurants.dtos.request.ProductRequestDto;
+import com.c24_39_t_webapp.restaurants.dtos.request.ProductUpdateDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.GroupedProductsResponseDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.ProductResponseDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.ProductSummaryResponseDto;
@@ -40,15 +42,17 @@ public class ProductServiceImpl implements IProductService {
 
 
     @Override
-    public ProductResponseDto addProduct(Product product){
-        log.info("Intentando crear un producto para el restaurante con ID: {}", product.getRestaurant().getId());
+    public ProductResponseDto addProduct(ProductRequestDto productRequestDto){
+        log.info("Intentando crear un producto para el restaurante con ID: {}", productRequestDto.restaurantId());
 //        if (restaurantId == null || restaurantId <= 0) {
 //            throw new IllegalArgumentException("El ID del restaurante no es válido");
 //        }
-        Restaurant restaurant = restaurantRepository.findById(product.getRestaurant().getId())
+        Restaurant restaurant = restaurantRepository.findById(productRequestDto.restaurantId())
                 .orElseThrow(() -> new RestaurantNotFoundException("No se ha encontrado el restaurante"));
-        Category category = categoryRepository.findById(product.getCategory().getCtg_id())
+        log.warn("Restaurante no encontrado con ID: {}", productRequestDto.restaurantId());
+        Category category = categoryRepository.findById(productRequestDto.categoryId())
                 .orElseThrow(() -> new CategoryNotFoundException("No se ha encontrado la categoria"));
+        log.warn("Categoría no encontrada con ID: {}", productRequestDto.categoryId());
         String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
         log.info("Recuperando el email del usuario de la autenticacion: {}", userEmail);
         log.info("Recuperando el email del usuario del restaurante: {}", restaurant.getUserEntity().getEmail());
@@ -57,22 +61,32 @@ public class ProductServiceImpl implements IProductService {
             throw new SecurityException("No tienes permiso para añadir productos a este restaurante");
         }
 
-        product.setRestaurant(restaurant);
-        product.setCategory(category);
+        Product newProduct = new Product();
+        newProduct.setName(productRequestDto.name());
+        newProduct.setDescription(productRequestDto.description());
+        newProduct.setPrice(productRequestDto.price());
+        newProduct.setImage(productRequestDto.image());
+        newProduct.setIsActive(productRequestDto.isActive() != null ? productRequestDto.isActive() : true); // Default true si no viene
+        newProduct.setQuantity(productRequestDto.quantity());
 
-        product = productRepository.save(product);
-        log.info("Producto creado con éxito");
+        // --- 4. Asigna las ENTIDADES encontradas ---
+        newProduct.setRestaurant(restaurant);
+        newProduct.setCategory(category);
+        Product savedProduct = productRepository.save(newProduct);
+        log.info("Producto creado con éxito con ID: {}", savedProduct.getPrd_id());
 
         return new ProductResponseDto(
-                product.getPrd_id(),
-                product.getRestaurant().getId(),
-                product.getCategory().getCtg_id(),
-                product.getName(),
-                product.getDescription(),
-                product.getPrice(),
-                product.getImage(),
-                product.getIsActive(),
-                product.getQuantity()
+                savedProduct.getPrd_id(),
+                savedProduct.getRestaurant().getId(),
+                savedProduct.getCategory().getCtg_id(),
+                savedProduct.getName(),
+                savedProduct.getDescription(),
+                savedProduct.getPrice(),
+                savedProduct.getImage(),
+                savedProduct.getIsActive(),
+                savedProduct.getQuantity(),
+                savedProduct.getCategory().getName(),
+                savedProduct.getRestaurant().getName()
         );
     }
 
@@ -94,8 +108,11 @@ public class ProductServiceImpl implements IProductService {
                         product.getPrice(),
                         product.getImage(),
                         product.getIsActive(),
-                        product.getQuantity()
+                        product.getQuantity(),
+                        product.getCategory().getName(),
+                        product.getRestaurant().getName(
                 ))
+                )
                 .collect(Collectors.toList());
     }
 
@@ -117,7 +134,9 @@ public class ProductServiceImpl implements IProductService {
                         product.getPrice(),
                         product.getImage(),
                         product.getIsActive(),
-                        product.getQuantity()
+                        product.getQuantity(),
+                        product.getCategory().getName(),
+                        product.getRestaurant().getName()
                 ))
                 .orElseThrow(() -> {
                     log.warn("No se encontro un producto con el ID: {}", prd_id);
@@ -127,22 +146,51 @@ public class ProductServiceImpl implements IProductService {
 
     @Transactional
     @Override
-    public ProductResponseDto updateProduct(Product product) {
-        log.info("Actualizando el producto con ID {}", product.getPrd_id());
+    public ProductResponseDto updateProduct(Long productId, ProductUpdateDto updateDto) {
+        log.info("Solicitud recibida para actualizar el producto con ID: {}", productId);
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> {
+                    log.warn("El ID del producto proporcionado es invalido: {}", productId);
+                    return new ProductNotFoundException("No se ha encontrado el producto con el ID " + productId);
+                });
+        String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (product.getRestaurant() == null || product.getRestaurant().getUserEntity() == null || !product.getRestaurant().getUserEntity().getEmail().equals(userEmail)) {
+            log.warn("Permiso denegado: Usuario {} intentando actualizar producto {} del restaurante {}", userEmail, productId, product.getRestaurant() != null ? product.getRestaurant().getId() : "DESCONOCIDO");
+            throw new SecurityException("No tienes permiso para actualizar este producto"); // O lanzar AccessDeniedException mapeada a 403
+        }
+        if (updateDto.name() != null) product.setName(updateDto.name());
+        if (updateDto.description() != null) product.setDescription(updateDto.description());
+        if (updateDto.price() != null) product.setPrice(updateDto.price());
+        if (updateDto.image() != null) product.setImage(updateDto.image());
+        if (updateDto.isActive() != null) product.setIsActive(updateDto.isActive()); // Asume tipo boolean/Boolean y que no viola NOT NULL
+        if (updateDto.quantity() != null) product.setQuantity(updateDto.quantity()); // Asume tipo Integer/Long
 
-        Product updatedProduct = productRepository.saveAndFlush(product);
-        log.info("Producto con ID {} ha sido actualizado con éxito", product.getPrd_id());
+        Category category = categoryRepository.findById(updateDto.categoryId())
+                .orElseThrow(() -> {
+                    log.warn("El ID de la categoria proporcionada es invalido: {}", updateDto.categoryId());
+                    return new CategoryNotFoundException("No se ha encontrado la categoria con el ID " + updateDto.categoryId());
+                });
+        product.setCategory(category);
+
+        Product updatedProductEntity = productRepository.save(product);
+        log.info("Producto ID {} actualizado en BD", updatedProductEntity.getPrd_id());
+
+        //    Necesita los nombres, los obtiene de las entidades cargadas/actualizadas
+        String categoryName = (updatedProductEntity.getCategory() != null) ? updatedProductEntity.getCategory().getName() : null;
+        String restaurantName = (updatedProductEntity.getRestaurant() != null) ? updatedProductEntity.getRestaurant().getName() : null;
 
         return new ProductResponseDto(
-                updatedProduct.getPrd_id(),
-                updatedProduct.getRestaurant().getId(),
-                updatedProduct.getCategory().getCtg_id(),
-                updatedProduct.getName(),
-                updatedProduct.getDescription(),
-                updatedProduct.getPrice(),
-                updatedProduct.getImage(),
-                updatedProduct.getIsActive(),
-                updatedProduct.getQuantity()
+                updatedProductEntity.getPrd_id(),
+                updatedProductEntity.getRestaurant() != null ? updatedProductEntity.getRestaurant().getId() : null,
+                updatedProductEntity.getCategory() != null ? updatedProductEntity.getCategory().getCtg_id() : null,
+                updatedProductEntity.getName(),
+                updatedProductEntity.getDescription(),
+                updatedProductEntity.getPrice(), // Asegura tipo
+                updatedProductEntity.getImage(),
+                updatedProductEntity.getIsActive(), // Asegura tipo
+                updatedProductEntity.getQuantity(), // Asegura tipo
+                categoryName,
+                restaurantName
         );
     }
 
@@ -227,62 +275,91 @@ public class ProductServiceImpl implements IProductService {
                         product.getPrice(),
                         product.getImage(),
                         product.getIsActive(),
-                        product.getQuantity()
+                        product.getQuantity(),
+                        product.getCategory().getName(),
+                        product.getRestaurant().getName(
                 ))
+                )
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<GroupedProductsResponseDto> findProductsByRestaurantIdAndCategory(Long restaurantId) {
-        log.info("Buscando productos del restaurante con ID: {}", restaurantId);
+       log.info("Buscando productos del restaurante con ID: {}", restaurantId);
+//
+//            // Obtener los productos del repositorio
+//            List<Product> products = productRepository.findProductsByRestaurantIdAndCategory(restaurantId);
+//
+//            // Agrupar los productos por categoría y restaurante
+//            Map<String, Map<Long, List<ProductResponseDto>>> groupedProducts = products.stream()
+//                    .collect(Collectors.groupingBy(
+//                            product -> product.getCategory().getName(), // Agrupar por nombre de categoría
+//                            TreeMap::new, // Ordenar por nombre de categoría
+//                            Collectors.groupingBy(
+//                                    product -> product.getRestaurant().getId(), // Agrupar por ID del restaurante
+//                                    TreeMap::new, // Ordenar por ID del restaurante
+//                                    Collectors.mapping(
+//                                            product -> new ProductResponseDto(
+//                                                    product.getPrd_id(),
+//                                                    product.getRestaurant().getId(),
+//                                                    product.getCategory().getCtg_id(),
+//                                                    product.getName(),
+//                                                    product.getDescription(),
+//                                                    product.getPrice(),
+//                                                    product.getImage(),
+//                                                    product.getIsActive(),
+//                                                    product.getQuantity()
+//                                            ),
+//                                            Collectors.toList()
+//                                    )
+//                            )
+//                    ));
+//
+//            // Convertir el mapa a una lista de GroupedProductsResponseDto
+//            return groupedProducts.entrySet().stream()
+//                    .flatMap(categoryEntry -> categoryEntry.getValue().entrySet().stream()
+//                            .map(restaurantEntry -> new GroupedProductsResponseDto(
+//                                    categoryEntry.getKey(), // Nombre de la categoría
+//                                    products.stream() // Obtener el ID de la categoría
+//                                            .filter(p -> p.getCategory().getName().equals(categoryEntry.getKey()))
+//                                            .findFirst()
+//                                            .map(p -> p.getCategory().getCtg_id())
+//                                            .orElse(null),
+//                                    products.stream() // Obtener el nombre del restaurante
+//                                            .filter(p -> p.getRestaurant().getId().equals(restaurantEntry.getKey()))
+//                                            .findFirst()
+//                                            .map(p -> p.getRestaurant().getName())
+//                                            .orElse(null),
+//                                    restaurantEntry.getKey(), // ID del restaurante
+//                                    restaurantEntry.getValue() // Lista de productos
+//                            ))
+//                    )
+//                    .collect(Collectors.toList());
 
-            // Obtener los productos del repositorio
-            List<Product> products = productRepository.findProductsByRestaurantIdAndCategory(restaurantId);
+        List<ProductResponseDto> productDtos = productRepository.findProductsByRestaurantIdAndCategory(restaurantId);
 
-            // Agrupar los productos por categoría y restaurante
-            Map<String, Map<Long, List<ProductResponseDto>>> groupedProducts = products.stream()
-                    .collect(Collectors.groupingBy(
-                            product -> product.getCategory().getName(), // Agrupar por nombre de categoría
-                            TreeMap::new, // Ordenar por nombre de categoría
-                            Collectors.groupingBy(
-                                    product -> product.getRestaurant().getId(), // Agrupar por ID del restaurante
-                                    TreeMap::new, // Ordenar por ID del restaurante
-                                    Collectors.mapping(
-                                            product -> new ProductResponseDto(
-                                                    product.getPrd_id(),
-                                                    product.getRestaurant().getId(),
-                                                    product.getCategory().getCtg_id(),
-                                                    product.getName(),
-                                                    product.getDescription(),
-                                                    product.getPrice(),
-                                                    product.getImage(),
-                                                    product.getIsActive(),
-                                                    product.getQuantity()
-                                            ),
-                                            Collectors.toList()
-                                    )
-                            )
-                    ));
+        // Agrupa los DTOs en memoria por categoryId (si GroupedProductsResponseDto lo necesita)
+        Map<Long, List<ProductResponseDto>> groupedByCategoryId = productDtos.stream()
+                .collect(Collectors.groupingBy(
+                        ProductResponseDto::categoryId, // Agrupa por ID de categoría
+                        TreeMap::new,                      // Para ordenar por ID de categoría
+                        Collectors.toList()                // Lista de productos (DTOs) por categoría
+                ));
 
-            // Convertir el mapa a una lista de GroupedProductsResponseDto
-            return groupedProducts.entrySet().stream()
-                    .flatMap(categoryEntry -> categoryEntry.getValue().entrySet().stream()
-                            .map(restaurantEntry -> new GroupedProductsResponseDto(
-                                    categoryEntry.getKey(), // Nombre de la categoría
-                                    products.stream() // Obtener el ID de la categoría
-                                            .filter(p -> p.getCategory().getName().equals(categoryEntry.getKey()))
-                                            .findFirst()
-                                            .map(p -> p.getCategory().getCtg_id())
-                                            .orElse(null),
-                                    products.stream() // Obtener el nombre del restaurante
-                                            .filter(p -> p.getRestaurant().getId().equals(restaurantEntry.getKey()))
-                                            .findFirst()
-                                            .map(p -> p.getRestaurant().getName())
-                                            .orElse(null),
-                                    restaurantEntry.getKey(), // ID del restaurante
-                                    restaurantEntry.getValue() // Lista de productos
-                            ))
-                    )
-                    .collect(Collectors.toList());
+        // Construye la respuesta final agrupada.
+        List<GroupedProductsResponseDto> finalResponse = groupedByCategoryId.entrySet().stream()
+                .map(entry -> {
+                    Long categoryId = entry.getKey();
+                    List<ProductResponseDto> productsInCategory = entry.getValue();
+                    // Hacer una consulta a CategoryRepository o tener un Map<Long, String>
+                    String categoryName = productsInCategory.isEmpty() ? "Unknown Category" : productsInCategory.get(0).categoryName();
+                    Long restId = productsInCategory.isEmpty() ? null : productsInCategory.get(0).restaurantId();
+                    String restName = productsInCategory.isEmpty() ? "Unknown Restaurant" : productsInCategory.get(0).restaurantName();
+
+                    return new GroupedProductsResponseDto(categoryName, categoryId, restName, restId, productsInCategory);
+                })
+                .collect(Collectors.toList());
+        log.info("Se agruparon productos de {} categorías para el restaurante {}", finalResponse.size(), restaurantId);
+        return finalResponse;
         }
 }

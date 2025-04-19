@@ -35,7 +35,7 @@ public class UserController {
 //    }
 
     @PutMapping
-    @PreAuthorize("hasAnyAuthority('cliente')")
+    @PreAuthorize("hasRole('CLIENTE')")
     public ResponseEntity<UserResponseDto> updateUser(@RequestBody final UserRequestDto userRequestDto,
                                                       @AuthenticationPrincipal final UserDetailsImpl userDetails) {
         String username = userDetails.getUsername();
@@ -57,7 +57,7 @@ public class UserController {
     }
 
     @DeleteMapping
-    @PreAuthorize("hasAnyAuthority('cliente')")
+    @PreAuthorize("hasRole('CLIENTE')")
     public ResponseEntity<Void> deleteUser(@AuthenticationPrincipal final UserDetailsImpl userDetails) {
         userService.deleteUser(userDetails.getId());
         return ResponseEntity.noContent().build();

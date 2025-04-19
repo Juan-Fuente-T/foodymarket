@@ -1,8 +1,12 @@
 package com.c24_39_t_webapp.restaurants.dtos.request;
 
+import com.c24_39_t_webapp.restaurants.models.Category;
+import com.c24_39_t_webapp.restaurants.models.Restaurant;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+
+import java.math.BigDecimal;
 
 public record ProductRequestDto(
         @NotNull(message = "El ID del restaurante no puede ser nulo.")
@@ -19,7 +23,7 @@ public record ProductRequestDto(
         String description,
 
         @NotNull(message = "El precio no puede estar ser nulo.")
-        Integer price,
+        BigDecimal price,
 
         @NotBlank(message = "La imagen no puede estar vacía.")
         String image,
@@ -29,5 +33,9 @@ public record ProductRequestDto(
 
         @NotNull(message = "La cantidad no puede estar vacío.")
         Integer quantity
+
 ) {
 }
+
+
+
