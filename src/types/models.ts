@@ -1,6 +1,6 @@
 
 // export type UserRole = 'cliente' | 'restaurante' | 'admin';
-export type UserRole = 'cliente' | 'restaurante';
+export type UserRole = 'CLIENTE' | 'RESTAURANTE';
 
 export interface User {
   id: string;
@@ -16,9 +16,9 @@ export interface User {
 export interface Category {
   id: string;
   name: string;
-  description?: string;
-  createdAt: string;
-  updatedAt: string;
+  // description?: string;
+  // createdAt: string;
+  // updatedAt: string;
   // image?: string;
 }
 
@@ -49,13 +49,12 @@ export interface Product {
   description: string;
   price: number;
   image: string;
-  available: boolean;
+  isActive: boolean;
   quantity: number;
   restaurantId: string;
   categoryId: string;
   createdAt: string;
   updatedAt: string;
-  category?: string; // Added for backward compatibility
 }
 
 export interface GroupedProduct {

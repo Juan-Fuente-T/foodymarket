@@ -10,9 +10,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
-import { 
-  CheckCircle, Clock, PlusCircle, RefreshCcw, TrendingUp, 
-  Users, DollarSign, ShoppingBag, User, Settings, 
+import {
+  CheckCircle, Clock, PlusCircle, RefreshCcw, TrendingUp,
+  Users, DollarSign, ShoppingBag, User, Settings,
   Edit, Trash2, Package, Star
 } from "lucide-react";
 import { Product, Restaurant, GroupedProduct } from "@/types/models";
@@ -47,7 +47,7 @@ const Dashboard = () => {
     return <Navigate to="/login" replace />;
   }
 
-  if (user?.role === "restaurante") {
+  if (user?.role === "RESTAURANTE") {
     return <RestaurantDashboard />;
   }
 
@@ -159,9 +159,9 @@ const CustomerDashboard = () => {
                       <TableCell>{order.restaurantId}</TableCell>
                       <TableCell>
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${order?.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                            order.status === 'preparing' ? 'bg-blue-100 text-blue-800' :
-                              order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-gray-100 text-gray-800'
+                          order.status === 'preparing' ? 'bg-blue-100 text-blue-800' :
+                            order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-gray-100 text-gray-800'
                           }`}>
                           {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                         </span>
@@ -196,7 +196,7 @@ const RestaurantDashboard = () => {
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  
+
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
@@ -236,6 +236,13 @@ const RestaurantDashboard = () => {
     }
   }, [ownedRestaurants, isLoadingRestaurants, errorRestaurants]);
 
+  useEffect(() => {
+    // --- LOG PASO 3 ---
+    console.log('PASO 3 - useEffect[selectedProduct] - Estado selectedProduct cambió a:', selectedProduct);
+    // Verifica aquí si selectedProduct TIENE categoryId con valor correcto
+     // --- FIN LOG ---
+}, [selectedProduct]); 
+
   const { data: orders = [], isLoading: isLoadingOrders } = useQuery({
     queryKey: ["restaurantOrders", selectedRestaurant?.id],
     queryFn: () => orderAPI.getByRestaurant(selectedRestaurant!.id.toString()),
@@ -247,41 +254,127 @@ const RestaurantDashboard = () => {
     queryFn: () => productAPI.getByRestaurantAndCategory(selectedRestaurant!.id.toString()),
     enabled: !!selectedRestaurant?.id,
   });
+  console.log("CategoriesWithProducts", categoriesWithProducts); 
 
-  const allProducts = useMemo(() => {
-    return categoriesWithProducts.reduce((acc: Product[], category: GroupedProduct) => {
-      return [...acc, ...category.products];
-    }, []);
-  }, [categoriesWithProducts]);
+  // const allProducts = useMemo((): Product[] => { 
+  //   return categoriesWithProducts.reduce((acc: Product[], category: GroupedProduct) => {
+  //     return [...acc, ...category.products];
+  //   }, []);
+  // }, [categoriesWithProducts]);
 
-  const uniqueCategories = useMemo(() => {
+  const allProducts = useMemo((): Product[] => {
+    console.log("--- Recalculando allProducts con CÓDIGO FINAL v2 ---");
+    if (!categoriesWithProducts || !Array.isArray(categoriesWithProducts)) {
+        console.log("allProducts: Input (categoriesWithProducts) vacío o inválido.");
+        return [];
+    }
+    const flattenedProducts: Product[] = [];
+    categoriesWithProducts.forEach((categoryGroup: any, groupIndex: number) => {
+        const currentGroupId = categoryGroup.categoryId ?? null;
+        if (!categoryGroup.products || !Array.isArray(categoryGroup.products)) {
+            return;
+        }
+        categoryGroup.products.forEach((backendProduct: any, productIndex: number) => {
+            // --- Lectura de campos (USA LOS NOMBRES DE TU JSON!) ---
+            const productIdFromBackend = backendProduct.prd_id;     // <-- ¿Seguro es prd_id?
+            const categoryIdFromBackend = backendProduct.categoryId; // <-- ¿Seguro es categoryId?
+            const isActiveFromBackend = backendProduct.isActive;   // <-- ¿Seguro es isActive?
+            const priceFromBackend = backendProduct.price;
+
+            // --- Objeto Frontend Final ---
+            const frontendProduct = {
+                id: productIdFromBackend !== null && productIdFromBackend !== undefined ? String(productIdFromBackend) : '',
+                name: backendProduct.name || '',
+                description: backendProduct.description || '',
+                price: Number(priceFromBackend?.parsedValue ?? priceFromBackend ?? 0),
+                image: backendProduct.image || '',
+                // --- Mapeo Category ID (Usa el del producto O el del grupo, convierte a STRING)---
+                categoryId: (categoryIdFromBackend ?? currentGroupId) !== null ? String(categoryIdFromBackend ?? currentGroupId) : '', // <-- Correcto si interfaz pide string
+                // --- Mapeo Estado (Asegura boolean) ---
+                isActive: isActiveFromBackend === true, // <-- Correcto si interfaz pide boolean
+                // available: isActiveFromBackend === true, // <-- QUITA ESTA LÍNEA (no está en tu interfaz Product)
+                quantity: Number(backendProduct.quantity || 0),
+                restaurantId: String(backendProduct.restaurantId || categoryGroup.restaurantId || ''),
+                createdAt: backendProduct.createdAt || '',
+                updatedAt: backendProduct.updatedAt || '',
+            };
+            flattenedProducts.push(frontendProduct as Product);
+        });
+    });
+    console.log("--- Fin cálculo allProducts. Resultado FINAL v2:", flattenedProducts);
+    return flattenedProducts;
+}, [categoriesWithProducts]);
+        console.log('Contenido de allProducts:', allProducts);
+        console.log("CcategoriesWithProducts", categoriesWithProducts)
+        const uniqueCategories = useMemo(() => {
     return categoriesWithProducts.map(category => category.categoryName);
   }, [categoriesWithProducts]);
 
-  const { mutate: saveProduct } = useMutation({
-    mutationFn: (product: Product) => {
-      if (product.id && !product.id.startsWith('temp_')) {
-        return productAPI.update(product.id.toString(), {
-          ...product,
-          restaurantId: selectedRestaurant!.id.toString()
-        });
-      } else {
-        return productAPI.create({
-          ...product,
-          restaurantId: selectedRestaurant!.id.toString()
-        });
-      }
-    },
+  const categoriesDataForModal = useMemo(() => {
+    if (!categoriesWithProducts || !Array.isArray(categoriesWithProducts)) {
+      return [];
+    }
+    return categoriesWithProducts.map(categoryGroup => ({
+      id: categoryGroup.categoryId,
+      name: categoryGroup.categoryName
+    }));
+  }, [categoriesWithProducts]);
+  console.log("CATEGORIAS UNICAS", categoriesDataForModal)
+
+  // const { mutate: saveProduct } = useMutation({
+  //   mutationFn: (product: Product) => {
+  //     console.log("MUTATION", product.id, product);
+  //     // if (product.id && !product.id.startsWith('temp_')) {
+  //     const isUpdate = product.id != null && String(product.id).length > 0; // Más simple si ID nunca es 'temp_'
+  //     if (isUpdate) {
+  //       return productAPI.update(product.id.toString(), {
+  //         ...product
+  //       });
+  //     } else {
+  //       return productAPI.create({
+  //         ...product,
+  //         restaurantId: selectedRestaurant!.id.toString()
+  //       });
+  //     }
+  //   },
+  //   onSuccess: () => {
+  //     queryClient.invalidateQueries({ queryKey: ["restaurantProducts", selectedRestaurant?.id] });
+  //     toast.success("Producto guardado con éxito");
+  //   },
+  //   onError: (error) => {
+  //     console.error("Error saving product:", error);
+  //     toast.error("Error al guardar el producto");
+  //   }
+  // });
+
+  const createProductMutation = useMutation({
+    // mutationFn recibe los datos del nuevo producto (sin ID)
+    mutationFn: (createData: any) => productAPI.create(createData),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["restaurantProducts", selectedRestaurant?.id] });
-      toast.success("Producto guardado con éxito");
+      toast.success("Producto creado con éxito");
+      // Invalida la caché de productos para refrescar la lista
+      queryClient.invalidateQueries({ queryKey: ['restaurantProducts', selectedRestaurant?.id] });
+      setIsProductModalOpen(false);
     },
-    onError: (error) => {
-      console.error("Error saving product:", error);
-      toast.error("Error al guardar el producto");
+    onError: (error: Error) => {
+      console.error("Error creating product:", error);
+      toast.error(`Error creando producto: ${error.message}`);
     }
   });
 
+  const updateProductMutation = useMutation({
+    // mutationFn recibe un objeto con 'id' y 'data'
+    mutationFn: (vars: { id: string | number, data: any }) => productAPI.update(vars.id.toString(), vars.data),
+    onSuccess: () => {
+      toast.success("Producto actualizado con éxito");
+      queryClient.invalidateQueries({ queryKey: ['restaurantProducts', selectedRestaurant?.id] });
+      setIsProductModalOpen(false);
+    },
+    onError: (error: Error) => {
+      console.error("Error updating product:", error);
+      toast.error(`Error actualizando producto: ${error.message}`);
+    }
+  });
   const { mutate: deleteProduct } = useMutation({
     mutationFn: (productId: string) => productAPI.delete(productId),
     onSuccess: () => {
@@ -310,7 +403,9 @@ const RestaurantDashboard = () => {
   };
 
   const handleEditProduct = (product: Product) => {
+    console.log('PASO 1 - handleEditProductClick - Recibido productToEdit:', product);
     setSelectedProduct(product);
+    console.log('PASO 2 - handleEditProductClick - Después de setSelectedProduct, abriendo modal...');
     setIsProductModalOpen(true);
   };
 
@@ -326,8 +421,65 @@ const RestaurantDashboard = () => {
     setIsDeleteDialogOpen(false);
   };
 
-  const handleSaveProduct = (product: Product) => {
-    saveProduct(product);
+  const handleSaveProduct = (productData: any, isNew: boolean) => {
+    console.log("handleSaveProduct received:", productData)
+    console.log("isNew???:", isNew);
+    // --- Validación y parseo de tipos ANTES de enviar ---
+    let categoryIdNum: number | null = null;
+    if (productData.categoryId != null && productData.categoryId !== '') {
+      categoryIdNum = parseInt(String(productData.categoryId), 10);
+      if (isNaN(categoryIdNum)) {
+        toast.error("ID de categoría inválido."); return;
+      }
+    } else if (isNew) { // Es obligatorio para crear
+      toast.error("La categoría es obligatoria."); return;
+    }
+
+    let priceNum: number | null = null;
+    if (productData.price != null && String(productData.price).trim() !== '') {
+      priceNum = parseFloat(String(productData.price));
+      if (isNaN(priceNum) || priceNum < 0) {
+        toast.error("Precio inválido."); return;
+      }
+    } else { // Obligatorio?
+      toast.error("El precio es obligatorio."); return;
+    }
+
+    let quantityNum: number | null = null;
+    if (productData.quantity != null && String(productData.quantity).trim() !== '') {
+      quantityNum = parseInt(String(productData.quantity), 10);
+      if (isNaN(quantityNum) || quantityNum < 0) {
+        toast.error("Cantidad inválida."); return;
+      }
+    } else {
+      quantityNum = 0; // Default 0 si no viene? O error?
+    }
+
+    const finalData = {
+      name: productData.name,
+      description: productData.description,
+      price: priceNum, // Usa el número parseado (o BigDecimal si usas eso)
+      image: productData.image,
+      isActive: productData.isActive, 
+      quantity: quantityNum, // Usa el número parseado
+      categoryId: categoryIdNum, 
+      restaurantId: selectedRestaurant?.id ? Number(selectedRestaurant.id) : undefined
+    };
+    if (isNew) {
+      console.log("Calling CREATE mutation with:", finalData);
+      createProductMutation.mutate(finalData);
+    } else {
+      if (!productData.id) {
+        toast.error("Error: ID de producto necesario para actualizar.");
+        return;
+      }
+      // Asegura que id es del tipo correcto para la mutación
+      const idToUpdate = String(productData.id);
+      console.log("Calling UPDATE mutation for ID:", idToUpdate, "with:", finalData);
+      updateProductMutation.mutate({ id: String(productData.id), data: finalData });
+      setIsProductModalOpen(false); // Cierra el modal después de guardar (o en onSuccess)
+      setSelectedProduct(null); 
+    }
   };
 
   const handleAddCategory = (categoryName: string) => {
@@ -343,20 +495,20 @@ const RestaurantDashboard = () => {
   };
 
   const orderStatusData = useMemo(() => {
-    const statusCounts: {[key: string]: number} = {
+    const statusCounts: { [key: string]: number } = {
       pending: 0,
       preparing: 0,
       delivered: 0,
       completed: 0,
       cancelled: 0
     };
-    
+
     orders.forEach((order: any) => {
       if (order?.status in statusCounts) {
         statusCounts[order.status]++;
       }
     });
-    
+
     return Object.entries(statusCounts).map(([status, count]) => ({
       name: status.charAt(0).toUpperCase() + status.slice(1),
       value: count
@@ -369,19 +521,19 @@ const RestaurantDashboard = () => {
       date.setDate(date.getDate() - i);
       return date.toISOString().split('T')[0];
     }).reverse();
-    
-    const dailyRevenue: {[key: string]: number} = {};
+
+    const dailyRevenue: { [key: string]: number } = {};
     last7Days.forEach(day => {
       dailyRevenue[day] = 0;
     });
-    
+
     completedOrders.forEach((order: any) => {
       const orderDate = new Date(order?.createdAt).toISOString().split('T')[0];
       if (orderDate in dailyRevenue) {
         dailyRevenue[orderDate] += order?.total || 0;
       }
     });
-    
+
     return Object.entries(dailyRevenue).map(([date, amount]) => ({
       date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
       amount
@@ -464,7 +616,6 @@ const RestaurantDashboard = () => {
             </Button>
           </div>
         </div>
-
         {!selectedRestaurant ? (
           <div className="text-center py-16 text-gray-500">
             Please select one of your restaurants to see the dashboard.
@@ -485,7 +636,7 @@ const RestaurantDashboard = () => {
                   </div>
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-gray-500">Completed Orders</CardTitle>
@@ -499,7 +650,7 @@ const RestaurantDashboard = () => {
                   </div>
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-gray-500">Total Revenue</CardTitle>
@@ -513,7 +664,7 @@ const RestaurantDashboard = () => {
                   </div>
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-gray-500">Total Products</CardTitle>
@@ -630,12 +781,11 @@ const RestaurantDashboard = () => {
                               </TableCell>
                               <TableCell>{order.clientId || "Customer"}</TableCell>
                               <TableCell>
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                  order.status === 'delivered' ? 'bg-green-100 text-green-800' :
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${order.status === 'delivered' ? 'bg-green-100 text-green-800' :
                                   order.status === 'preparing' ? 'bg-blue-100 text-blue-800' :
-                                  order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                  'bg-gray-100 text-gray-800'
-                                }`}>
+                                    order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                      'bg-gray-100 text-gray-800'
+                                  }`}>
                                   {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                                 </span>
                               </TableCell>
@@ -692,12 +842,11 @@ const RestaurantDashboard = () => {
                               </TableCell>
                               <TableCell>{order.clientId || "Customer"}</TableCell>
                               <TableCell>
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                  order.status === 'delivered' ? 'bg-green-100 text-green-800' :
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${order.status === 'delivered' ? 'bg-green-100 text-green-800' :
                                   order.status === 'preparing' ? 'bg-blue-100 text-blue-800' :
-                                  order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                  'bg-gray-100 text-gray-800'
-                                }`}>
+                                    order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                      'bg-gray-100 text-gray-800'
+                                  }`}>
                                   {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                                 </span>
                               </TableCell>
@@ -730,7 +879,7 @@ const RestaurantDashboard = () => {
                       <CardTitle>Menu Products</CardTitle>
                       <CardDescription>Manage your restaurant's menu items</CardDescription>
                     </div>
-                    <Button 
+                    <Button
                       className="bg-food-600 hover:bg-food-700"
                       onClick={handleAddProduct}
                     >
@@ -751,7 +900,7 @@ const RestaurantDashboard = () => {
                             <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">
                               {category.categoryName}
                             </h3>
-                            
+
                             <Table>
                               <TableHeader>
                                 <TableRow>
@@ -768,9 +917,9 @@ const RestaurantDashboard = () => {
                                     <TableCell>
                                       <div className="w-10 h-10 rounded-md overflow-hidden bg-gray-100">
                                         {product.image ? (
-                                          <img 
-                                            src={product.image} 
-                                            alt={product.name} 
+                                          <img
+                                            src={product.image}
+                                            alt={product.name}
                                             className="w-full h-full object-cover"
                                           />
                                         ) : (
@@ -800,15 +949,15 @@ const RestaurantDashboard = () => {
                                     </TableCell>
                                     <TableCell>
                                       <div className="flex items-center gap-2">
-                                        <Button 
-                                          variant="ghost" 
+                                        <Button
+                                          variant="ghost"
                                           size="sm"
                                           onClick={() => handleEditProduct(product)}
                                         >
                                           <Edit className="h-4 w-4" />
                                         </Button>
-                                        <Button 
-                                          variant="ghost" 
+                                        <Button
+                                          variant="ghost"
                                           size="sm"
                                           onClick={() => handleDeleteProduct(product)}
                                         >
@@ -826,7 +975,7 @@ const RestaurantDashboard = () => {
                     ) : (
                       <div className="text-center py-8">
                         <p className="text-gray-600 mb-4">This restaurant doesn't have any products yet.</p>
-                        <Button 
+                        <Button
                           className="bg-food-600 hover:bg-food-700"
                           onClick={handleAddProduct}
                         >
@@ -836,15 +985,15 @@ const RestaurantDashboard = () => {
                     )}
                   </CardContent>
                 </Card>
-                
+
                 <ProductEditModal
                   product={selectedProduct}
-                  categories={uniqueCategories}
+                  categories={categoriesDataForModal}
                   isOpen={isProductModalOpen}
                   onClose={() => setIsProductModalOpen(false)}
                   onSave={handleSaveProduct}
                 />
-                
+
                 <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
                   <AlertDialogContent>
                     <AlertDialogHeader>
@@ -856,7 +1005,7 @@ const RestaurantDashboard = () => {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction 
+                      <AlertDialogAction
                         onClick={confirmDeleteProduct}
                         className="bg-red-600 hover:bg-red-700 text-white"
                       >

@@ -357,10 +357,12 @@ export const productAPI = {
   },
 
   update: async (id: string, data: Omit<Product, 'id' | 'restaurantId' | 'createdAt' | 'updatedAt'>) => {
+    console.log("Data update: ", data);
     const response = await fetchWithError(`/product/${id}`, {
       method: "PATCH",
       body: JSON.stringify(data),
     });
+    console.log("Data update response: ", response);
     return adaptProduct(response);
   },
 
