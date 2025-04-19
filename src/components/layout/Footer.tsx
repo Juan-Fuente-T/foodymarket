@@ -65,7 +65,7 @@ export function Footer() {
                   to="/restaurants"
                   className="text-gray-500 hover:text-food-500 transition-colors"
                 >
-                  Categories
+                  Browse Menu
                 </Link>
               </li>
               <li>
@@ -84,7 +84,7 @@ export function Footer() {
             <ul className="space-y-2">
               <li>
                 <Link
-                  to="/help"
+                  to="/contact"
                   className="text-gray-500 hover:text-food-500 transition-colors"
                 >
                   Help Center
@@ -108,7 +108,7 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  to="/"
+                  to="/contact"
                   className="text-gray-500 hover:text-food-500 transition-colors"
                 >
                   Contact Us
@@ -138,7 +138,7 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  to="/partner"
+                  to="/advertising"
                   className="text-gray-500 hover:text-food-500 transition-colors"
                 >
                   Advertising
@@ -166,10 +166,10 @@ export function Footer() {
               Terms
             </Link>
             <Link
-              to="/privacy"
+              to="/contact"
               className="text-sm text-gray-500 hover:text-food-500 transition-colors"
             >
-              Cookies
+              Contact
             </Link>
           </div>
         </div>

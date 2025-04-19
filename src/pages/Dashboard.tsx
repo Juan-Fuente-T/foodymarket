@@ -1,4 +1,3 @@
-
 import React, { useEffect, useMemo, useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useAuth } from "../hooks/use-auth";
@@ -348,7 +347,13 @@ const RestaurantDashboard = () => {
   });
   
   const { mutate: deleteProduct } = useMutation({
-    mutationFn: (productId: string) => productAPI.delete(productId),
+    mutationFn: (productId: string) => {
+      console.log("Deleting product with ID:", productId);
+      if (!productId || productId === "undefined" || productId === "") {
+        throw new Error("Invalid product ID for deletion");
+      }
+      return productAPI.delete(productId);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["restaurantProducts", selectedRestaurant?.id] });
       toast.success("Producto eliminado con éxito");
@@ -376,19 +381,35 @@ const RestaurantDashboard = () => {
 
   const handleEditProduct = (product: Product) => {
     console.log('PASO 1 - handleEditProductClick - Recibido productToEdit:', product);
+    // Make sure we have a valid product with all required fields
+    if (!product.id) {
+      console.error("Product missing ID:", product);
+      toast.error("Error: ID de producto no encontrado");
+      return;
+    }
     setSelectedProduct(product);
     console.log('PASO 2 - handleEditProductClick - Después de setSelectedProduct, abriendo modal...');
     setIsProductModalOpen(true);
   };
 
   const handleDeleteProduct = (product: Product) => {
+    console.log("Product to delete:", product);
+    if (!product.id) {
+      console.error("Cannot delete product without ID:", product);
+      toast.error("Error: ID de producto no encontrado");
+      return;
+    }
     setProductToDelete(product);
     setIsDeleteDialogOpen(true);
   };
 
   const confirmDeleteProduct = () => {
     if (productToDelete && productToDelete.id) {
-      deleteProduct(productToDelete.id.toString());
+      console.log("Confirming delete for product:", productToDelete.id);
+      deleteProduct(productToDelete.id);
+    } else {
+      console.error("Attempted to delete product without ID");
+      toast.error("Error: No se puede eliminar un producto sin ID");
     }
     setIsDeleteDialogOpen(false);
   };
@@ -894,7 +915,7 @@ const RestaurantDashboard = () => {
                                   </TableHeader>
                                   <TableBody>
                                     {category.products.map((product) => (
-                                      <TableRow key={product.prd_id}>
+                                      <TableRow key={product.prd_id || product.id}>
                                         <TableCell>
                                           <div className="h-10 w-10 rounded-md bg-gray-100 overflow-hidden">
                                             {product.image ? (
@@ -936,13 +957,15 @@ const RestaurantDashboard = () => {
                                               variant="ghost" 
                                               size="sm" 
                                               onClick={() => {
-                                                const mappedProduct: Product = {
-                                                  id: String(product.prd_id),
+                                                // Generate a clean product object to edit
+                                                const productToEdit: Product = {
+                                                  id: String(product.prd_id || product.id),
                                                   name: product.name,
                                                   description: product.description,
                                                   price: Number(product.price),
                                                   image: product.image,
-                                                  isActive: product.isActive,
+                                                  isActive: product.isActive === true,
+                                                  available: product.isActive === true,
                                                   quantity: Number(product.quantity),
                                                   restaurantId: String(product.restaurantId),
                                                   categoryId: String(product.categoryId),
@@ -950,7 +973,8 @@ const RestaurantDashboard = () => {
                                                   updatedAt: product.updatedAt || '',
                                                   categoryName: product.categoryName
                                                 };
-                                                handleEditProduct(mappedProduct);
+                                                console.log("Edit product:", productToEdit);
+                                                handleEditProduct(productToEdit);
                                               }}
                                             >
                                               <Edit className="h-4 w-4" />
@@ -960,13 +984,14 @@ const RestaurantDashboard = () => {
                                               size="sm" 
                                               className="text-red-500 hover:text-red-700"
                                               onClick={() => {
-                                                const mappedProduct: Product = {
-                                                  id: String(product.prd_id),
+                                                // Generate a clean product object to delete
+                                                const productToDelete: Product = {
+                                                  id: String(product.prd_id || product.id),
                                                   name: product.name,
                                                   description: product.description,
                                                   price: Number(product.price),
                                                   image: product.image,
-                                                  isActive: product.isActive,
+                                                  isActive: product.isActive === true,
                                                   quantity: Number(product.quantity),
                                                   restaurantId: String(product.restaurantId),
                                                   categoryId: String(product.categoryId),
@@ -974,7 +999,8 @@ const RestaurantDashboard = () => {
                                                   updatedAt: product.updatedAt || '',
                                                   categoryName: product.categoryName
                                                 };
-                                                handleDeleteProduct(mappedProduct);
+                                                console.log("Delete product:", productToDelete);
+                                                handleDeleteProduct(productToDelete);
                                               }}
                                             >
                                               <Trash2 className="h-4 w-4" />
@@ -998,7 +1024,10 @@ const RestaurantDashboard = () => {
                 {isProductModalOpen && (
                   <ProductEditModal
                     isOpen={isProductModalOpen}
-                    onClose={() => setIsProductModalOpen(false)}
+                    onClose={() => {
+                      setIsProductModalOpen(false);
+                      setSelectedProduct(null);
+                    }}
                     product={selectedProduct}
                     onSave={handleSaveProduct}
                     categories={categoriesDataForModal}

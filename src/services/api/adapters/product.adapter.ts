@@ -8,12 +8,14 @@ export const adaptProduct = (data: any): Product => ({
   description: data.description || '',
   price: data.price || 0,
   image: data.image || '',
-  available: data.isActive || false,
+  isActive: data.isActive === true,
+  available: data.isActive === true, // Set available field to same value as isActive for compatibility
   quantity: data.quantity || 0,
   restaurantId: data.restaurantId?.toString() || '',
   categoryId: data.categoryId?.toString() || '',
   createdAt: data.prd_fecha_alta?.toString() || new Date().toISOString(),
-  updatedAt: data.prd_fecha_actualizacion?.toString() || new Date().toISOString()
+  updatedAt: data.prd_fecha_actualizacion?.toString() || new Date().toISOString(),
+  categoryName: data.categoryName
 });
 
 export const adaptGroupedProduct = (data: any): GroupedProduct => ({

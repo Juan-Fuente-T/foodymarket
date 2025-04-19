@@ -50,12 +50,12 @@ export interface Product {
   price: number;
   image: string;
   isActive: boolean;
+  available?: boolean; // Kept for backward compatibility
   quantity: number;
   restaurantId: string;
   categoryId: string;
   createdAt: string;
   updatedAt: string;
-  available?: boolean; // Added for backward compatibility
   categoryName?: string; // Added for UI convenience
 }
 
