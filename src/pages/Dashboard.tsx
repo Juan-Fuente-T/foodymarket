@@ -1,3 +1,4 @@
+
 import React, { useEffect, useMemo, useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useAuth } from "../hooks/use-auth";
@@ -241,7 +242,7 @@ const RestaurantDashboard = () => {
     console.log('PASO 3 - useEffect[selectedProduct] - Estado selectedProduct cambió a:', selectedProduct);
     // Verifica aquí si selectedProduct TIENE categoryId con valor correcto
      // --- FIN LOG ---
-}, [selectedProduct]); 
+  }, [selectedProduct]); 
 
   const { data: orders = [], isLoading: isLoadingOrders } = useQuery({
     queryKey: ["restaurantOrders", selectedRestaurant?.id],
@@ -303,7 +304,7 @@ const RestaurantDashboard = () => {
     });
     console.log("--- Fin cálculo allProducts. Resultado FINAL v2:", flattenedProducts);
     return flattenedProducts;
-}, [categoriesWithProducts]);
+  }, [categoriesWithProducts]);
 
   const uniqueCategories = useMemo(() => {
     return categoriesWithProducts.map(category => category.categoryName);
@@ -318,40 +319,12 @@ const RestaurantDashboard = () => {
       name: categoryGroup.categoryName
     }));
   }, [categoriesWithProducts]);
-  console.log("CATEGORIAS UNICAS", categoriesDataForModal)
-
-  // const { mutate: saveProduct } = useMutation({
-  //   mutationFn: (product: Product) => {
-  //     console.log("MUTATION", product.id, product);
-  //     // if (product.id && !product.id.startsWith('temp_')) {
-  //     const isUpdate = product.id != null && String(product.id).length > 0; // Más simple si ID nunca es 'temp_'
-  //     if (isUpdate) {
-  //       return productAPI.update(product.id.toString(), {
-  //         ...product
-  //       });
-  //     } else {
-  //       return productAPI.create({
-  //         ...product,
-  //         restaurantId: selectedRestaurant!.id.toString()
-  //       });
-  //     }
-  //   },
-  //   onSuccess: () => {
-  //     queryClient.invalidateQueries({ queryKey: ["restaurantProducts", selectedRestaurant?.id] });
-  //     toast.success("Producto guardado con éxito");
-  //   },
-  //   onError: (error) => {
-  //     console.error("Error saving product:", error);
-  //     toast.error("Error al guardar el producto");
-  //   }
-  // });
+  console.log("CATEGORIAS UNICAS", categoriesDataForModal);
 
   const createProductMutation = useMutation({
-    // mutationFn recibe los datos del nuevo producto (sin ID)
     mutationFn: (createData: any) => productAPI.create(createData),
     onSuccess: () => {
       toast.success("Producto creado con éxito");
-      // Invalida la caché de productos para refrescar la lista
       queryClient.invalidateQueries({ queryKey: ['restaurantProducts', selectedRestaurant?.id] });
       setIsProductModalOpen(false);
     },
@@ -362,7 +335,6 @@ const RestaurantDashboard = () => {
   });
 
   const updateProductMutation = useMutation({
-    // mutationFn recibe un objeto con 'id' y 'data'
     mutationFn: (vars: { id: string | number, data: any }) => productAPI.update(vars.id.toString(), vars.data),
     onSuccess: () => {
       toast.success("Producto actualizado con éxito");
@@ -374,6 +346,7 @@ const RestaurantDashboard = () => {
       toast.error(`Error actualizando producto: ${error.message}`);
     }
   });
+  
   const { mutate: deleteProduct } = useMutation({
     mutationFn: (productId: string) => productAPI.delete(productId),
     onSuccess: () => {
@@ -773,3 +746,412 @@ const RestaurantDashboard = () => {
                         {Array(5).fill(0).map((_, i) => (
                           <Skeleton key={i} className="h-12 w-full" />
                         ))}
+                      </div>
+                    ) : orders.length > 0 ? (
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Order ID</TableHead>
+                            <TableHead>Date</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead className="text-right">Amount</TableHead>
+                            <TableHead></TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {orders.slice(0, 5).map((order) => (
+                            <TableRow key={order.id}>
+                              <TableCell className="font-medium">{order.id.slice(0, 8)}</TableCell>
+                              <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
+                              <TableCell>
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                  order.status === 'delivered' ? 'bg-green-100 text-green-800' :
+                                  order.status === 'preparing' ? 'bg-blue-100 text-blue-800' :
+                                  order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                  'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                                </span>
+                              </TableCell>
+                              <TableCell className="text-right">${order.total.toFixed(2)}</TableCell>
+                              <TableCell>
+                                <Button variant="ghost" size="sm">View</Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    ) : (
+                      <div className="text-center py-8">
+                        <p className="text-gray-600 mb-4">No orders found.</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="orders">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>All Orders</CardTitle>
+                    <CardDescription>Manage your restaurant orders</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {isLoadingOrders ? (
+                      <div className="space-y-4">
+                        {Array(5).fill(0).map((_, i) => (
+                          <Skeleton key={i} className="h-12 w-full" />
+                        ))}
+                      </div>
+                    ) : orders.length > 0 ? (
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Order ID</TableHead>
+                            <TableHead>Date</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead className="text-right">Amount</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {orders.map((order) => (
+                            <TableRow key={order.id}>
+                              <TableCell className="font-medium">{order.id.slice(0, 8)}</TableCell>
+                              <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
+                              <TableCell>
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                  order.status === 'delivered' ? 'bg-green-100 text-green-800' :
+                                  order.status === 'preparing' ? 'bg-blue-100 text-blue-800' :
+                                  order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                  'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                                </span>
+                              </TableCell>
+                              <TableCell className="text-right">${order.total.toFixed(2)}</TableCell>
+                              <TableCell>
+                                <Button variant="ghost" size="sm">View Details</Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    ) : (
+                      <div className="text-center py-8">
+                        <p className="text-gray-600 mb-4">No orders found for this restaurant.</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="products">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-lg font-medium">Products Management</h3>
+                  <Button onClick={handleAddProduct} className="bg-food-600 hover:bg-food-700">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add New Product
+                  </Button>
+                </div>
+
+                {isLoadingProducts ? (
+                  <div className="space-y-4">
+                    {Array(3).fill(0).map((_, i) => (
+                      <Skeleton key={i} className="h-32 w-full" />
+                    ))}
+                  </div>
+                ) : (
+                  <>
+                    {categoriesWithProducts.length === 0 ? (
+                      <div className="text-center py-12 bg-white rounded-lg shadow-sm border border-gray-100">
+                        <h3 className="text-xl font-medium text-gray-900 mb-2">No products added yet</h3>
+                        <p className="text-gray-600 mb-6">Start adding products to your restaurant menu.</p>
+                        <Button onClick={handleAddProduct} className="bg-food-600 hover:bg-food-700">
+                          <PlusCircle className="mr-2 h-4 w-4" />
+                          Add First Product
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-8">
+                        {categoriesWithProducts.map((category) => (
+                          <Card key={category.categoryId} className="overflow-hidden">
+                            <CardHeader className="bg-gray-50">
+                              <CardTitle>{category.categoryName}</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="overflow-x-auto">
+                                <Table>
+                                  <TableHeader>
+                                    <TableRow>
+                                      <TableHead>Image</TableHead>
+                                      <TableHead>Name</TableHead>
+                                      <TableHead>Price</TableHead>
+                                      <TableHead>Quantity</TableHead>
+                                      <TableHead>Status</TableHead>
+                                      <TableHead className="text-right">Actions</TableHead>
+                                    </TableRow>
+                                  </TableHeader>
+                                  <TableBody>
+                                    {category.products.map((product) => (
+                                      <TableRow key={product.prd_id}>
+                                        <TableCell>
+                                          <div className="h-10 w-10 rounded-md bg-gray-100 overflow-hidden">
+                                            {product.image ? (
+                                              <img 
+                                                src={product.image} 
+                                                alt={product.name} 
+                                                className="h-full w-full object-cover"
+                                                onError={(e) => {
+                                                  (e.target as HTMLImageElement).src = '/placeholder.svg';
+                                                }}
+                                              />
+                                            ) : (
+                                              <div className="flex h-full w-full items-center justify-center bg-gray-200">
+                                                <Package className="h-5 w-5 text-gray-400" />
+                                              </div>
+                                            )}
+                                          </div>
+                                        </TableCell>
+                                        <TableCell>
+                                          <div>
+                                            <p className="font-medium">{product.name}</p>
+                                            <p className="text-sm text-gray-500 truncate max-w-[200px]">
+                                              {product.description}
+                                            </p>
+                                          </div>
+                                        </TableCell>
+                                        <TableCell>${parseFloat(String(product.price)).toFixed(2)}</TableCell>
+                                        <TableCell>{product.quantity}</TableCell>
+                                        <TableCell>
+                                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                            product.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                          }`}>
+                                            {product.isActive ? 'Active' : 'Inactive'}
+                                          </span>
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                          <div className="flex justify-end space-x-2">
+                                            <Button 
+                                              variant="ghost" 
+                                              size="sm" 
+                                              onClick={() => {
+                                                const mappedProduct: Product = {
+                                                  id: String(product.prd_id),
+                                                  name: product.name,
+                                                  description: product.description,
+                                                  price: Number(product.price),
+                                                  image: product.image,
+                                                  isActive: product.isActive,
+                                                  quantity: Number(product.quantity),
+                                                  restaurantId: String(product.restaurantId),
+                                                  categoryId: String(product.categoryId),
+                                                  createdAt: product.createdAt || '',
+                                                  updatedAt: product.updatedAt || '',
+                                                  categoryName: product.categoryName
+                                                };
+                                                handleEditProduct(mappedProduct);
+                                              }}
+                                            >
+                                              <Edit className="h-4 w-4" />
+                                            </Button>
+                                            <Button 
+                                              variant="ghost" 
+                                              size="sm" 
+                                              className="text-red-500 hover:text-red-700"
+                                              onClick={() => {
+                                                const mappedProduct: Product = {
+                                                  id: String(product.prd_id),
+                                                  name: product.name,
+                                                  description: product.description,
+                                                  price: Number(product.price),
+                                                  image: product.image,
+                                                  isActive: product.isActive,
+                                                  quantity: Number(product.quantity),
+                                                  restaurantId: String(product.restaurantId),
+                                                  categoryId: String(product.categoryId),
+                                                  createdAt: product.createdAt || '',
+                                                  updatedAt: product.updatedAt || '',
+                                                  categoryName: product.categoryName
+                                                };
+                                                handleDeleteProduct(mappedProduct);
+                                              }}
+                                            >
+                                              <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                          </div>
+                                        </TableCell>
+                                      </TableRow>
+                                    ))}
+                                  </TableBody>
+                                </Table>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* Product Edit Modal */}
+                {isProductModalOpen && (
+                  <ProductEditModal
+                    isOpen={isProductModalOpen}
+                    onClose={() => setIsProductModalOpen(false)}
+                    product={selectedProduct}
+                    onSave={handleSaveProduct}
+                    categories={categoriesDataForModal}
+                  />
+                )}
+
+                {/* Delete Product Dialog */}
+                <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will permanently delete the product &quot;{productToDelete?.name}&quot; from your restaurant menu.
+                        This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={confirmDeleteProduct} className="bg-red-600 hover:bg-red-700">
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </TabsContent>
+
+              <TabsContent value="categories">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Category Management</CardTitle>
+                    <CardDescription>Manage your product categories</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <CategoryManagement
+                      categories={uniqueCategories}
+                      onAdd={handleAddCategory}
+                      onEdit={handleEditCategory}
+                      onDelete={handleDeleteCategory}
+                    />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="analytics">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Restaurant Analytics</CardTitle>
+                    <CardDescription>Performance statistics for your restaurant</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-8">
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-500 mb-4">Monthly Revenue</h4>
+                        <div className="h-80">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={revenueData}>
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis dataKey="date" />
+                              <YAxis />
+                              <RechartsTooltip />
+                              <Bar dataKey="amount" fill="#9b87f5" radius={[4, 4, 0, 0]} />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-500 mb-4">Customer Engagement</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          <Card>
+                            <CardContent className="pt-6">
+                              <div className="flex flex-col items-center justify-center text-center">
+                                <Users className="h-8 w-8 text-blue-500 mb-2" />
+                                <p className="text-3xl font-bold">42</p>
+                                <p className="text-sm text-gray-500">New Customers</p>
+                              </div>
+                            </CardContent>
+                          </Card>
+                          
+                          <Card>
+                            <CardContent className="pt-6">
+                              <div className="flex flex-col items-center justify-center text-center">
+                                <RefreshCcw className="h-8 w-8 text-green-500 mb-2" />
+                                <p className="text-3xl font-bold">73%</p>
+                                <p className="text-sm text-gray-500">Return Rate</p>
+                              </div>
+                            </CardContent>
+                          </Card>
+                          
+                          <Card>
+                            <CardContent className="pt-6">
+                              <div className="flex flex-col items-center justify-center text-center">
+                                <Star className="h-8 w-8 text-yellow-500 mb-2" />
+                                <p className="text-3xl font-bold">4.8</p>
+                                <p className="text-sm text-gray-500">Average Rating</p>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-500 mb-4">Popular Products</h4>
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Product</TableHead>
+                              <TableHead>Orders</TableHead>
+                              <TableHead>Revenue</TableHead>
+                              <TableHead className="text-right">Trend</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            <TableRow>
+                              <TableCell className="font-medium">Hawaiian Pizza</TableCell>
+                              <TableCell>145</TableCell>
+                              <TableCell>$2,175.00</TableCell>
+                              <TableCell className="text-right">
+                                <TrendingUp className="h-4 w-4 text-green-500 inline" />
+                                <span className="text-green-500 ml-1">12%</span>
+                              </TableCell>
+                            </TableRow>
+                            <TableRow>
+                              <TableCell className="font-medium">Chicken Alfredo</TableCell>
+                              <TableCell>122</TableCell>
+                              <TableCell>$1,830.00</TableCell>
+                              <TableCell className="text-right">
+                                <TrendingUp className="h-4 w-4 text-green-500 inline" />
+                                <span className="text-green-500 ml-1">8%</span>
+                              </TableCell>
+                            </TableRow>
+                            <TableRow>
+                              <TableCell className="font-medium">Beef Burger</TableCell>
+                              <TableCell>98</TableCell>
+                              <TableCell>$1,470.00</TableCell>
+                              <TableCell className="text-right">
+                                <TrendingUp className="h-4 w-4 text-green-500 inline" />
+                                <span className="text-green-500 ml-1">5%</span>
+                              </TableCell>
+                            </TableRow>
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </>
+        )}
+      </div>
+    </Layout>
+  );
+};
+
+export default Dashboard;
