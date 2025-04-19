@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -74,7 +75,7 @@ const EditRestaurant = () => {
       const fields = [
         'name', 'description', 'address', 'phone', 
         'email', 'category', 'openingHours', 'coverImage', 
-        'logo', 'minOrderAmount', 'deliveryFee'
+        'logo'
       ];
       
       fields.forEach(field => {
@@ -83,8 +84,18 @@ const EditRestaurant = () => {
         }
       });
       
+      // Handle minOrderAmount and deliveryFee specially since they might be optional
+      if (restaurant.minOrderAmount !== undefined) {
+        setValue('minOrderAmount', restaurant.minOrderAmount);
+      }
+      
+      if (restaurant.deliveryFee !== undefined) {
+        setValue('deliveryFee', restaurant.deliveryFee);
+      }
+      
+      // Use logo for logoImagePreview if logoImage doesn't exist
       setCoverImagePreview(restaurant.coverImage || '');
-      setLogoImagePreview(restaurant.logo || '');
+      setLogoImagePreview(restaurant.logo || restaurant.logoImage || '');
     }
   }, [restaurant, setValue]);
   
@@ -100,12 +111,21 @@ const EditRestaurant = () => {
   }, [watchLogo]);
   
   const onSubmit = (data: Restaurant) => {
-    updateRestaurant({
+    const updatedData = {
       ...restaurant,
-      ...data,
-      minOrderAmount: parseFloat(data.minOrderAmount?.toString() || '0'),
-      deliveryFee: parseFloat(data.deliveryFee?.toString() || '0'),
-    });
+      ...data
+    };
+    
+    // Ensure numeric types
+    if (data.minOrderAmount !== undefined) {
+      updatedData.minOrderAmount = parseFloat(data.minOrderAmount.toString() || '0');
+    }
+    
+    if (data.deliveryFee !== undefined) {
+      updatedData.deliveryFee = parseFloat(data.deliveryFee.toString() || '0');
+    }
+    
+    updateRestaurant(updatedData);
   };
   
   if (isLoading) {

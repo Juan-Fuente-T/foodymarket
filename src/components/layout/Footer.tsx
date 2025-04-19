@@ -62,7 +62,7 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  to="/categories"
+                  to="/restaurants"
                   className="text-gray-500 hover:text-food-500 transition-colors"
                 >
                   Categories
@@ -108,7 +108,7 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  to="/contact"
+                  to="/"
                   className="text-gray-500 hover:text-food-500 transition-colors"
                 >
                   Contact Us
@@ -138,7 +138,7 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  to="/advertising"
+                  to="/partner"
                   className="text-gray-500 hover:text-food-500 transition-colors"
                 >
                   Advertising
@@ -166,7 +166,7 @@ export function Footer() {
               Terms
             </Link>
             <Link
-              to="/cookies"
+              to="/privacy"
               className="text-sm text-gray-500 hover:text-food-500 transition-colors"
             >
               Cookies

@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   CheckCircle, Clock, PlusCircle, RefreshCcw, TrendingUp,
   Users, DollarSign, ShoppingBag, User, Settings,
-  Edit, Trash2, Package, Star
+  Edit, Trash2, Package, Star, Building
 } from "lucide-react";
 import { Product, Restaurant, GroupedProduct } from "@/types/models";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -276,9 +276,9 @@ const RestaurantDashboard = () => {
         }
         categoryGroup.products.forEach((backendProduct: any, productIndex: number) => {
             // --- Lectura de campos (USA LOS NOMBRES DE TU JSON!) ---
-            const productIdFromBackend = backendProduct.prd_id;     // <-- ¿Seguro es prd_id?
-            const categoryIdFromBackend = backendProduct.categoryId; // <-- ¿Seguro es categoryId?
-            const isActiveFromBackend = backendProduct.isActive;   // <-- ¿Seguro es isActive?
+            const productIdFromBackend = backendProduct.prd_id;
+            const categoryIdFromBackend = backendProduct.categoryId;
+            const isActiveFromBackend = backendProduct.isActive;
             const priceFromBackend = backendProduct.price;
 
             // --- Objeto Frontend Final ---
@@ -289,14 +289,14 @@ const RestaurantDashboard = () => {
                 price: Number(priceFromBackend?.parsedValue ?? priceFromBackend ?? 0),
                 image: backendProduct.image || '',
                 // --- Mapeo Category ID (Usa el del producto O el del grupo, convierte a STRING)---
-                categoryId: (categoryIdFromBackend ?? currentGroupId) !== null ? String(categoryIdFromBackend ?? currentGroupId) : '', // <-- Correcto si interfaz pide string
+                categoryId: (categoryIdFromBackend ?? currentGroupId) !== null ? String(categoryIdFromBackend ?? currentGroupId) : '',
                 // --- Mapeo Estado (Asegura boolean) ---
-                isActive: isActiveFromBackend === true, // <-- Correcto si interfaz pide boolean
-                // available: isActiveFromBackend === true, // <-- QUITA ESTA LÍNEA (no está en tu interfaz Product)
+                isActive: isActiveFromBackend === true,
                 quantity: Number(backendProduct.quantity || 0),
                 restaurantId: String(backendProduct.restaurantId || categoryGroup.restaurantId || ''),
                 createdAt: backendProduct.createdAt || '',
                 updatedAt: backendProduct.updatedAt || '',
+                categoryName: backendProduct.categoryName || categoryGroup.categoryName || ''
             };
             flattenedProducts.push(frontendProduct as Product);
         });
@@ -304,9 +304,8 @@ const RestaurantDashboard = () => {
     console.log("--- Fin cálculo allProducts. Resultado FINAL v2:", flattenedProducts);
     return flattenedProducts;
 }, [categoriesWithProducts]);
-        console.log('Contenido de allProducts:', allProducts);
-        console.log("CcategoriesWithProducts", categoriesWithProducts)
-        const uniqueCategories = useMemo(() => {
+
+  const uniqueCategories = useMemo(() => {
     return categoriesWithProducts.map(category => category.categoryName);
   }, [categoriesWithProducts]);
 
@@ -455,16 +454,20 @@ const RestaurantDashboard = () => {
       quantityNum = 0; // Default 0 si no viene? O error?
     }
 
-    const finalData = {
+    const finalData: any = {
       name: productData.name,
       description: productData.description,
       price: priceNum, // Usa el número parseado (o BigDecimal si usas eso)
       image: productData.image,
       isActive: productData.isActive, 
       quantity: quantityNum, // Usa el número parseado
-      categoryId: categoryIdNum, 
-      restaurantId: selectedRestaurant?.id ? Number(selectedRestaurant.id) : undefined
+      categoryId: categoryIdNum
     };
+    
+    if (selectedRestaurant?.id) {
+      finalData.restaurantId = selectedRestaurant.id;
+    }
+    
     if (isNew) {
       console.log("Calling CREATE mutation with:", finalData);
       createProductMutation.mutate(finalData);
@@ -604,18 +607,29 @@ const RestaurantDashboard = () => {
           )}
 
           <div className="mt-4 md:mt-0 space-x-2 self-end md:self-center">
-            <Button asChild variant="outline" disabled={!selectedRestaurant}>
-              <Link to={selectedRestaurant ? `/restaurants/${selectedRestaurant.id}` : '#'}>
-                View Restaurant
+            <Button asChild variant="outline" className="border-food-500 text-food-500 hover:bg-food-50">
+              <Link to="/partner">
+                <Building className="mr-2 h-4 w-4" />
+                Add New Restaurant
               </Link>
             </Button>
-            <Button asChild className="bg-food-600 hover:bg-food-700" disabled={!selectedRestaurant}>
-              <Link to={selectedRestaurant ? `/edit-restaurant/${selectedRestaurant.id}` : '#'}>
-                Edit Restaurant
-              </Link>
-            </Button>
+            {selectedRestaurant && (
+              <>
+                <Button asChild variant="outline" disabled={!selectedRestaurant}>
+                  <Link to={selectedRestaurant ? `/restaurants/${selectedRestaurant.id}` : '#'}>
+                    View Restaurant
+                  </Link>
+                </Button>
+                <Button asChild className="bg-food-600 hover:bg-food-700" disabled={!selectedRestaurant}>
+                  <Link to={selectedRestaurant ? `/edit-restaurant/${selectedRestaurant.id}` : '#'}>
+                    Edit Restaurant
+                  </Link>
+                </Button>
+              </>
+            )}
           </div>
         </div>
+        
         {!selectedRestaurant ? (
           <div className="text-center py-16 text-gray-500">
             Please select one of your restaurants to see the dashboard.
@@ -759,342 +773,3 @@ const RestaurantDashboard = () => {
                         {Array(5).fill(0).map((_, i) => (
                           <Skeleton key={i} className="h-12 w-full" />
                         ))}
-                      </div>
-                    ) : orders.length > 0 ? (
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Order ID</TableHead>
-                            <TableHead>Date</TableHead>
-                            <TableHead>Customer</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead className="text-right">Amount</TableHead>
-                            <TableHead></TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {orders.slice(0, 5).map((order: any) => (
-                            <TableRow key={order?.id}>
-                              <TableCell className="font-medium">{order.id.slice(0, 8)}</TableCell>
-                              <TableCell>
-                                {new Date(order.createdAt).toLocaleDateString()}
-                              </TableCell>
-                              <TableCell>{order.clientId || "Customer"}</TableCell>
-                              <TableCell>
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${order.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                                  order.status === 'preparing' ? 'bg-blue-100 text-blue-800' :
-                                    order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                      'bg-gray-100 text-gray-800'
-                                  }`}>
-                                  {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                                </span>
-                              </TableCell>
-                              <TableCell className="text-right">${order.total.toFixed(2)}</TableCell>
-                              <TableCell>
-                                <Button variant="ghost" size="sm">
-                                  View
-                                </Button>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    ) : (
-                      <div className="text-center py-8">
-                        <p className="text-gray-600 mb-4">This restaurant hasn't received any orders yet.</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="orders">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>All Orders</CardTitle>
-                    <CardDescription>Manage your restaurant orders</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {isLoadingOrders ? (
-                      <div className="space-y-4">
-                        {Array(8).fill(0).map((_, i) => (
-                          <Skeleton key={i} className="h-12 w-full" />
-                        ))}
-                      </div>
-                    ) : orders.length > 0 ? (
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Order ID</TableHead>
-                            <TableHead>Date</TableHead>
-                            <TableHead>Customer</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead className="text-right">Amount</TableHead>
-                            <TableHead>Actions</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {orders.map((order: any) => (
-                            <TableRow key={order?.id}>
-                              <TableCell className="font-medium">{order.id.slice(0, 8)}</TableCell>
-                              <TableCell>
-                                {new Date(order.createdAt).toLocaleDateString()}
-                              </TableCell>
-                              <TableCell>{order.clientId || "Customer"}</TableCell>
-                              <TableCell>
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${order.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                                  order.status === 'preparing' ? 'bg-blue-100 text-blue-800' :
-                                    order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                      'bg-gray-100 text-gray-800'
-                                  }`}>
-                                  {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                                </span>
-                              </TableCell>
-                              <TableCell className="text-right">${order.total.toFixed(2)}</TableCell>
-                              <TableCell>
-                                <div className="flex gap-2">
-                                  <Button variant="ghost" size="sm">View</Button>
-                                  {(order.status === 'pending' || order.status === 'preparing') && (
-                                    <Button variant="outline" size="sm">Update Status</Button>
-                                  )}
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    ) : (
-                      <div className="text-center py-8">
-                        <p className="text-gray-600 mb-4">This restaurant hasn't received any orders yet.</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="products">
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <div>
-                      <CardTitle>Menu Products</CardTitle>
-                      <CardDescription>Manage your restaurant's menu items</CardDescription>
-                    </div>
-                    <Button
-                      className="bg-food-600 hover:bg-food-700"
-                      onClick={handleAddProduct}
-                    >
-                      <PlusCircle className="mr-2 h-4 w-4" /> Add New Product
-                    </Button>
-                  </CardHeader>
-                  <CardContent>
-                    {isLoadingProducts ? (
-                      <div className="space-y-4">
-                        {Array(8).fill(0).map((_, i) => (
-                          <Skeleton key={i} className="h-12 w-full" />
-                        ))}
-                      </div>
-                    ) : categoriesWithProducts.length > 0 ? (
-                      <div className="space-y-8">
-                        {categoriesWithProducts.map((category) => (
-                          <div key={category.categoryName} className="space-y-4">
-                            <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">
-                              {category.categoryName}
-                            </h3>
-
-                            <Table>
-                              <TableHeader>
-                                <TableRow>
-                                  <TableHead>Image</TableHead>
-                                  <TableHead>Name</TableHead>
-                                  <TableHead>Price</TableHead>
-                                  <TableHead>Available</TableHead>
-                                  <TableHead>Actions</TableHead>
-                                </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                {category.products.map((product) => (
-                                  <TableRow key={product.id}>
-                                    <TableCell>
-                                      <div className="w-10 h-10 rounded-md overflow-hidden bg-gray-100">
-                                        {product.image ? (
-                                          <img
-                                            src={product.image}
-                                            alt={product.name}
-                                            className="w-full h-full object-cover"
-                                          />
-                                        ) : (
-                                          <div className="flex items-center justify-center w-full h-full text-gray-400">
-                                            <Package className="h-5 w-5" />
-                                          </div>
-                                        )}
-                                      </div>
-                                    </TableCell>
-                                    <TableCell className="font-medium">
-                                      {product.name}
-                                      {product.description && (
-                                        <p className="text-xs text-gray-500 truncate max-w-xs">{product.description}</p>
-                                      )}
-                                    </TableCell>
-                                    <TableCell>${product.price?.toFixed(2)}</TableCell>
-                                    <TableCell>
-                                      {product.available !== false ? (
-                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                          Available
-                                        </span>
-                                      ) : (
-                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                          Unavailable
-                                        </span>
-                                      )}
-                                    </TableCell>
-                                    <TableCell>
-                                      <div className="flex items-center gap-2">
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          onClick={() => handleEditProduct(product)}
-                                        >
-                                          <Edit className="h-4 w-4" />
-                                        </Button>
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          onClick={() => handleDeleteProduct(product)}
-                                        >
-                                          <Trash2 className="h-4 w-4 text-red-500" />
-                                        </Button>
-                                      </div>
-                                    </TableCell>
-                                  </TableRow>
-                                ))}
-                              </TableBody>
-                            </Table>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-8">
-                        <p className="text-gray-600 mb-4">This restaurant doesn't have any products yet.</p>
-                        <Button
-                          className="bg-food-600 hover:bg-food-700"
-                          onClick={handleAddProduct}
-                        >
-                          <PlusCircle className="mr-2 h-4 w-4" /> Add Your First Product
-                        </Button>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-
-                <ProductEditModal
-                  product={selectedProduct}
-                  categories={categoriesDataForModal}
-                  isOpen={isProductModalOpen}
-                  onClose={() => setIsProductModalOpen(false)}
-                  onSave={handleSaveProduct}
-                />
-
-                <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete the product
-                        "{productToDelete?.name}" from your restaurant.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={confirmDeleteProduct}
-                        className="bg-red-600 hover:bg-red-700 text-white"
-                      >
-                        Delete
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </TabsContent>
-
-              <TabsContent value="categories">
-                <CategoryManagement
-                  categories={uniqueCategories}
-                  onAddCategory={handleAddCategory}
-                  onEditCategory={handleEditCategory}
-                  onDeleteCategory={handleDeleteCategory}
-                />
-              </TabsContent>
-
-              <TabsContent value="analytics">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Popular Products</CardTitle>
-                    </CardHeader>
-                    <CardContent className="h-80">
-                      {isLoadingProducts || isLoadingOrders ? (
-                        <Skeleton className="w-full h-full" />
-                      ) : allProducts.length > 0 ? (
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart
-                            data={allProducts.slice(0, 5).map((p: any, index: number) => ({
-                              name: p.name,
-                              orders: Math.floor(Math.random() * 50) + 5 // Example random data
-                            }))}
-                            layout="vertical"
-                          >
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis type="number" />
-                            <YAxis dataKey="name" type="category" width={100} />
-                            <RechartsTooltip />
-                            <Bar dataKey="orders" fill="#8884d8" radius={[0, 4, 4, 0]} />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      ) : (
-                        <div className="flex items-center justify-center h-full text-gray-500">
-                          No product data available
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Customer Growth</CardTitle>
-                    </CardHeader>
-                    <CardContent className="h-80">
-                      {isLoadingOrders ? (
-                        <Skeleton className="w-full h-full" />
-                      ) : (
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart
-                            data={[
-                              { month: 'Jan', customers: 10 },
-                              { month: 'Feb', customers: 15 },
-                              { month: 'Mar', customers: 25 },
-                              { month: 'Apr', customers: 30 },
-                              { month: 'May', customers: 40 },
-                              { month: 'Jun', customers: 55 },
-                            ]}
-                          >
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="month" />
-                            <YAxis />
-                            <RechartsTooltip />
-                            <Bar dataKey="customers" fill="#82ca9d" radius={[4, 4, 0, 0]} />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      )}
-                    </CardContent>
-                  </Card>
-                </div>
-              </TabsContent>
-            </Tabs>
-          </>
-        )}
-      </div>
-    </Layout>
-  );
-};
-
-export default Dashboard;
