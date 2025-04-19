@@ -992,6 +992,7 @@ const RestaurantDashboard = () => {
                                                   price: Number(product.price),
                                                   image: product.image,
                                                   isActive: product.isActive === true,
+                                                  available: product.isActive === true,
                                                   quantity: Number(product.quantity),
                                                   restaurantId: String(product.restaurantId),
                                                   categoryId: String(product.categoryId),
