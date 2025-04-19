@@ -6,23 +6,11 @@ import { X } from 'lucide-react'
 import { toast } from 'sonner'
 import { createPortal } from 'react-dom'
 import { useNavigate } from "react-router-dom";
+import { Product } from '@/types/models';
 
 interface ProductDetailModalProps {
-    product: {
-        id: string
-        name: string
-        price: number
-        image: string
-        description: string
-        available: boolean
-        restaurantId: string
-        categoryName?: string
-        quantity: number
-        categoryId: string
-        createdAt: string
-        updatedAt: string
-    }
-    onClose: () => void
+    product: Product;
+    onClose: () => void;
 }
 
 export function ProductDetailModal({
@@ -31,8 +19,6 @@ export function ProductDetailModal({
 }: ProductDetailModalProps) {
     const navigate = useNavigate();
     const { items, addItem, removeItem, isProductInCart, canAddProduct, updateItemQuantity } = useCart()
-       // Opcional: Una función helper en el contexto sería más limpia:
-    // getItemQuantity 
     const isInCart = isProductInCart(product.id)
     const canAdd = canAddProduct(product)
 
@@ -44,7 +30,7 @@ export function ProductDetailModal({
         return undefined;
       }, [items, product.id, isInCart]);
 
-      const [quantity, setQuantity] = useState(() => cartItem ? cartItem.quantity : 1);
+    const [quantity, setQuantity] = useState(() => cartItem ? cartItem.quantity : 1);
 
     // Efecto para deshabilitar scroll
     useEffect(() => {
@@ -57,19 +43,15 @@ export function ProductDetailModal({
         if (cartItem && cartItem.quantity !== quantity) {
             setQuantity(cartItem.quantity);
         }
-        // Opcional: manejar si el item desaparece mientras el modal está abierto
-         if (!cartItem && quantity !== 1 && isInCart) { // Ya no se encuentra pero localmente hay > 1?
-            // setQuantity(1); // Resetear a 1?
-         }
     }, [cartItem, quantity, isInCart]);
 
     const handleAddToCart = () => {
         if (canAdd) {
             addItem(product, quantity)
             toast.success(`${product.name} añadido al carrito`)
-        }else {
+        } else {
             toast.error("No se puede añadir el producto.", { description: "Verifica la disponibilidad o el carrito actual."});
-          }
+        }
     }
 
     // --- Handlers que usan cartItem.id ---
@@ -78,34 +60,28 @@ export function ProductDetailModal({
         const stock = product.quantity;
         if (quantity < stock) {
           const newQuantity = quantity + 1;
-          // setQuantity(newQuantity); // No es necesario si useEffect sincroniza
           console.log(`Modal: Calling updateItemQuantity with ITEM ID: ${cartItem.id}, new quantity: ${newQuantity}`);
-          updateItemQuantity(cartItem.id, newQuantity); // <--- Pasa cartItem.id
+          updateItemQuantity(cartItem.id, newQuantity);
         } else {
             toast.warning("No hay más stock disponible.");
         }
-      };
+    };
   
-      const handleDecreaseQuantity = () => {
+    const handleDecreaseQuantity = () => {
         if (!cartItem) return;
         const newQuantity = quantity - 1;
         if (newQuantity >= 1) {
-           // setQuantity(newQuantity); // No es necesario si useEffect sincroniza
            console.log(`Modal: Calling updateItemQuantity with ITEM ID: ${cartItem.id}, new quantity: ${newQuantity}`);
-          updateItemQuantity(cartItem.id, newQuantity); // <--- Pasa cartItem.id
+          updateItemQuantity(cartItem.id, newQuantity);
         } else {
-          // Si se quiere eliminar al llegar a 0, llamar a handleRemoveItem aquí
           toast.info("La cantidad mínima es 1. Para eliminar, usa el botón Eliminar.");
-          // Opcionalmente, podrías llamar a handleRemoveItem directamente:
-          // handleRemoveItem();
         }
-      };
+    };
 
-      const handleRemoveItem = () => {
+    const handleRemoveItem = () => {
         if (!cartItem) return;
         console.log(`Modal: Calling removeItem with ITEM ID: ${cartItem.id}`);
-        removeItem(cartItem.id); // <--- Pasa cartItem.id
-        // onClose(); // Opcional: cerrar modal
+        removeItem(cartItem.id);
     }
 
     return createPortal(
@@ -173,12 +149,6 @@ export function ProductDetailModal({
                                                     variant="outline"
                                                     size="sm"
                                                     onClick={handleDecreaseQuantity}
-                                                    // onClick={() => {
-                                                    //     const currentQuantity = quantity; // O como obtengas la cantidad actual
-                                                    //     const idToPass = product.id; // Asegúrate que es este ID
-                                                    //     console.log(`Modal: Calling updateItemQuantity with ID: ${idToPass}, new quantity: ${currentQuantity - 1}`);
-                                                    //     handleDecreaseQuantity(); // O llama directamente a updateItemQuantity(idToPass, currentQuantity - 1)
-                                                    // }}
                                                     disabled={quantity <= 1}
                                                 >
                                                     -
@@ -188,12 +158,6 @@ export function ProductDetailModal({
                                                     variant="outline"
                                                     size="sm"
                                                     onClick={handleIncreaseQuantity}
-                                                    // onClick={() => {
-                                                    //     const currentQuantity = quantity;
-                                                    //     const idToPass = product.id;
-                                                    //     console.log(`Modal: Calling updateItemQuantity with ID: ${idToPass}, new quantity: ${currentQuantity + 1}`);
-                                                    //     handleIncreaseQuantity(); // O llama directamente a updateItemQuantity(idToPass, currentQuantity + 1)
-                                                    // }}
                                                     disabled={quantity >= product.quantity}
                                                 >
                                                     +
@@ -204,11 +168,6 @@ export function ProductDetailModal({
                                         <div className="flex gap-2">
                                             <Button
                                                 variant="destructive"
-                                                // onClick={() => {
-                                                //     const idToPass = product.id;
-                                                //     console.log(`Modal: Calling removeItem with ID: ${idToPass}`);
-                                                //     removeItem(idToPass); // Llama directamente aquí
-                                                // }}
                                                 onClick={handleRemoveItem}
                                                 className="flex-1"
                                             >
@@ -245,7 +204,6 @@ export function ProductDetailModal({
                                     )
                                 )}
 
-                                {/* Botón de compra directa SOLO cuando NO está en el carrito */}
                                 {!isInCart && product.quantity > 0 && (
                                     <Button
                                         variant="outline"

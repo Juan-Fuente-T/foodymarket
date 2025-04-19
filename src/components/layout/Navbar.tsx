@@ -14,6 +14,7 @@ import { useAuth } from "../../hooks/use-auth";
 import { useCart } from "@/contexts/CartContext";
 import { Menu, X, ShoppingBag, User, LogOut, Home, ChefHat, Settings, History, ClipboardList } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { UserRole } from "@/types/models";
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -40,7 +41,7 @@ export function Navbar() {
   // Add Dashboard link only for authenticated users
   if (isAuthenticated) {
     navLinks.push({
-      name: user?.role === "restaurante" ? "Restaurant Dashboard" : "My Account",
+      name: user?.role === "RESTAURANTE" ? "Restaurant Dashboard" : "My Account",
       path: "/dashboard"
     });
   }
@@ -139,7 +140,7 @@ export function Navbar() {
                       <span>My Orders</span>
                     </Link>
                   </DropdownMenuItem>
-                  {user?.role === "restaurante" && (
+                  {user?.role === "RESTAURANTE" && (
                     <DropdownMenuItem asChild>
                       <Link
                         to="/dashboard"

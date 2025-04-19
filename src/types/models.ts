@@ -11,6 +11,7 @@ export interface User {
   address?: string;
   createdAt: string;
   avatar?: string;
+  password?: string; // Add password field for registration
 }
 
 export interface Category {
@@ -50,7 +51,7 @@ export interface Product {
   price: number;
   image: string;
   isActive: boolean;
-  available?: boolean; // Kept for backward compatibility
+  available: boolean; // Changed from optional to required for consistency
   quantity: number;
   restaurantId: string;
   categoryId: string;

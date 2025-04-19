@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Layout } from '@/components/layout/Layout';
@@ -38,10 +37,11 @@ const Signup = () => {
 
     try {
       setIsLoading(true);
+      // We need to ensure the registerUser function accepts a password field
       await registerUser({
         name: data.name,
         email: data.email,
-        password: data.password,
+        password: data.password, // This is fine now since we've added password to User interface
         role: data.role
       });
       toast.success('Account created successfully! Redirecting to login...');

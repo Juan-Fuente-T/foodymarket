@@ -14,7 +14,6 @@ interface ProductCardProps {
   onOpenModal: (product: Product) => void
 }
 
-
 export function ProductCard({ product, onOpenModal }: ProductCardProps) {
   const navigate = useNavigate();
   const { addItem, isProductInCart, canAddProduct } = useCart();
@@ -24,13 +23,6 @@ export function ProductCard({ product, onOpenModal }: ProductCardProps) {
   const handleClick = () => {
     onOpenModal(product)
   }
-  // const handleCardClick = (e: React.MouseEvent) => {
-  //   // Solo navega si el click NO fue en el botón
-  //   if (!(e.target instanceof HTMLElement)) return;
-  //   if (!e.target.closest('button')) {
-  //     navigate(`/product/${product.id}`);
-  //   }
-  // };
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -53,8 +45,6 @@ export function ProductCard({ product, onOpenModal }: ProductCardProps) {
     finalDisabled: !product.available || isInCart || !canAdd
   });
   return (
-    // <Link to={`/products/${product.id}`} className="block">
-    // <div className="food-card bg-white rounded-xl overflow-hidden shadow-sm h-full flex flex-col hover:shadow-md transition-shadow cursor-pointer"
     <div className="food-card bg-white rounded-xl overflow-hidden shadow-sm h-full flex flex-col hover:shadow-md transition-shadow"
       onClick={handleClick}
     >
@@ -71,11 +61,6 @@ export function ProductCard({ product, onOpenModal }: ProductCardProps) {
             </Badge>
           </div>
         )}
-        {/* {product.featured && (
-          <Badge className="absolute top-2 left-2 bg-food-500 hover:bg-food-600">
-            Featured
-          </Badge>
-        )} */}
         {product.categoryId && (
           <Badge className="absolute top-2 right-2 bg-white/90 text-food-700">
             {product.categoryId}
@@ -99,7 +84,6 @@ export function ProductCard({ product, onOpenModal }: ProductCardProps) {
           className="w-full transition-all disabled:opacity-50 disabled:bg-gray-300 disabled:cursor-not-allowed cursor-pointer"
           disabled={!product.available || isInCart || !canAdd}
           variant={isInCart ? "outline" : "default"}
-
         >
           {isInCart ? (
             <>

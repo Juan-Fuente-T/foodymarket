@@ -9,7 +9,7 @@ export const adaptProduct = (data: any): Product => ({
   price: data.price || 0,
   image: data.image || '',
   isActive: data.isActive === true,
-  available: data.isActive === true, // Set available field to same value as isActive for compatibility
+  available: data.isActive === true, // Always set available field to same value as isActive
   quantity: data.quantity || 0,
   restaurantId: data.restaurantId?.toString() || '',
   categoryId: data.categoryId?.toString() || '',

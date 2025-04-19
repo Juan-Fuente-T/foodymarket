@@ -1,210 +1,150 @@
 
 import React, { useState } from 'react';
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
-} from '@/components/ui/card';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Edit, PlusCircle, Trash2 } from 'lucide-react';
-import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Edit, Trash2, Plus } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
-interface Category {
-  id: string;
-  name: string;
-  description?: string;
+export interface CategoryManagementProps {
+  categories: Array<{ id: number | string, name: string }>;
+  onAdd: (categoryName: string) => void;
+  onEdit: (oldName: string, newName: string) => void;
+  onDelete: (categoryName: string) => void;
 }
 
-interface CategoryManagementProps {
-  categories: string[];
-  onAddCategory: (category: string) => void;
-  onEditCategory: (oldName: string, newName: string) => void;
-  onDeleteCategory: (category: string) => void;
-}
+export function CategoryManagement({ categories, onAdd, onEdit, onDelete }: CategoryManagementProps) {
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [editingCategory, setEditingCategory] = useState<{name: string, newName: string} | null>(null);
+  const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
 
-export const CategoryManagement = ({
-  categories,
-  onAddCategory,
-  onEditCategory,
-  onDeleteCategory
-}: CategoryManagementProps) => {
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [currentCategory, setCurrentCategory] = useState('');
-  
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<{ name: string }>();
-  
-  const handleAdd = (data: { name: string }) => {
-    onAddCategory(data.name);
-    toast.success(`Categoría "${data.name}" creada con éxito`);
-    setIsAddDialogOpen(false);
-    reset();
+  const handleAddCategory = () => {
+    if (!newCategoryName.trim()) return;
+    onAdd(newCategoryName);
+    setNewCategoryName("");
   };
-  
-  const handleEdit = (data: { name: string }) => {
-    onEditCategory(currentCategory, data.name);
-    toast.success(`Categoría actualizada con éxito`);
-    setIsEditDialogOpen(false);
-    reset();
+
+  const handleStartEdit = (categoryName: string) => {
+    setEditingCategory({ name: categoryName, newName: categoryName });
   };
-  
-  const confirmDelete = (category: string) => {
-    if (window.confirm(`¿Estás seguro de que deseas eliminar la categoría "${category}"?`)) {
-      onDeleteCategory(category);
-      toast.success(`Categoría "${category}" eliminada con éxito`);
+
+  const handleSaveEdit = () => {
+    if (editingCategory && editingCategory.name !== editingCategory.newName) {
+      onEdit(editingCategory.name, editingCategory.newName);
     }
+    setEditingCategory(null);
   };
-  
-  const openEditDialog = (category: string) => {
-    setCurrentCategory(category);
-    reset({ name: category });
-    setIsEditDialogOpen(true);
+
+  const handleConfirmDelete = () => {
+    if (categoryToDelete) {
+      onDelete(categoryToDelete);
+      setCategoryToDelete(null);
+    }
   };
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle>Categorías de Productos</CardTitle>
-          <CardDescription>Gestiona las categorías de productos de tu restaurante</CardDescription>
-        </div>
-        <Button 
-          className="bg-food-600 hover:bg-food-700"
-          onClick={() => {
-            reset({ name: '' });
-            setIsAddDialogOpen(true);
-          }}
-        >
-          <PlusCircle className="mr-2 h-4 w-4" /> Añadir Categoría
-        </Button>
+      <CardHeader>
+        <CardTitle>Category Management</CardTitle>
       </CardHeader>
       <CardContent>
-        {categories.length > 0 ? (
+        <div className="flex space-x-2 mb-6">
+          <Input
+            placeholder="New category name"
+            value={newCategoryName}
+            onChange={(e) => setNewCategoryName(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleAddCategory()}
+          />
+          <Button onClick={handleAddCategory}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add
+          </Button>
+        </div>
+
+        <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Nombre</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead className="w-[100px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {categories.map((category) => (
-                <TableRow key={category}>
-                  <TableCell className="font-medium">{category}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => openEditDialog(category)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => confirmDelete(category)}
-                      >
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
-                    </div>
+              {categories.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={2} className="text-center py-4 text-gray-500">
+                    No categories yet
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                categories.map((category) => (
+                  <TableRow key={category.id}>
+                    <TableCell>
+                      {editingCategory?.name === category.name ? (
+                        <Input
+                          value={editingCategory.newName}
+                          onChange={(e) => setEditingCategory({
+                            ...editingCategory,
+                            newName: e.target.value
+                          })}
+                          onKeyDown={(e) => e.key === 'Enter' && handleSaveEdit()}
+                          autoFocus
+                        />
+                      ) : (
+                        category.name
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex space-x-2">
+                        {editingCategory?.name === category.name ? (
+                          <Button onClick={handleSaveEdit} size="sm">
+                            Save
+                          </Button>
+                        ) : (
+                          <Button
+                            onClick={() => handleStartEdit(category.name)}
+                            variant="ghost"
+                            size="sm"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        )}
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-red-500 hover:text-red-700"
+                              onClick={() => setCategoryToDelete(category.name)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Category</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete "{category.name}"? This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={handleConfirmDelete} className="bg-red-500 hover:bg-red-600">
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
-        ) : (
-          <div className="text-center py-8">
-            <p className="text-gray-600 mb-4">No hay categorías definidas</p>
-            <Button 
-              className="bg-food-600 hover:bg-food-700"
-              onClick={() => setIsAddDialogOpen(true)}
-            >
-              <PlusCircle className="mr-2 h-4 w-4" /> Añadir Tu Primera Categoría
-            </Button>
-          </div>
-        )}
+        </div>
       </CardContent>
-
-      {/* Add Category Dialog */}
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Añadir Nueva Categoría</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSubmit(handleAdd)} className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nombre de la Categoría</Label>
-              <Input
-                id="name"
-                placeholder="Ej: Entradas, Platos Principales, Bebidas"
-                {...register('name', { required: 'El nombre es obligatorio' })}
-              />
-              {errors.name && (
-                <p className="text-sm text-red-500">{errors.name.message}</p>
-              )}
-            </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                Cancelar
-              </Button>
-              <Button type="submit" className="bg-food-600 hover:bg-food-700">
-                Añadir Categoría
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Category Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Editar Categoría</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSubmit(handleEdit)} className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="edit-name">Nombre de la Categoría</Label>
-              <Input
-                id="edit-name"
-                placeholder="Nombre de la categoría"
-                {...register('name', { required: 'El nombre es obligatorio' })}
-              />
-              {errors.name && (
-                <p className="text-sm text-red-500">{errors.name.message}</p>
-              )}
-            </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-                Cancelar
-              </Button>
-              <Button type="submit" className="bg-food-600 hover:bg-food-700">
-                Guardar Cambios
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
     </Card>
   );
-};
+}
