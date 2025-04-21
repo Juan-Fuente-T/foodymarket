@@ -240,6 +240,11 @@ export const restaurantAPI = {
     console.log("Data received from API getByOwnerId:", data);
     return data.map(adaptRestaurant);
   },
+  getProductGategories: async(id: string): Promise<Category[]> =>{
+    const data = await fetchWithError(`/restaurant/${id}/categories`); // <-- Añade false
+    console.log("Categories received from API getProductGategories:", data);
+    return data;
+  },
 
   // getByCategory: async (categoryId: string) => {
   //   const data = await fetchWithError(`/restaurant/byCategory/${categoryId}`);
@@ -264,6 +269,14 @@ export const restaurantAPI = {
     });
     return adaptRestaurant(response);
   },
+  addProductCategory: async (id: string, categoryData: Partial<Category>) => {
+    const response = await fetchWithError(`/restaurant/${id}/categories`, {
+      method: "POST",
+      body: JSON.stringify(categoryData),
+    });
+    console.log(`Response API addProductCategory: ${response}`)
+    return response;
+  },
 
   delete: (id: string) => fetchWithError(`/restaurant/${id}`, { method: "DELETE" }),
 
@@ -282,24 +295,18 @@ export const categoryAPI = {
     return data;
   },
 
-  create: async (data: Partial<Category>) => {
-    const response = await fetchWithError("/category", {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
-    return response;
-  },
+  // update: async (id: string, data: Partial<Category>) => {
+  //     const response = await fetchWithError(`/category/${id}`, {
+  //       method: "PUT",
+  //       body: JSON.stringify(data),
+  //     });
+  //     return response;
+  //   },
 
-  update: async (id: string, data: Partial<Category>) => {
-      const response = await fetchWithError(`/category/${id}`, {
-        method: "PUT",
-        body: JSON.stringify(data),
-      });
-      return response;
-    },
-
-  delete: (id: string) => fetchWithError(`/category/${id}`, { method: "DELETE" }),
-
+  delete: (categoryId: string, restaurantId: string) => fetchWithError(
+    `/category/${categoryId}/restaurant/${restaurantId}`,
+     { method: "DELETE" }
+    ),
 };
 
 // Products

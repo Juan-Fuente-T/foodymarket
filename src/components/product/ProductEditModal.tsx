@@ -50,7 +50,7 @@ export const ProductEditModal = ({
 
   useEffect(() => {
     console.log("Categories in modal:", categories);
-    console.log("Product in modal:", product);
+    console.log("OBJETO PRODUCT COMPLETO AL RENDERIZAR:", product);
     
     if (product) {
       setValue('name', product.name || '');
@@ -58,6 +58,7 @@ export const ProductEditModal = ({
       setValue('price', product.price || 0);
       setValue('image', product.image || '');
       setValue('quantity', product.quantity || 1);
+      // setValue('categoryName', CategoryInfo.name);
       setIsActive(product.isActive !== false);
       setIsNewProduct(false);
       

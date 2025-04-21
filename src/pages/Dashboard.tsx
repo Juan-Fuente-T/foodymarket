@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useAuth } from "../hooks/use-auth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { restaurantAPI, orderAPI, productAPI } from "@/services/api";
+import { restaurantAPI, orderAPI, productAPI, categoryAPI } from "@/services/api";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -236,95 +236,80 @@ const RestaurantDashboard = () => {
     }
   }, [ownedRestaurants, isLoadingRestaurants, errorRestaurants]);
 
-  useEffect(() => {
-    // --- LOG PASO 3 ---
-    console.log('PASO 3 - useEffect[selectedProduct] - Estado selectedProduct cambió a:', selectedProduct);
-    // Verifica aquí si selectedProduct TIENE categoryId con valor correcto
-     // --- FIN LOG ---
-  }, [selectedProduct]); 
-
   const { data: orders = [], isLoading: isLoadingOrders } = useQuery({
     queryKey: ["restaurantOrders", selectedRestaurant?.id],
     queryFn: () => orderAPI.getByRestaurant(selectedRestaurant!.id.toString()),
     enabled: !!selectedRestaurant?.id,
   });
 
-  const { data: categoriesWithProducts = [], isLoading: isLoadingProducts } = useQuery({
-    queryKey: ["restaurantProducts", selectedRestaurant?.id],
+  const { data: groupedProductsData = [], isLoading: isLoadingProducts } = useQuery({
+    queryKey: ["groupedProducts", selectedRestaurant?.id], // Clave específica para productos agrupados
     queryFn: () => productAPI.getByRestaurantAndCategory(selectedRestaurant!.id.toString()),
     enabled: !!selectedRestaurant?.id,
   });
-  console.log("CategoriesWithProducts", categoriesWithProducts); 
-
-  // const allProducts = useMemo((): Product[] => { 
-  //   return categoriesWithProducts.reduce((acc: Product[], category: GroupedProduct) => {
-  //     return [...acc, ...category.products];
-  //   }, []);
-  // }, [categoriesWithProducts]);
 
   const allProducts = useMemo((): Product[] => {
-    console.log("--- Recalculando allProducts con CÓDIGO FINAL v2 ---");
-    if (!categoriesWithProducts || !Array.isArray(categoriesWithProducts)) {
-        console.log("allProducts: Input (categoriesWithProducts) vacío o inválido.");
-        return [];
-    }
-    const flattenedProducts: Product[] = [];
-    categoriesWithProducts.forEach((categoryGroup: any, groupIndex: number) => {
-        const currentGroupId = categoryGroup.categoryId ?? null;
-        if (!categoryGroup.products || !Array.isArray(categoryGroup.products)) {
-            return;
-        }
-        categoryGroup.products.forEach((backendProduct: any, productIndex: number) => {
-            // --- Lectura de campos (USA LOS NOMBRES DE TU JSON!) ---
-            const productIdFromBackend = backendProduct.prd_id;
-            const categoryIdFromBackend = backendProduct.categoryId;
-            const isActiveFromBackend = backendProduct.isActive;
-            const priceFromBackend = backendProduct.price;
-
-            // --- Objeto Frontend Final ---
-            const frontendProduct = {
-                id: productIdFromBackend !== null && productIdFromBackend !== undefined ? String(productIdFromBackend) : '',
-                name: backendProduct.name || '',
-                description: backendProduct.description || '',
-                price: Number(priceFromBackend?.parsedValue ?? priceFromBackend ?? 0),
-                image: backendProduct.image || '',
-                // --- Mapeo Category ID (Usa el del producto O el del grupo, convierte a STRING)---
-                categoryId: (categoryIdFromBackend ?? currentGroupId) !== null ? String(categoryIdFromBackend ?? currentGroupId) : '',
-                // --- Mapeo Estado (Asegura boolean) ---
-                isActive: isActiveFromBackend === true,
-                quantity: Number(backendProduct.quantity || 0),
-                restaurantId: String(backendProduct.restaurantId || categoryGroup.restaurantId || ''),
-                createdAt: backendProduct.createdAt || '',
-                updatedAt: backendProduct.updatedAt || '',
-                categoryName: backendProduct.categoryName || categoryGroup.categoryName || ''
-            };
-            flattenedProducts.push(frontendProduct as Product);
-        });
-    });
-    console.log("--- Fin cálculo allProducts. Resultado FINAL v2:", flattenedProducts);
-    return flattenedProducts;
-  }, [categoriesWithProducts]);
-
-  const uniqueCategories = useMemo(() => {
-    return categoriesWithProducts.map(category => category.categoryName);
-  }, [categoriesWithProducts]);
-
-  const categoriesDataForModal = useMemo(() => {
-    if (!categoriesWithProducts || !Array.isArray(categoriesWithProducts)) {
+    // Usa 'groupedProductsData' COMO INPUT!!
+    if (!groupedProductsData || !Array.isArray(groupedProductsData)) {
       return [];
     }
-    return categoriesWithProducts.map(categoryGroup => ({
-      id: categoryGroup.categoryId,
-      name: categoryGroup.categoryName
+    const flattenedProducts: Product[] = [];
+    console.log("FLATTENED: ", flattenedProducts);
+    // Itera sobre la estructura agrupada que devuelve getByRestaurantAndCategory
+    groupedProductsData.forEach((categoryGroup: any) => {
+      const currentGroupId = categoryGroup.categoryId ?? null;
+      const currentGroupName = categoryGroup.categoryName || '';
+      console.log("MERDA", currentGroupId, currentGroupId);
+
+      if (!categoryGroup.products || !Array.isArray(categoryGroup.products)) {
+        return;
+      }
+
+      categoryGroup.products.forEach((backendProduct: any) => {
+        // Mapea los campos del backendProduct a tu tipo Product del frontend
+        const frontendProduct = {
+          id: String(backendProduct.prd_id ?? ''),
+          name: backendProduct.name || '',
+          description: backendProduct.description || '',
+          price: Number(backendProduct.price ?? 0),
+          image: backendProduct.image || '',
+          categoryId: String(backendProduct.categoryId ?? currentGroupId ?? ''),
+          isActive: backendProduct.isActive === true,
+          quantity: Number(backendProduct.quantity || 0),
+          restaurantId: String(backendProduct.restaurantId || ''),
+          createdAt: backendProduct.createdAt || '',
+          updatedAt: backendProduct.updatedAt || '',
+          categoryName: backendProduct.categoryName || currentGroupName
+        };
+        flattenedProducts.push(frontendProduct as Product);
+      });
+    });
+    console.log("--- Fin cálculo allProducts. Resultado:", flattenedProducts);
+    return flattenedProducts;
+  }, [groupedProductsData]);
+
+  const { data: offeredCategories = [], isLoading: isLoadingCategories } = useQuery({
+    queryKey: ["restaurantProductCategories", selectedRestaurant?.id], // Clave más clara
+    queryFn: () => restaurantAPI.getProductGategories(selectedRestaurant!.id.toString()),
+    enabled: !!selectedRestaurant?.id,
+  });
+  // Usar el nuevo nombre en el log (opcional, quitar logs cuando funcione)
+  console.log("restaurantProductCategories:", offeredCategories ? offeredCategories : 'NADA');
+
+  const categoriesDataForModal = useMemo(() => {
+    if (!Array.isArray(offeredCategories)) return [];
+    return offeredCategories.map(category => ({
+      id: category.id,
+      name: category.name
     }));
-  }, [categoriesWithProducts]);
+  }, [offeredCategories]);
   console.log("CATEGORIAS UNICAS", categoriesDataForModal);
 
   const createProductMutation = useMutation({
     mutationFn: (createData: any) => productAPI.create(createData),
     onSuccess: () => {
       toast.success("Producto creado con éxito");
-      queryClient.invalidateQueries({ queryKey: ['restaurantProducts', selectedRestaurant?.id] });
+      queryClient.invalidateQueries({ queryKey: ['groupedProducts', selectedRestaurant?.id] });
       setIsProductModalOpen(false);
     },
     onError: (error: Error) => {
@@ -337,7 +322,7 @@ const RestaurantDashboard = () => {
     mutationFn: (vars: { id: string | number, data: any }) => productAPI.update(vars.id.toString(), vars.data),
     onSuccess: () => {
       toast.success("Producto actualizado con éxito");
-      queryClient.invalidateQueries({ queryKey: ['restaurantProducts', selectedRestaurant?.id] });
+      queryClient.invalidateQueries({ queryKey: ['groupedProducts', selectedRestaurant?.id] });
       setIsProductModalOpen(false);
     },
     onError: (error: Error) => {
@@ -345,7 +330,7 @@ const RestaurantDashboard = () => {
       toast.error(`Error actualizando producto: ${error.message}`);
     }
   });
-  
+
   const { mutate: deleteProduct } = useMutation({
     mutationFn: (productId: string) => {
       console.log("Deleting product with ID:", productId);
@@ -355,12 +340,58 @@ const RestaurantDashboard = () => {
       return productAPI.delete(productId);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["restaurantProducts", selectedRestaurant?.id] });
+      queryClient.invalidateQueries({ queryKey: ["groupedProducts", selectedRestaurant?.id] });
       toast.success("Producto eliminado con éxito");
     },
     onError: (error) => {
       console.error("Error deleting product:", error);
       toast.error("Error al eliminar el producto");
+    }
+  });
+
+  const createCategoryMutation = useMutation({
+    mutationFn: (vars: { restaurantId: string; categoryData: { name: string; description?: string } }) => {
+      console.log(`Attempting POST /api/restaurants/${vars.restaurantId}/categories`);
+      if (!vars.restaurantId) throw new Error("Restaurant ID es necesario");
+      if (!vars.categoryData || !vars.categoryData.name) throw new Error("Nombre de categoría es necesario");
+
+      // Asume que tienes esta función en tu API client que hace el POST correcto
+      return restaurantAPI.addProductCategory(vars.restaurantId, vars.categoryData);
+    },
+    onSuccess: (returnedCategory, vars) => { // data es la CategoryResponseDto devuelta por el POST
+      toast.success(`Categoría '${returnedCategory.name}' creada con éxito.`);
+      queryClient.invalidateQueries({ queryKey: ['restaurantProductCategories', vars.restaurantId] });
+      queryClient.invalidateQueries({ queryKey: ['groupedProducts', vars.restaurantId] });
+
+      console.log(`Queries invalidadas después de añadir/asociar categoría a restaurante ${vars.restaurantId}`);
+      // setIsAddCategoryModalOpen(false);
+    },
+    onError: (error: Error) => {
+      console.error("Error creating category:", error);
+      toast.error(`Error al añadir categoría: ${error.message}`);
+    }
+  });
+
+  const { mutate: deleteCategory } = useMutation({
+    mutationFn: (vars: { categoryId: string; restaurantId: string }) => {
+      console.log("Deleting category with ID:", vars.categoryId);
+      if (!vars.categoryId || vars.categoryId === "undefined" || vars.categoryId === "") {
+        throw new Error("Invalid categoryId ID for category deletion");
+      }
+      if (!vars.restaurantId || vars.restaurantId  === "undefined" || vars.restaurantId  === "") {
+        throw new Error("Invalid restaurantId ID for category deletion");
+      }
+      return categoryAPI.delete(vars.categoryId, vars.restaurantId);
+    },
+    onSuccess: (data, vars) => { // El segundo argumento es la variable pasada a mutate()
+      toast.success(`Categoría global (ID: ${vars.categoryId}) eliminada con éxito`);
+      queryClient.invalidateQueries({ queryKey: ['restaurantProductCategories', vars.restaurantId] });
+      queryClient.invalidateQueries({ queryKey: ['groupedProducts', vars.restaurantId] });
+    },
+    onError: (error: Error) => {
+      console.error("Error deleting global category:", error);
+      // El backend debería devolver un error claro si la categoría está en uso (ej: 409 Conflict o 400 Bad Request)
+      toast.error(`Error al eliminar categoría global: ${error.message}`);
     }
   });
 
@@ -380,6 +411,9 @@ const RestaurantDashboard = () => {
   };
 
   const handleEditProduct = (product: Product) => {
+    // <<< --- AÑADE ESTE LOG AQUÍ --- >>>
+    console.log('PRODUCTO QUE LLEGA A handleEditProduct:', JSON.stringify(product, null, 2));
+    // <<< --- FIN DEL LOG AÑADIDO --- >>>
     console.log('PASO 1 - handleEditProductClick - Recibido productToEdit:', product);
     // Make sure we have a valid product with all required fields
     if (!product.id) {
@@ -434,7 +468,7 @@ const RestaurantDashboard = () => {
       if (isNaN(priceNum) || priceNum < 0) {
         toast.error("Precio inválido."); return;
       }
-    } else { // Obligatorio?
+    } else {
       toast.error("El precio es obligatorio."); return;
     }
 
@@ -445,7 +479,7 @@ const RestaurantDashboard = () => {
         toast.error("Cantidad inválida."); return;
       }
     } else {
-      quantityNum = 0; // Default 0 si no viene? O error?
+      quantityNum = 1; // Default 1 si no viene? O error?
     }
 
     const finalData: any = {
@@ -453,15 +487,15 @@ const RestaurantDashboard = () => {
       description: productData.description,
       price: priceNum, // Usa el número parseado (o BigDecimal si usas eso)
       image: productData.image,
-      isActive: productData.isActive, 
+      isActive: productData.isActive,
       quantity: quantityNum, // Usa el número parseado
       categoryId: categoryIdNum
     };
-    
+
     if (selectedRestaurant?.id) {
       finalData.restaurantId = selectedRestaurant.id;
     }
-    
+
     if (isNew) {
       console.log("Calling CREATE mutation with:", finalData);
       createProductMutation.mutate(finalData);
@@ -470,25 +504,38 @@ const RestaurantDashboard = () => {
         toast.error("Error: ID de producto necesario para actualizar.");
         return;
       }
-      // Asegura que id es del tipo correcto para la mutación
-      const idToUpdate = String(productData.id);
-      console.log("Calling UPDATE mutation for ID:", idToUpdate, "with:", finalData);
       updateProductMutation.mutate({ id: String(productData.id), data: finalData });
       setIsProductModalOpen(false); // Cierra el modal después de guardar (o en onSuccess)
-      setSelectedProduct(null); 
+      setSelectedProduct(null);
     }
   };
 
-  const handleAddCategory = (categoryName: string) => {
-    toast.success(`Categoría "${categoryName}" agregada con éxito`);
+  // const handleAddCategory = (categoryName: string) => {
+  const handleAddCategory = (formData: { name: string; description: string }) => {
+    console.log("DATA addCategory: ", formData, formData.name, formData.description);
+    createCategoryMutation.mutate({
+          restaurantId: selectedRestaurant!.id.toString(),
+          categoryData: { name: formData.name, description: formData.description }
+        });
+    // toast.success(`Categoría "${categoryName}" agregada con éxito`);
   };
 
-  const handleEditCategory = (oldName: string, newName: string) => {
-    toast.success(`Categoría actualizada de "${oldName}" a "${newName}"`);
-  };
+  // const handleEditCategory = (oldName: string, newName: string) => {
+  //   toast.success(`Categoría actualizada de "${oldName}" a "${newName}"`);
+  // };
 
-  const handleDeleteCategory = (categoryName: string) => {
-    toast.success(`Categoría "${categoryName}" eliminada con éxito`);
+  const handleDeleteCategory = (categoryId: string) => {
+    const restaurantId = selectedRestaurant?.id;
+    if (restaurantId === undefined || restaurantId === null) {
+      console.error("ERROR: selectedRestaurant.id es undefined o null.");
+      toast.error("Error: No se ha seleccionado un restaurante válido.");
+      return;
+    }
+    deleteCategory({
+      categoryId: categoryId,
+      restaurantId: restaurantId.toString()
+    });
+    // toast.success(`Categoría "${categoryId}" eliminada con éxito`);
   };
 
   const orderStatusData = useMemo(() => {
@@ -623,7 +670,7 @@ const RestaurantDashboard = () => {
             )}
           </div>
         </div>
-        
+
         {!selectedRestaurant ? (
           <div className="text-center py-16 text-gray-500">
             Please select one of your restaurants to see the dashboard.
@@ -785,12 +832,11 @@ const RestaurantDashboard = () => {
                               <TableCell className="font-medium">{order.id.slice(0, 8)}</TableCell>
                               <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
                               <TableCell>
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                  order.status === 'delivered' ? 'bg-green-100 text-green-800' :
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${order.status === 'delivered' ? 'bg-green-100 text-green-800' :
                                   order.status === 'preparing' ? 'bg-blue-100 text-blue-800' :
-                                  order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                  'bg-gray-100 text-gray-800'
-                                }`}>
+                                    order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                      'bg-gray-100 text-gray-800'
+                                  }`}>
                                   {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                                 </span>
                               </TableCell>
@@ -841,12 +887,11 @@ const RestaurantDashboard = () => {
                               <TableCell className="font-medium">{order.id.slice(0, 8)}</TableCell>
                               <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
                               <TableCell>
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                  order.status === 'delivered' ? 'bg-green-100 text-green-800' :
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${order.status === 'delivered' ? 'bg-green-100 text-green-800' :
                                   order.status === 'preparing' ? 'bg-blue-100 text-blue-800' :
-                                  order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                  'bg-gray-100 text-gray-800'
-                                }`}>
+                                    order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                      'bg-gray-100 text-gray-800'
+                                  }`}>
                                   {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                                 </span>
                               </TableCell>
@@ -884,7 +929,7 @@ const RestaurantDashboard = () => {
                   </div>
                 ) : (
                   <>
-                    {categoriesWithProducts.length === 0 ? (
+                    {groupedProductsData.length === 0 ? (
                       <div className="text-center py-12 bg-white rounded-lg shadow-sm border border-gray-100">
                         <h3 className="text-xl font-medium text-gray-900 mb-2">No products added yet</h3>
                         <p className="text-gray-600 mb-6">Start adding products to your restaurant menu.</p>
@@ -895,7 +940,7 @@ const RestaurantDashboard = () => {
                       </div>
                     ) : (
                       <div className="space-y-8">
-                        {categoriesWithProducts.map((category) => (
+                        {groupedProductsData.map((category) => (
                           <Card key={category.categoryId} className="overflow-hidden">
                             <CardHeader className="bg-gray-50">
                               <CardTitle>{category.categoryName}</CardTitle>
@@ -919,9 +964,9 @@ const RestaurantDashboard = () => {
                                         <TableCell>
                                           <div className="h-10 w-10 rounded-md bg-gray-100 overflow-hidden">
                                             {product.image ? (
-                                              <img 
-                                                src={product.image} 
-                                                alt={product.name} 
+                                              <img
+                                                src={product.image}
+                                                alt={product.name}
                                                 className="h-full w-full object-cover"
                                                 onError={(e) => {
                                                   (e.target as HTMLImageElement).src = '/placeholder.svg';
@@ -945,18 +990,19 @@ const RestaurantDashboard = () => {
                                         <TableCell>${parseFloat(String(product.price)).toFixed(2)}</TableCell>
                                         <TableCell>{product.quantity}</TableCell>
                                         <TableCell>
-                                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                            product.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                                          }`}>
+                                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${product.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                            }`}>
                                             {product.isActive ? 'Active' : 'Inactive'}
                                           </span>
                                         </TableCell>
                                         <TableCell className="text-right">
                                           <div className="flex justify-end space-x-2">
-                                            <Button 
-                                              variant="ghost" 
-                                              size="sm" 
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
                                               onClick={() => {
+                                                const currentCategoryGroupId = category.categoryId;
+                                                const currentCategoryGroupName = category.categoryName;
                                                 // Generate a clean product object to edit
                                                 const productToEdit: Product = {
                                                   id: String(product.prd_id || product.id),
@@ -968,10 +1014,12 @@ const RestaurantDashboard = () => {
                                                   available: product.isActive === true,
                                                   quantity: Number(product.quantity),
                                                   restaurantId: String(product.restaurantId),
-                                                  categoryId: String(product.categoryId),
+                                                  // *** USA LOS DATOS DE LA CATEGORÍA DEL GRUPO ***
+                                                  categoryId: currentCategoryGroupId !== null && currentCategoryGroupId !== undefined
+                                                    ? String(currentCategoryGroupId) : '',
+                                                  categoryName: currentCategoryGroupName || '',
                                                   createdAt: product.createdAt || '',
-                                                  updatedAt: product.updatedAt || '',
-                                                  categoryName: product.categoryName
+                                                  updatedAt: product.updatedAt || ''
                                                 };
                                                 console.log("Edit product:", productToEdit);
                                                 handleEditProduct(productToEdit);
@@ -979,9 +1027,9 @@ const RestaurantDashboard = () => {
                                             >
                                               <Edit className="h-4 w-4" />
                                             </Button>
-                                            <Button 
-                                              variant="ghost" 
-                                              size="sm" 
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
                                               className="text-red-500 hover:text-red-700"
                                               onClick={() => {
                                                 // Generate a clean product object to delete
@@ -1063,9 +1111,9 @@ const RestaurantDashboard = () => {
                   </CardHeader>
                   <CardContent>
                     <CategoryManagement
-                      categories={uniqueCategories}
+                      categories={categoriesDataForModal}
                       onAdd={handleAddCategory}
-                      onEdit={handleEditCategory}
+                      // onEdit={handleEditCategory}
                       onDelete={handleDeleteCategory}
                     />
                   </CardContent>
@@ -1094,7 +1142,7 @@ const RestaurantDashboard = () => {
                           </ResponsiveContainer>
                         </div>
                       </div>
-                      
+
                       <div>
                         <h4 className="text-sm font-medium text-gray-500 mb-4">Customer Engagement</h4>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -1107,7 +1155,7 @@ const RestaurantDashboard = () => {
                               </div>
                             </CardContent>
                           </Card>
-                          
+
                           <Card>
                             <CardContent className="pt-6">
                               <div className="flex flex-col items-center justify-center text-center">
@@ -1117,7 +1165,7 @@ const RestaurantDashboard = () => {
                               </div>
                             </CardContent>
                           </Card>
-                          
+
                           <Card>
                             <CardContent className="pt-6">
                               <div className="flex flex-col items-center justify-center text-center">
@@ -1129,7 +1177,7 @@ const RestaurantDashboard = () => {
                           </Card>
                         </div>
                       </div>
-                      
+
                       <div>
                         <h4 className="text-sm font-medium text-gray-500 mb-4">Popular Products</h4>
                         <Table>
