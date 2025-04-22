@@ -86,7 +86,8 @@ const RestaurantPartner = () => {
       
       const restaurantData = {
         ...data,
-        ownerId: user.id
+        ownerId: user.id,
+        coverImage: data.photo, // Add coverImage property, mapping it from photo
       };
       
       await restaurantAPI.create(restaurantData);
