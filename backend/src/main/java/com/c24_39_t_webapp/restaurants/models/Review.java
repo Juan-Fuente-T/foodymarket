@@ -1,11 +1,9 @@
 package com.c24_39_t_webapp.restaurants.models;
 
-import com.c24_39_t_webapp.restaurants.services.IRestaurantService;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.validator.constraints.Range;
 
 import java.time.LocalDateTime;

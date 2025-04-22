@@ -15,7 +15,6 @@ import com.c24_39_t_webapp.restaurants.models.Restaurant;
 import com.c24_39_t_webapp.restaurants.repository.CategoryRepository;
 import com.c24_39_t_webapp.restaurants.repository.ProductRepository;
 import com.c24_39_t_webapp.restaurants.repository.RestaurantRepository;
-import com.c24_39_t_webapp.restaurants.repository.UserRepository;
 import com.c24_39_t_webapp.restaurants.services.IProductService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;

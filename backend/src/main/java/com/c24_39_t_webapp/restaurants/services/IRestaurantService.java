@@ -6,7 +6,6 @@ import com.c24_39_t_webapp.restaurants.models.Category;
 import com.c24_39_t_webapp.restaurants.models.Restaurant;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 public interface IRestaurantService {

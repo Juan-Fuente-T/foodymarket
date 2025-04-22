@@ -1,18 +1,14 @@
 package com.c24_39_t_webapp.restaurants.models;
 
-
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.hibernate.validator.constraints.URL;
-
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
-
 
 @Entity
 @Data

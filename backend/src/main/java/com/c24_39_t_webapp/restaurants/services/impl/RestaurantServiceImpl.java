@@ -7,7 +7,6 @@ import com.c24_39_t_webapp.restaurants.exception.user_implementations.ResourceNo
 import com.c24_39_t_webapp.restaurants.models.Category;
 import com.c24_39_t_webapp.restaurants.models.Restaurant;
 import com.c24_39_t_webapp.restaurants.models.UserEntity;
-import com.c24_39_t_webapp.restaurants.repository.CategoryRepository;
 import com.c24_39_t_webapp.restaurants.repository.RestaurantRepository;
 import com.c24_39_t_webapp.restaurants.repository.UserRepository;
 import com.c24_39_t_webapp.restaurants.services.IRestaurantService;
