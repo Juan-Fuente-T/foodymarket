@@ -1,13 +1,17 @@
 package com.c24_39_t_webapp.restaurants.services.impl;
 
+import com.c24_39_t_webapp.restaurants.dtos.request.CategoryRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.RestaurantResponseDto;
 import com.c24_39_t_webapp.restaurants.exception.RestaurantNotFoundException;
 import com.c24_39_t_webapp.restaurants.exception.user_implementations.ResourceNotFoundException;
+import com.c24_39_t_webapp.restaurants.models.Category;
 import com.c24_39_t_webapp.restaurants.models.Restaurant;
 import com.c24_39_t_webapp.restaurants.models.UserEntity;
+import com.c24_39_t_webapp.restaurants.repository.CategoryRepository;
 import com.c24_39_t_webapp.restaurants.repository.RestaurantRepository;
 import com.c24_39_t_webapp.restaurants.repository.UserRepository;
 import com.c24_39_t_webapp.restaurants.services.IRestaurantService;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -15,7 +19,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -26,9 +33,11 @@ public class RestaurantServiceImpl implements IRestaurantService {
 
     private final RestaurantRepository restaurantRepository;
     private final UserRepository userRepository;
+    private final CategoryServiceImpl categoryService;
 
     public RestaurantResponseDto registerRestaurant(Restaurant restaurant, String email) {
         log.info("Intentando crear un restaurante para el usuario con email: {}", email);
+        System.out.println("restaurant = " + restaurant);
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> {
                     log.warn("Intento fallido: Usuario con email {} no encontrado", email);
@@ -126,6 +135,7 @@ public class RestaurantServiceImpl implements IRestaurantService {
                 updatedRestaurant.getLogo()
         );
     }
+
     @Transactional
     @Override
     public void deleteById(Long id) {
@@ -134,10 +144,12 @@ public class RestaurantServiceImpl implements IRestaurantService {
         }
         restaurantRepository.deleteById(id);
     }
+
     private Restaurant getRestaurantById(Long id) {
         return restaurantRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("El restaurante no existe!"));
     }
+
     @Transactional(readOnly = true)
     @Override
     public Restaurant findRestaurantEntityById(Long id) { // Este devuelve un Restaurant
@@ -147,7 +159,9 @@ public class RestaurantServiceImpl implements IRestaurantService {
                     log.warn("No se encontró un restaurante con ese ID para editar: {}", id);
                     return new RestaurantNotFoundException(("No se encontró un restaurante con ese ID para editar: " + id));
                 });
-    }@Transactional(readOnly = true)
+    }
+
+    @Transactional(readOnly = true)
     @Override
     public List<RestaurantResponseDto> findRestaurantsByOwnerId(Long ownerId) { // Este devuelve un array de  Restaurant
         log.info("Buscando los restaurantes del dueño con id {}", ownerId);
@@ -156,4 +170,55 @@ public class RestaurantServiceImpl implements IRestaurantService {
         log.info("Se encontraron {} DTOs de restaurantes para el propietario {}", dtos.size(), ownerId);
         return dtos;
     }
+
+    @Transactional(readOnly = true)
+    @Override
+    public Set<Category> getOfferedCategories(Long restaurantId) {
+        log.info("Obteniedo las categorias de producto del restaurantes on id {}", restaurantId);
+        Optional<Restaurant> restaurantOpt = restaurantRepository.findById(restaurantId);
+
+        if (restaurantOpt.isPresent()) {
+            Restaurant restaurant = restaurantOpt.get();
+            // *** ¡Magia aquí! ***
+            // Al llamar a .size() (o simplemente devolver la colección) Hibernate ve que la colección LAZY
+            // no está inicializada y ejecuta la consulta necesaria para cargarla DENTRO de la transacción.
+            Set<Category> categories = restaurant.getOfferedCategories();
+            categories.size(); // Acceso simple para forzar la inicialización
+            log.info("Se encontraron {} categorias de restaurantes con el ID {}", categories.size(), restaurantId);
+            return categories;
+            // O simplemente: return restaurant.getOfferedCategories();
+            // Spring/Hibernate a menudo gestionan la inicialización al devolverla desde un método transaccional.
+        } else {
+            // Manejar caso restaurante no encontrado, quizás lanzar excepción o devolver vacío
+            return Collections.emptySet();
+        }
+    }
+
+    @Transactional
+    @Override
+    public Category addCategoryToRestaurant(Long restaurantId, CategoryRequestDto categoryInput) {
+        log.info("Intentando asociar la categoría '{}' al restaurante con ID {}", categoryInput.name(), restaurantId);
+        Category categoryToAdd = categoryService.findOrCreateCategory(categoryInput);
+
+        Restaurant restaurant = restaurantRepository.findById(restaurantId)
+                .orElseThrow(() -> {
+                    log.error("Restaurante con ID {} no encontrado al intentar añadir categoría.", restaurantId);
+                    return new EntityNotFoundException("Restaurante no encontrado con ID: " + restaurantId);
+                });
+        boolean added = restaurant.getOfferedCategories().add(categoryToAdd);
+
+        // Esto hará que JPA/Hibernate inserte la fila en la tabla categorias_restaurante
+        if (added) {
+            log.info("Asociando la categoría '{}' (ID: {}) al restaurante '{}' (ID: {})",
+                    categoryToAdd.getName(), categoryToAdd.getId(), restaurant.getName(), restaurant.getId());
+            restaurantRepository.save(restaurant);
+            log.info("Asociación guardada en tabla intermedia.");
+        } else {
+            log.info("La categoría '{}' (ID: {}) ya estaba asociada al restaurante '{}' (ID: {}). No se requiere guardar.",
+                    categoryToAdd.getName(), categoryToAdd.getId(), restaurant.getName(), restaurant.getId());
+        }
+        // El llamador (Controller) decidirá si mapea esto a un DTO si es necesario
+        return categoryToAdd;
+    }
 }
+

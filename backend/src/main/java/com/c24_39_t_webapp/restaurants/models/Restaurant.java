@@ -1,13 +1,17 @@
 package com.c24_39_t_webapp.restaurants.models;
 
-import com.c24_39_t_webapp.restaurants.dtos.request.RestaurantRequestDto;
+
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.validator.constraints.URL;
 
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 
 @Entity
@@ -37,11 +41,21 @@ public class Restaurant {
     @Column(name = "rst_telefono", nullable = false)
     private String phone;
 
+    @Email(message = "El formato del email no es válido")
+    @Column(name="rst_email", unique = true)
+    private String email;
+
     @Column(name = "rst_direccion", nullable = false)
     private String address;
 
+    @Column(name = "rst_horario", nullable = false)
+    private String openingHours;
+
     @Column(name = "rst_logo")
     private String logo;
+
+    @Column(name="rst_foto", length = 1024) // Longitud suficiente para URLs
+    private String coverImage;
 
     @Column(name = "rst_fecha_registro", nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     @CreationTimestamp
@@ -51,4 +65,17 @@ public class Restaurant {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "categorias_restaurante", // Nombre de la tabla de unión
+            joinColumns = @JoinColumn(
+                    name = "restaurante_id", // Nombre de FK en la tabla de unión que apunta a Restaurant
+                    referencedColumnName = "rst_id" // REFERENCIA AL PK REAL de Restaurant (`rst_id`)
+            ),
+            inverseJoinColumns = @JoinColumn(
+                    name = "categoria_id",
+                    referencedColumnName = "ctg_id"
+            )
+    )
+    private Set<Category> offeredCategories = new HashSet<>();
 }

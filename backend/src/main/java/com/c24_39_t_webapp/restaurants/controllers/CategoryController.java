@@ -53,16 +53,17 @@ public class CategoryController {
      * @param categoryRequestDto The {@code CategoryRequestDto} object to add.
      * @return The {@code CategoryResponseDto} object representing the added category.
      */
-    @PostMapping
-    public ResponseEntity<CategoryResponseDto> addCategory(@RequestBody CategoryRequestDto categoryRequestDto) {
-        log.info("Solicitud recibida para agregar una nueva categoria: {}", categoryRequestDto);
-        Category category = new Category();
-        category.setName(categoryRequestDto.name());
-        category.setDescription(categoryRequestDto.description());
-        CategoryResponseDto categoryResponseDto = categoryService.addCategory(category);
-        log.info("Categoria agregada exitosamente: {}", categoryResponseDto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(categoryResponseDto);
-    }
+//    @PostMapping
+//    public ResponseEntity<CategoryResponseDto> addCategory(@RequestBody CategoryRequestDto categoryRequestDto) {
+//        log.info("Solicitud recibida para agregar una nueva categoria: {}", categoryRequestDto);
+//        Category category = new Category();
+//        category.setName(categoryRequestDto.name());
+//        category.setDescription(categoryRequestDto.description());
+//        CategoryResponseDto categoryResponseDto = categoryService.addCategory(category);
+//        log.info("Categoria agregada exitosamente: {}", categoryResponseDto);
+//        return ResponseEntity.status(HttpStatus.CREATED).body(categoryResponseDto);
+//    }
+
 
     /**
      * Endpoint to retrieve a list of all {@link ResponseEntity} objects stored in the system.
@@ -101,35 +102,35 @@ public class CategoryController {
      * @param updateDto The {@link CategoryRequestDto} object containing the details of the updated category.
      * @return The {@code CategoryResponseDto} object representing the updated category.
      */
-    @PatchMapping("/{ctg_id}")
-    public ResponseEntity<CategoryResponseDto> updateCategory(@PathVariable Long ctg_id, @RequestBody CategoryRequestDto updateDto) {
-        log.info("Solicitud recibida para actualizar la categoria con ID: {}", ctg_id);
-
-        Category category = categoryRepository.findById(ctg_id)
-                .orElseThrow(() -> {
-                    log.warn("No se encontró una categoria con ese ID para editar: {}", ctg_id);
-                    return new CategoryNotFoundException(("No se encontró una categoria con ese ID para editar: " + ctg_id));
-                });
-        category.setName(updateDto.name());
-        category.setDescription(updateDto.description());
-
-        CategoryResponseDto updatedCategory = categoryService.updateCategory(category);
-        log.info("Categoria con ID: {} actualizado exitosamente", ctg_id);
-        return ResponseEntity.ok(updatedCategory);
-    }
+//    @PatchMapping("/{ctg_id}")
+//    public ResponseEntity<CategoryResponseDto> updateCategory(@PathVariable Long ctg_id, @RequestBody CategoryRequestDto updateDto) {
+//        log.info("Solicitud recibida para actualizar la categoria con ID: {}", ctg_id);
+//
+//        Category category = categoryRepository.findById(ctg_id)
+//                .orElseThrow(() -> {
+//                    log.warn("No se encontró una categoria con ese ID para editar: {}", ctg_id);
+//                    return new CategoryNotFoundException(("No se encontró una categoria con ese ID para editar: " + ctg_id));
+//                });
+//        category.setName(updateDto.name());
+//        category.setDescription(updateDto.description());
+//
+//        CategoryResponseDto updatedCategory = categoryService.updateCategory(category);
+//        log.info("Categoria con ID: {} actualizado exitosamente", ctg_id);
+//        return ResponseEntity.ok(updatedCategory);
+//    }
 
     /**
-     * Endpoint to delete a category from the system using the provided {@link CategoryResponseDto}.
-     * Delegates the deletion logic to {@link ICategoryService#deleteCategory(Long)}.
-     *
-     * @param ctg_id The {@link CategoryResponseDto} object identifying the category to be deleted.
-     * @return The number of rows deleted by the operation.
+     * Endpoint to delete a category from the system using the provided {@link CategoryRequestDto}.
+     * Delegates the deletion logic to {@link ICategoryService#deleteCategory(Long, Long)}.
+     *  @param restaurantId The ID of the restaurant to which the category belongs.
+     *  @param categoryId   The ID of the category to delete.
+     *  @return A {@link ResponseEntity} indicating the result of the deletion operation.
      */
-    @DeleteMapping("/{ctg_id}")
-    public ResponseEntity<Void> deleteCategory(@PathVariable Long ctg_id) {
-        log.info("Solicitud recibida para eliminar la categoria con ID: {}", ctg_id);
-        categoryService.deleteCategory(ctg_id);
-        log.info("Categoria con ID: {} eliminado exitosamente", ctg_id);
+     @DeleteMapping("/{categoryId}/restaurant/{restaurantId}")
+    public ResponseEntity<Void> deleteCategory(@PathVariable Long categoryId, @PathVariable Long restaurantId) {
+        log.info("Solicitud recibida para eliminar la categoria con ID: {} del restaurante con ID: {}.", categoryId, restaurantId);
+        categoryService.deleteCategory(restaurantId, categoryId);
+        log.info("Categoria con ID: {} del restaurante con ID {} se ha eliminado exitosamente", categoryId, restaurantId);
         return ResponseEntity.noContent().build();
     }
 

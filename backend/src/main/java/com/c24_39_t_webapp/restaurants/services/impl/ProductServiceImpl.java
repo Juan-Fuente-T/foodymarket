@@ -78,7 +78,7 @@ public class ProductServiceImpl implements IProductService {
         return new ProductResponseDto(
                 savedProduct.getPrd_id(),
                 savedProduct.getRestaurant().getId(),
-                savedProduct.getCategory().getCtg_id(),
+                savedProduct.getCategory().getId(),
                 savedProduct.getName(),
                 savedProduct.getDescription(),
                 savedProduct.getPrice(),
@@ -102,7 +102,7 @@ public class ProductServiceImpl implements IProductService {
                 .map(product -> new ProductResponseDto(
                         product.getPrd_id(),
                         product.getRestaurant().getId(),
-                        product.getCategory().getCtg_id(),
+                        product.getCategory().getId(),
                         product.getName(),
                         product.getDescription(),
                         product.getPrice(),
@@ -128,7 +128,7 @@ public class ProductServiceImpl implements IProductService {
                 .map(product -> new ProductResponseDto(
                         product.getPrd_id(),
                         product.getRestaurant().getId(),
-                        product.getCategory().getCtg_id(),
+                        product.getCategory().getId(),
                         product.getName(),
                         product.getDescription(),
                         product.getPrice(),
@@ -182,7 +182,7 @@ public class ProductServiceImpl implements IProductService {
         return new ProductResponseDto(
                 updatedProductEntity.getPrd_id(),
                 updatedProductEntity.getRestaurant() != null ? updatedProductEntity.getRestaurant().getId() : null,
-                updatedProductEntity.getCategory() != null ? updatedProductEntity.getCategory().getCtg_id() : null,
+                updatedProductEntity.getCategory() != null ? updatedProductEntity.getCategory().getId() : null,
                 updatedProductEntity.getName(),
                 updatedProductEntity.getDescription(),
                 updatedProductEntity.getPrice(), // Asegura tipo
@@ -222,7 +222,7 @@ public class ProductServiceImpl implements IProductService {
                 .map(product -> new ProductSummaryResponseDto(
                         product.getPrd_id(),
                         product.getRestaurant().getId(),
-                        product.getCategory().getCtg_id(),
+                        product.getCategory().getId(),
                         product.getName(),
                         product.getDescription(),
                         product.getImage()
@@ -247,7 +247,7 @@ public class ProductServiceImpl implements IProductService {
                 .map(product -> new ProductSummaryResponseDto(
                         product.getPrd_id(),
                         product.getRestaurant().getId(),
-                        product.getCategory().getCtg_id(),
+                        product.getCategory().getId(),
                         product.getName(),
                         product.getDescription(),
                         product.getImage()
@@ -269,7 +269,7 @@ public class ProductServiceImpl implements IProductService {
                 .map(product -> new ProductResponseDto(
                         product.getPrd_id(),
                         product.getRestaurant().getId(),
-                        product.getCategory().getCtg_id(),
+                        product.getCategory().getId(),
                         product.getName(),
                         product.getDescription(),
                         product.getPrice(),
@@ -302,7 +302,7 @@ public class ProductServiceImpl implements IProductService {
 //                                            product -> new ProductResponseDto(
 //                                                    product.getPrd_id(),
 //                                                    product.getRestaurant().getId(),
-//                                                    product.getCategory().getCtg_id(),
+//                                                    product.getCategory().getId(),
 //                                                    product.getName(),
 //                                                    product.getDescription(),
 //                                                    product.getPrice(),
@@ -323,7 +323,7 @@ public class ProductServiceImpl implements IProductService {
 //                                    products.stream() // Obtener el ID de la categoría
 //                                            .filter(p -> p.getCategory().getName().equals(categoryEntry.getKey()))
 //                                            .findFirst()
-//                                            .map(p -> p.getCategory().getCtg_id())
+//                                            .map(p -> p.getCategory().getId())
 //                                            .orElse(null),
 //                                    products.stream() // Obtener el nombre del restaurante
 //                                            .filter(p -> p.getRestaurant().getId().equals(restaurantEntry.getKey()))

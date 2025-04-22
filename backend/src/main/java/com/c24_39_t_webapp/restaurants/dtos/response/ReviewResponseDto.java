@@ -11,24 +11,13 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
-@Getter
-@Setter
-@AllArgsConstructor
-public class ReviewResponseDto {
-
-    private Long id;
-    private Restaurant restaurant;
-    private UserEntity userEntity;
-    private Integer score;
-    private String comments;
-    private LocalDateTime createdAt;
-
-    public ReviewResponseDto(Review review) {
-        this.id = review.getId();
-        this.restaurant = review.getRestaurant();
-        this.userEntity = review.getUserEntity();
-        this.score = review.getScore();
-        this.comments = review.getComments();
-        this.createdAt = getCreatedAt();
-    }
+public record ReviewResponseDto(
+//        Long id,
+        Long restaurantId,
+        Long userId,
+        String userName,
+        Integer score,
+        String comments,
+        LocalDateTime createdAt
+) {
 }

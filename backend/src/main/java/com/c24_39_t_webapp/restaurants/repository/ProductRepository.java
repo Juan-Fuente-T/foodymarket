@@ -25,6 +25,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 //    @Query("SELECT p FROM Product p WHERE p.restaurant.rst_id = :restaurantId")
     List<Product> findProductsByRestaurantId(Long restaurantId);
 
+    boolean existsByCategoryId(Long categoryId);
+
 //    @Query("SELECT p FROM Product p WHERE p.restaurant = :restaurant")
 //    List<GroupedProductsResponseDto> findProductsByRestaurantAndCategory(@Param("restaurant") Restaurant restaurant);
 
@@ -32,7 +34,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     // Este método devuelve DIRECTAMENTE List<ProductResponseDto>
 @Query("SELECT new com.c24_39_t_webapp.restaurants.dtos.response.ProductResponseDto(" +
-        "p.prd_id, p.restaurant.id, p.category.ctg_id, p.name, p.description, " +
+        "p.prd_id, p.restaurant.id, p.category.id, p.name, p.description, " +
         "p.price, p.image, p.isActive, p.quantity, " +
         "c.name, r.name)" +
         "FROM Product p JOIN p.category c JOIN p.restaurant r " +

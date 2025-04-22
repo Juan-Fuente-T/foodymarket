@@ -1,7 +1,10 @@
 package com.c24_39_t_webapp.restaurants.controllers;
 
+import com.c24_39_t_webapp.restaurants.dtos.response.CategoryResponseDto;
+import com.c24_39_t_webapp.restaurants.dtos.request.CategoryRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.request.RestaurantRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.RestaurantResponseDto;
+import com.c24_39_t_webapp.restaurants.models.Category;
 import com.c24_39_t_webapp.restaurants.models.Restaurant;
 import com.c24_39_t_webapp.restaurants.services.IRestaurantService;
 import com.c24_39_t_webapp.restaurants.services.impl.UserDetailsImpl;
@@ -16,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 
 //import java.net.URI;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @RestController
@@ -57,19 +61,25 @@ public class RestaurantController {
      * @return a response entity with the new restaurant uri
      */
 
-    @PostMapping("/create")
+//    @PostMapping("/create")
+    @PostMapping()
     @PreAuthorize("hasRole('RESTAURANTE')")
     public ResponseEntity<?> registerRestaurant(@RequestBody @Valid final RestaurantRequestDto restaurantRequestDto,
                                                 @AuthenticationPrincipal final UserDetailsImpl userDetails) {
         log.info("Solicitud recibida para registrar un restaurante para el usuario con email: {}", userDetails.getUsername());
 
+        System.out.println("restaurantRequestDto = " + restaurantRequestDto);
+
         Restaurant restaurant = new Restaurant();
         restaurant.setName(restaurantRequestDto.name());
         restaurant.setDescription(restaurantRequestDto.description());
-        restaurant.setPhone(restaurantRequestDto.phone());
-        restaurant.setAddress(restaurantRequestDto.address());
-        restaurant.setLogo(restaurantRequestDto.logo());
         restaurant.setCategory(restaurantRequestDto.categoria());
+        restaurant.setPhone(restaurantRequestDto.phone());
+        restaurant.setEmail(restaurantRequestDto.email());
+        restaurant.setAddress(restaurantRequestDto.address());
+        restaurant.setOpeningHours(restaurantRequestDto.openingHours());
+        restaurant.setLogo(restaurantRequestDto.logo());
+        restaurant.setCoverImage(restaurantRequestDto.coverImage());
 
         RestaurantResponseDto restaurantResponseDto = restaurantService.
                 registerRestaurant(restaurant, userDetails.getUsername());
@@ -157,6 +167,45 @@ public class RestaurantController {
         log.info("Se recuperaron {} restaurantes exitosamente para el dueño {}.", restaurants.size(), ownerId);
         return ResponseEntity.ok(restaurants);
     }
+
+    /**
+     * Endpoint to retrieve the categories offered by a specific restaurant.
+     * Delegates the retrieval logic to {@link IRestaurantService#getOfferedCategories(Long)}.
+     *
+     * @param restaurantId The ID of the restaurant for which to retrieve the offered categories.
+     * @return A set of {@link Category} objects representing the categories offered by the restaurant.
+     */
+    @GetMapping("{restaurantId}/categories")
+    @PreAuthorize("hasRole('RESTAURANTE')")
+    public ResponseEntity<Set<Category>> getOfferedCategories(@PathVariable Long restaurantId) {
+        log.info("Solicitud recibida para obtener las categorias ofrecidas por el restaurante {}", restaurantId);
+        Set<Category> categories = restaurantService.getOfferedCategories(restaurantId);
+
+        log.info("Se recuperaron {} categorias exitosamente para el restaurante {}.", categories.size(), restaurantId);
+        return ResponseEntity.ok(categories);
+    }
+    @PostMapping("{restaurantId}/categories")
+    @PreAuthorize("hasRole('RESTAURANTE')")
+    public ResponseEntity<CategoryResponseDto> addCategoryToRestaurant(
+            @PathVariable Long restaurantId,
+            @Valid @RequestBody CategoryRequestDto categoryInput
+            ) {
+        log.info("Solicitud recibida para añadir la categoria {} al restaurante con ID {}", categoryInput.name(), restaurantId);
+
+        Category associatedCategory = restaurantService.addCategoryToRestaurant(restaurantId, categoryInput);
+        // Mapea la entidad devuelta a un DTO de respuesta
+        CategoryResponseDto associatedCategoryResponseDto = new CategoryResponseDto(
+                associatedCategory.getId(),
+                associatedCategory.getName(),
+                associatedCategory.getDescription()
+        );
+
+        log.info("Categoría {} asociada/creada para restaurante {}. Devolviendo DTO.",
+                associatedCategoryResponseDto.name(), restaurantId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(associatedCategoryResponseDto);
+    }
+
+
 
     /**
      * Endpoint to delete an existing restaurant in the system using the provided {@link RestaurantRequestDto}.

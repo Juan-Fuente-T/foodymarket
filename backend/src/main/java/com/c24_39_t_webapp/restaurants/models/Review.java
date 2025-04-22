@@ -1,8 +1,10 @@
 package com.c24_39_t_webapp.restaurants.models;
 
+import com.c24_39_t_webapp.restaurants.services.IRestaurantService;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.validator.constraints.Range;
 
@@ -24,7 +26,10 @@ public class Review {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "rvw_id_usuario", nullable = false)
-    private UserEntity userEntity;
+    private UserEntity user;
+
+    @Column(name = "rvw_username", nullable = false)
+    private String userName;
 
     @Range(min = 0, max = 10)
     @Column(name = "rvw_puntaje", nullable = false)
@@ -34,6 +39,6 @@ public class Review {
     private String comments;
 
     @Column(name = "rvw_fecha_creacion", nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
-    @UpdateTimestamp
+    @CreationTimestamp
     private LocalDateTime createdAt;
 }

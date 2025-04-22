@@ -14,10 +14,13 @@ import com.c24_39_t_webapp.restaurants.repository.UserRepository;
 import com.c24_39_t_webapp.restaurants.services.IReviewService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -49,11 +52,18 @@ public class ReviewServiceImpl implements IReviewService {
         review.setComments(reviewDto.comments());
         review.setScore(reviewDto.score());
         review.setRestaurant(restaurant);
-        review.setUserEntity(user);
+        review.setUser(user);
 
         reviewRepository.save(review);
         log.info("Reseña creada con exito!");
-        return new ReviewResponseDto(review);
+        return new ReviewResponseDto(
+                (restaurant != null) ? restaurant.getId() : null,
+                (review.getRestaurant() != null) ? user.getId() : null,
+                (user != null) ? user.getName() : null,
+                review.getScore(),
+                review.getComments(),
+                review.getCreatedAt()
+        );
     }
 
     @Override
@@ -69,21 +79,33 @@ public class ReviewServiceImpl implements IReviewService {
         log.info("Convirtiendo las las reseñas en dto´s ");
         return rewiewList.stream().map(
                 review -> new ReviewResponseDto(
-                        review.getId(),
-                        review.getRestaurant(),
-                        review.getUserEntity(),
+                        review.getRestaurant().getId(),
+                        review.getUser().getId(),
+                        review.getUser().getName(),
                         review.getScore(),
                         review.getComments(),
-                        review.getCreatedAt())
+                        review.getCreatedAt()
+                )
         ).collect(Collectors.toList());
     }
 
     @Override
     public ReviewResponseDto getReviewById(Long id) {
+        log.info("Buscando la reseña con ID {}", id);
         Review review = reviewRepository.findById(id).orElseThrow(() ->
                 new ResourceNotFoundException("Reseña no " +
                         "encontrada!"));
-        return new ReviewResponseDto(review);
+        Restaurant restaurant = review.getRestaurant();
+        UserEntity user = review.getUser();
+
+        return new ReviewResponseDto(
+                (restaurant != null) ? restaurant.getId() : null,
+                (user != null) ? user.getId() : null,
+                (user != null) ? user.getName() : null,
+                review.getScore(),
+                review.getComments(),
+                review.getCreatedAt()
+        );
     }
 
     @PreAuthorize("hasRole('CLIENTE')")
@@ -97,7 +119,7 @@ public class ReviewServiceImpl implements IReviewService {
         log.info("validando que el usuario que esta intentando actualizar la reseña tenga los permisos necesarios id:" +
                         " {}",
                 userDetails.getId());
-        validateUserPermissions(userDetails, review.getUserEntity().getId());
+        validateUserPermissions(userDetails, review.getUser().getId());
 
         log.info("Actualizando datos");
         Optional.ofNullable(updateReviewDto.comments())
@@ -108,7 +130,16 @@ public class ReviewServiceImpl implements IReviewService {
         reviewRepository.save(review);
 
         log.info("Reseña actualizada");
-        return new ReviewResponseDto(review);
+        Restaurant restaurant = review.getRestaurant();
+        UserEntity user = review.getUser();
+        return new ReviewResponseDto(
+                (restaurant != null) ? restaurant.getId() : null,
+                (review.getRestaurant() != null) ? user.getId() : null,
+                (user != null) ? user.getName() : null,
+                review.getScore(),
+                review.getComments(),
+                review.getCreatedAt()
+        );
     }
 
     @PreAuthorize("hasRole('CLIENTE')")
@@ -119,7 +150,7 @@ public class ReviewServiceImpl implements IReviewService {
                 new ResourceNotFoundException("No se encontro la reseña"));
 
         log.info("Validando que el usuario tenga permisos para eliminar la reseña");
-        validateUserPermissions(userDetails, review.getUserEntity().getId());
+        validateUserPermissions(userDetails, review.getUser().getId());
 
         log.warn("Eliminando la reseña");
         reviewRepository.deleteById(id);

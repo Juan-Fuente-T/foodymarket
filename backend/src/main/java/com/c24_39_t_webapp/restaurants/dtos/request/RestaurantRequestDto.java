@@ -14,10 +14,14 @@ public record RestaurantRequestDto(
 
         @NotBlank(message = "El teléfono no puede estar vacío.")
         String phone,
+        @NotBlank(message = "El email no puede estar vacío.")
+        String email,
 
         @NotBlank(message = "La dirección no puede estar vacía.")
         String address,
+        String openingHours,
+        String logo,
 
-        String logo
+        String coverImage
 ) {
 }

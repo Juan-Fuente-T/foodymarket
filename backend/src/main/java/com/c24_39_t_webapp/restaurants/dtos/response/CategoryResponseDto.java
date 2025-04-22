@@ -6,20 +6,10 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+public record CategoryResponseDto(
+        Long ctg_id,
+        String name,
+        String description
+) {
 
-@Getter
-@Setter
-@AllArgsConstructor
-public class CategoryResponseDto {
-
-    private Long ctg_id;
-    private String name;
-    private String description;
-    // Campos de fecha omitidos
-
-    public CategoryResponseDto(Category category) {
-        this.ctg_id = category.getCtg_id();
-        this.name = category.getName();
-        this.description = category.getDescription();
-    }
 }
