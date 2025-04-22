@@ -29,15 +29,15 @@ export interface Restaurant {
   description: string;
   category: string;
   phone: string;
+  email: string;
   address: string;
+  openingHours: string;
   logo: string;
+  coverImage: string;
   ownerId: string;
   createdAt: string;
   updatedAt: string;
-  coverImage?: string;
-  email?: string;
   rating?: number;
-  openingHours?: string;
   reviewCount?: number;
   logoImage?: string; // Added for backward compatibility
   minOrderAmount?: number;

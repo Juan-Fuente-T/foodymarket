@@ -6,12 +6,14 @@ export const adaptRestaurant = (data: any): Restaurant => ({
   description: data.description || '',
   category: data.category || '',
   phone: data.phone || '',
+  email: data.email || '',
   address: data.address || '',
+  openingHours: data.openingHours || '',
   logo: data.logo || '',
+  coverImage: data.photo || '',
   ownerId: data.rst_user_id?.toString() || '',
   createdAt: data.createdAt?.toString() || new Date().toISOString(),
-  updatedAt: data.updatedAt?.toString() || new Date().toISOString()
-  ,coverImage: '', // Valor por defecto
+  updatedAt: data.updatedAt?.toString() || new Date().toISOString(),
   rating: data.reviews?.reduce((acc: number, r: any) => acc + r.rvw_puntaje, 0) / data.reviews?.length || 0,
   reviewCount: data.reviews?.length || 0,
 });

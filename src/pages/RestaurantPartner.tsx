@@ -19,9 +19,11 @@ type RestaurantFormData = {
   description: string;
   category: string;
   phone: string;
-  address: string;
-  logo: string;
   email?: string;
+  address: string;
+  openingHours: string;
+  logo: string;
+  photo: string;
   minOrderAmount?: number;
   deliveryFee?: number;
 };
@@ -199,6 +201,15 @@ const RestaurantPartner = () => {
                 </div>
                 
                 <div className="space-y-2">
+                  <Label htmlFor="logo">Opening Hours</Label>
+                  <Input
+                    id="logo"
+                    placeholder="The hours that your restaurant is open. Optional"
+                    {...register('openingHours')}
+                  />
+                  {errors.logo && <p className="text-red-500 text-sm">{errors.logo.message}</p>}
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="logo">Logo URL *</Label>
                   <Input
                     id="logo"
@@ -206,6 +217,15 @@ const RestaurantPartner = () => {
                     {...register('logo', { required: 'Logo URL is required' })}
                   />
                   {errors.logo && <p className="text-red-500 text-sm">{errors.logo.message}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="photo">Foto URL *</Label>
+                  <Input
+                    id="photo"
+                    placeholder="URL to your restaurant photo"
+                    {...register('photo', { required: 'Photo URL is required' })}
+                  />
+                  {errors.photo && <p className="text-red-500 text-sm">{errors.photo.message}</p>}
                 </div>
               </CardContent>
             </Card>

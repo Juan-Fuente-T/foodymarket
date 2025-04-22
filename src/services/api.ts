@@ -252,11 +252,12 @@ export const restaurantAPI = {
   // },
 
   create: async (data: Omit<Restaurant, 'id' | 'createdAt' | 'updatedAt'>) => {
+    console.log("Data received on API create:", data);
     const response = await fetchWithError("/restaurant", {
       method: "POST",
       body: JSON.stringify({
         ...data,
-        categoria: data.category // Solo ajustamos el nombre del campo
+        categoria: data.category 
       }),
     });
     return adaptRestaurant(response);
