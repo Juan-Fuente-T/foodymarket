@@ -17,7 +17,6 @@ interface ProductCardProps {
 export function ProductCard({ product, onOpenModal }: ProductCardProps) {
   const navigate = useNavigate();
   const { addItem, isProductInCart, canAddProduct } = useCart();
-  console.log('Cart context:', { isProductInCart, canAddProduct });
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleClick = () => {
@@ -28,7 +27,6 @@ export function ProductCard({ product, onOpenModal }: ProductCardProps) {
     e.preventDefault();
     e.stopPropagation();
     addItem(product, 1);
-    toast.success(`${product.name} added to cart`);
   };
 
   const isInCart = isProductInCart(product.id);
@@ -38,12 +36,7 @@ export function ProductCard({ product, onOpenModal }: ProductCardProps) {
     console.error("ProductID is missing!", product);
     return null;
   }
-  console.log('Disable conditions:', {
-    available: product.available,
-    inCart: isInCart,
-    canAdd: canAdd,
-    finalDisabled: !product.available || isInCart || !canAdd
-  });
+  
   return (
     <div className="food-card bg-white rounded-xl overflow-hidden shadow-sm h-full flex flex-col hover:shadow-md transition-shadow"
       onClick={handleClick}
@@ -61,9 +54,9 @@ export function ProductCard({ product, onOpenModal }: ProductCardProps) {
             </Badge>
           </div>
         )}
-        {product.categoryId && (
+        {product.categoryName && (
           <Badge className="absolute top-2 right-2 bg-white/90 text-food-700">
-            {product.categoryId}
+            {product.categoryName}
           </Badge>
         )}
       </div>

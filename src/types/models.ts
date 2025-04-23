@@ -53,7 +53,7 @@ export interface Product {
   price: number;
   image: string;
   isActive: boolean;
-  available: boolean; // Changed from optional to required for consistency
+  available: boolean; // Always set to same value as isActive
   quantity: number;
   restaurantId: string;
   categoryId: string;

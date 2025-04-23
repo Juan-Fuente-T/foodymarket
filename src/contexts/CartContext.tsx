@@ -26,7 +26,7 @@ const CART_STORAGE_KEY = "food_delivery_cart";
 // Helper para obtener el carrito inicial desde localStorage
 const getInitialCart = () => {
   try {
-    const storedCart = localStorage.getItem('shoppingCart');
+    const storedCart = localStorage.getItem(CART_STORAGE_KEY);
     if (storedCart) {
       const parsedCart = JSON.parse(storedCart);
       // Validar que la estructura sea la esperada (opcional pero recomendado)
@@ -46,8 +46,9 @@ const getInitialCart = () => {
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const initialState = getInitialCart();
-  const [items, setItems] = useState<OrderItem[]>([]);
-  const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
+  const [items, setItems] = useState<OrderItem[]>(initialState.items || []);
+  const [restaurant, setRestaurant] = useState<Restaurant | null>(initialState.restaurant || null);
+  
   // Calcular totales (memoizar si se vuelve complejo)
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = items.reduce((sum, item) => sum + item.subtotal, 0);
@@ -77,8 +78,30 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   }, [items, restaurant]);
 
   const addItem = (product: Product, quantity: number, notes?: string) => {
-    console.log("Context: Updating existing PRODUCT:", product);
-    if (restaurant && Number(product.restaurantId) !== restaurant.id) {
+    if (quantity <= 0) return;
+    
+    // Make sure we set the restaurant when adding the first item
+    if (items.length === 0 && !restaurant) {
+      // Fetch restaurant info - we need to set the restaurant for the cart
+      const productRestaurant: Restaurant = {
+        id: Number(product.restaurantId),
+        name: "", // These will be filled in by a real API call in a full implementation
+        description: "",
+        address: "",
+        phone: "",
+        email: "",
+        logo: "",
+        openingHours: "",
+        coverImage: "",
+        cuisineId: 0,
+        cuisineName: "",
+        ownerId: "",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      setRestaurant(productRestaurant);
+      console.log("Setting restaurant from product:", productRestaurant);
+    } else if (restaurant && Number(product.restaurantId) !== restaurant.id) {
       toast.warning("Different Restaurants", {
         description: "Your cart contains items from a different restaurant. Would you like to clear your cart?",
         action: {
@@ -93,12 +116,16 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const existingItem = items.find((item) => item.productId === product.id);
-    console.log("Context: Updating existing item1:", existingItem);
+    
     if (existingItem) {
       setItems(
         items.map((item) =>
           item.productId === product.id
-            ? { ...item, quantity: item.quantity + quantity, notes: notes || '' }
+            ? { 
+                ...item, 
+                quantity: item.quantity + quantity, 
+                subtotal: (item.quantity + quantity) * (product.price)
+              }
             : item
         )
       );
@@ -109,50 +136,33 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         quantity,
         subtotal: product.price * quantity
       };
-      console.log("Context: Updating existing item2:", newItem);
       setItems([...items, newItem]);
     }
 
     toast.success(`Added ${product.name} to cart`);
   };
 
-  // const removeItem = (itemId: string) => {
-  //   setItems(items.filter((item) => item.id !== itemId));
-  //   toast.success("Item removed from cart");
-  // };
-
-  // const updateItemQuantity = (itemId: string, quantity: number) => {
-  //   if (quantity <= 0) {
-  //     removeItem(itemId);
-  //     return;
-  //   }
-
-  //   setItems(
-  //     items.map((item) =>
-  //       item.id === itemId ? { ...item, quantity } : item
-  //     )
-  //   );
-  // };
-
-  const removeItem = useCallback((itemId: string) => { // Acepta itemId
+  const removeItem = useCallback((itemId: string) => { 
     console.log(`[Context] removeItem - itemId: ${itemId}`);
     setItems(prevItems => {
       const initialLength = prevItems.length;
-      const updatedItems = prevItems.filter((item) => item.id !== itemId); // <-- Compara con item.id
-      // ... (lógica para limpiar restaurante y logs) ...
-       if (updatedItems.length === 0 && initialLength > 0) {
-           setRestaurant(null);
-       }
-       if (updatedItems.length !== initialLength) {
-           toast.success("Item removed from cart");
-       } else {
-           console.warn(`[Context] removeItem: Item ID ${itemId} not found.`);
-       }
+      const updatedItems = prevItems.filter((item) => item.id !== itemId);
+      
+      if (updatedItems.length === 0 && initialLength > 0) {
+        setRestaurant(null);
+      }
+      
+      if (updatedItems.length !== initialLength) {
+        toast.success("Item removed from cart");
+      } else {
+        console.warn(`[Context] removeItem: Item ID ${itemId} not found.`);
+      }
+      
       return updatedItems;
     });
   }, []); 
 
-  const updateItemQuantity = useCallback((itemId: string, quantity: number) => { // Acepta itemId
+  const updateItemQuantity = useCallback((itemId: string, quantity: number) => {
     console.log(`[Context] updateItemQuantity - itemId: ${itemId}, newQuantity: ${quantity}`);
     if (quantity <= 0) {
       removeItem(itemId);
@@ -162,29 +172,22 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     setItems(prevItems => {
       let itemFound = false;
       const updatedItems = prevItems.map((item) => {
-        if (item.id === itemId) { // <-- Compara con item.id
+        if (item.id === itemId) {
           itemFound = true;
-          // Necesitas el precio unitario. Añádelo a OrderItem o búscalo en el producto original.
-          // Si lo añadiste a OrderItem como 'price':
-          // const pricePerUnit = item.price;
-          // Si no, necesitas buscar el producto (más complejo) o calcularlo si es posible:
-           const pricePerUnit = item.subtotal / item.quantity; // Puede ser impreciso si quantity era 0
+          const pricePerUnit = item.subtotal / item.quantity;
           return {
             ...item,
             quantity: quantity,
-            subtotal: pricePerUnit * quantity // Recalcula subtotal
+            subtotal: pricePerUnit * quantity
           };
         }
         return item;
       });
-      // ... (logs y return updatedItems) ...
-       if (!itemFound) console.warn(`[Context] updateItemQuantity: Item ID ${itemId} not found.`);
-       return updatedItems;
+      
+      if (!itemFound) console.warn(`[Context] updateItemQuantity: Item ID ${itemId} not found.`);
+      return updatedItems;
     });
   }, [removeItem]); 
-  
-
-
 
   const clearCart = () => {
     setItems([]);
@@ -197,10 +200,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const canAddProduct = (product: Product) => {
-    console.log("Data in Context", restaurant?.id, product, product.restaurantId);
     return !restaurant || restaurant.id === Number(product.restaurantId);
   };
-
 
   const getItemQuantity = (productId: string): number => {
     const item = items.find(item => item.productId === productId);
