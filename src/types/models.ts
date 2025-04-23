@@ -27,13 +27,15 @@ export interface Restaurant {
   id: number;
   name: string;
   description: string;
-  category: string;
   phone: string;
   email: string;
   address: string;
   openingHours: string;
   logo: string;
   coverImage: string;
+  // cuisine: {id: number, name: string};
+  cuisineId: number;
+  cuisineName: string;
   ownerId: string;
   createdAt: string;
   updatedAt: string;

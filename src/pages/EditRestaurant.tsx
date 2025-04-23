@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
-import { restaurantAPI } from '@/services/api';
+import { useForm, Controller } from 'react-hook-form';
+import { restaurantAPI, restaurantCuisinesAPI } from '@/services/api';
 import { Restaurant } from '@/types/models';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -21,25 +21,25 @@ import {
 import { toast } from 'sonner';
 import { ArrowLeft, Save } from 'lucide-react';
 
-const CATEGORIES = [
-  'Italiana',
-  'Mexicana',
-  'China',
-  'Japonesa',
-  'India',
-  'Americana',
-  'Mediterránea',
-  'Vegetariana',
-  'Vegana',
-  'Mariscos',
-  'Parrilla',
-  'Pizzería',
-  'Hamburguesería',
-  'Cafetería',
-  'Pastelería',
-  'Heladería',
-  'Otro'
-];
+// const CATEGORIES = [
+//   'Italiana',
+//   'Mexicana',
+//   'China',
+//   'Japonesa',
+//   'India',
+//   'Americana',
+//   'Mediterránea',
+//   'Vegetariana',
+//   'Vegana',
+//   'Mariscos',
+//   'Parrilla',
+//   'Pizzería',
+//   'Hamburguesería',
+//   'Cafetería',
+//   'Pastelería',
+//   'Heladería',
+//   'Otro'
+// ];
 
 const EditRestaurant = () => {
   const { id } = useParams<{ id: string }>();
@@ -47,15 +47,21 @@ const EditRestaurant = () => {
   const queryClient = useQueryClient();
   const [coverImagePreview, setCoverImagePreview] = useState<string>('');
   const [logoImagePreview, setLogoImagePreview] = useState<string>('');
-  
-  const { register, handleSubmit, setValue, watch, formState: { errors, isDirty } } = useForm<Restaurant>();
-  
+
+  const { register, handleSubmit, setValue, watch, reset, control, formState: { errors, isDirty } } = useForm<Restaurant>();
+
   const { data: restaurant, isLoading } = useQuery({
     queryKey: ['restaurant', id],
     queryFn: () => restaurantAPI.getById(id as string),
     enabled: !!id,
   });
-  
+  console.log("Restaurant in EditRestaurant:", restaurant);
+  const { data: cuisines } = useQuery<{ id: string; name: string }[]>({
+    queryKey: ['restaurantCuisines'],
+    queryFn: () => restaurantCuisinesAPI.getAll()
+  });
+  console.log("Cuisines in EditRestaurant:", cuisines);
+
   const { mutate: updateRestaurant, isPending: isUpdating } = useMutation({
     mutationFn: (data: Restaurant) => restaurantAPI.update(id as string, data),
     onSuccess: () => {
@@ -69,65 +75,91 @@ const EditRestaurant = () => {
       console.error('Error updating restaurant:', error);
     }
   });
-  
+
+  // useEffect(() => {
+  //   if (restaurant) {
+  //     console.log("restaurant in EditRestaurant:", restaurant);
+  //     const fields = [
+  //       'name', 'description', 'address', 'phone', 
+  //       'email', 'cuisineId', 'openingHours', 'coverImage', 
+  //       'logo'
+  //     ];
+  //  fields.forEach(field => {
+  //   console.log("Fields in EditRestaurant:", restaurant[field as keyof Restaurant]);
+  //   if (field in restaurant) {
+  //     setValue(field as keyof Restaurant, restaurant[field as keyof Restaurant]);
+  //   }
+  // });
+  //   }
   useEffect(() => {
-    if (restaurant) {
-      const fields = [
-        'name', 'description', 'address', 'phone', 
-        'email', 'category', 'openingHours', 'coverImage', 
-        'logo'
-      ];
-      
-      fields.forEach(field => {
-        if (field in restaurant) {
-          setValue(field as keyof Restaurant, restaurant[field as keyof Restaurant]);
-        }
+    if (restaurant) { // Modo edición: Rellenar el form con los datos
+      console.log("Edit Mode - Restaurant data received:", JSON.stringify(restaurant, null, 2));
+      console.log("Cuisine object inside restaurant:", restaurant.cuisineId);
+      console.log("Cuisine ID y Name to set:", restaurant.cuisineId, restaurant.cuisineName);
+
+      reset({
+        name: restaurant.name || '',
+        description: restaurant.description || '',
+        phone: restaurant.phone || '',
+        email: restaurant.email || '',
+        address: restaurant.address || '',
+        openingHours: restaurant.openingHours || '',
+        logo: restaurant.logo || '',
+        coverImage: restaurant.coverImage || '',
+        cuisineId: restaurant.cuisineId ? restaurant.cuisineId : null,
+        cuisineName: restaurant.cuisineName ? restaurant.cuisineName : ''
       });
-      
+      console.log("Form reset complete with cuisineId:", restaurant.cuisineId ? String(restaurant.cuisineId) : null);
       // Handle minOrderAmount and deliveryFee specially since they might be optional
       if (restaurant.minOrderAmount !== undefined) {
         setValue('minOrderAmount', restaurant.minOrderAmount);
       }
-      
+
       if (restaurant.deliveryFee !== undefined) {
         setValue('deliveryFee', restaurant.deliveryFee);
       }
-      
+
       // Use logo for logoImagePreview if logoImage doesn't exist
       setCoverImagePreview(restaurant.coverImage || '');
       setLogoImagePreview(restaurant.logo || restaurant.logoImage || '');
+    } else { // Modo creación: Limpiar el form (o poner valores por defecto)
+      console.log("Create Mode - Resetting form");
+      reset({
+        name: '', description: '', phone: '', email: '', address: '',
+        openingHours: '', logo: '', coverImage: '', cuisineId: null
+      });
     }
-  }, [restaurant, setValue]);
-  
+  }, [restaurant, reset]);
+
   const watchCoverImage = watch('coverImage');
   const watchLogo = watch('logo');
-  
+
   useEffect(() => {
     if (watchCoverImage) setCoverImagePreview(watchCoverImage);
   }, [watchCoverImage]);
-  
+
   useEffect(() => {
     if (watchLogo) setLogoImagePreview(watchLogo);
   }, [watchLogo]);
-  
+
   const onSubmit = (data: Restaurant) => {
     const updatedData = {
       ...restaurant,
       ...data
     };
-    
+
     // Ensure numeric types
     if (data.minOrderAmount !== undefined) {
       updatedData.minOrderAmount = parseFloat(data.minOrderAmount.toString() || '0');
     }
-    
+
     if (data.deliveryFee !== undefined) {
       updatedData.deliveryFee = parseFloat(data.deliveryFee.toString() || '0');
     }
-    
+
     updateRestaurant(updatedData);
   };
-  
+
   if (isLoading) {
     return (
       <Layout>
@@ -144,7 +176,7 @@ const EditRestaurant = () => {
       </Layout>
     );
   }
-  
+
   if (!restaurant) {
     return (
       <Layout>
@@ -157,7 +189,7 @@ const EditRestaurant = () => {
       </Layout>
     );
   }
-  
+
   return (
     <Layout>
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -170,7 +202,7 @@ const EditRestaurant = () => {
             <h1 className="text-3xl font-bold text-gray-900">Editar Restaurante</h1>
           </div>
         </div>
-        
+
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-8">
             <Card>
@@ -193,27 +225,43 @@ const EditRestaurant = () => {
                       <p className="text-sm text-red-500">{errors.name.message}</p>
                     )}
                   </div>
-                  
+
                   <div className="space-y-2">
-                    <Label htmlFor="category">Categoría</Label>
-                    <Select
-                      onValueChange={(value) => setValue('category', value)}
-                      defaultValue={restaurant.category}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecciona una categoría" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {CATEGORIES.map(category => (
-                          <SelectItem key={category} value={category}>
-                            {category}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Label htmlFor="cuisineSelect">Categoría</Label>
+                    <Controller
+                      name="cuisineId"
+                      control={control}
+                      rules={{ required: 'La categoria es obligatoria' }}
+                      render={({ field, fieldState: { error } }) => (
+                        <>
+                          <Select
+                            value={field.value !== null && field.value !== undefined ? String(field.value) : undefined}
+                            onValueChange={(valueAsString) => {
+                              const numericValue = parseInt(valueAsString, 10);
+                              field.onChange(isNaN(numericValue) ? null : numericValue);
+                            }}
+                          >
+                            <SelectTrigger id="cuisineSelect" ref={field.ref} onBlur={field.onBlur}>
+                              <SelectValue placeholder="Selecciona un tipo de cocina" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {cuisines?.map(cuisine => (
+                                <SelectItem key={cuisine.id} value={String(cuisine.id)}>
+                                  {cuisine.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {error && (
+                            <p className="text-sm font-medium text-destructive">{error.message}</p>
+                            // O usa <p className="text-sm text-red-500">{error.message}</p> si prefieres tu clase anterior
+                          )}
+                        </>
+                      )}
+                    />
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="description">Descripción</Label>
                   <Textarea
@@ -223,7 +271,7 @@ const EditRestaurant = () => {
                     {...register('description')}
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="address">Dirección</Label>
                   <Input
@@ -235,7 +283,7 @@ const EditRestaurant = () => {
                     <p className="text-sm text-red-500">{errors.address.message}</p>
                   )}
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="phone">Teléfono</Label>
@@ -245,7 +293,7 @@ const EditRestaurant = () => {
                       {...register('phone')}
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
                     <Input
@@ -256,7 +304,7 @@ const EditRestaurant = () => {
                     />
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="openingHours">Horario de Apertura</Label>
                   <Input
@@ -267,7 +315,7 @@ const EditRestaurant = () => {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader>
                 <CardTitle>Imágenes</CardTitle>
@@ -286,16 +334,16 @@ const EditRestaurant = () => {
                   {coverImagePreview && (
                     <div className="mt-4">
                       <p className="text-sm text-gray-500 mb-2">Vista previa:</p>
-                      <img 
-                        src={coverImagePreview} 
-                        alt="Portada" 
+                      <img
+                        src={coverImagePreview}
+                        alt="Portada"
                         className="w-full h-48 object-cover rounded-md"
                         onError={() => setCoverImagePreview('')}
                       />
                     </div>
                   )}
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="logo">Logo (URL)</Label>
                   <Input
@@ -306,9 +354,9 @@ const EditRestaurant = () => {
                   {logoImagePreview && (
                     <div className="mt-4">
                       <p className="text-sm text-gray-500 mb-2">Vista previa:</p>
-                      <img 
-                        src={logoImagePreview} 
-                        alt="Logo" 
+                      <img
+                        src={logoImagePreview}
+                        alt="Logo"
                         className="w-24 h-24 object-cover rounded-md"
                         onError={() => setLogoImagePreview('')}
                       />
@@ -317,7 +365,7 @@ const EditRestaurant = () => {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader>
                 <CardTitle>Información de Entrega</CardTitle>
@@ -340,7 +388,7 @@ const EditRestaurant = () => {
                       })}
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="deliveryFee">Costo de Entrega (€)</Label>
                     <Input
@@ -357,14 +405,14 @@ const EditRestaurant = () => {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardFooter className="flex justify-between">
                 <Button type="button" variant="outline" asChild>
                   <Link to="/dashboard">Cancelar</Link>
                 </Button>
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   className="bg-food-600 hover:bg-food-700"
                   disabled={isUpdating || !isDirty}
                 >

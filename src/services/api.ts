@@ -231,6 +231,7 @@ export const restaurantAPI = {
 
   getById: async (id: string) => {
     const data = await fetchWithError(`/restaurant/${id}`);
+    console.log("DATA in API getById: ", data);
     return adaptRestaurant(data);
   },
   getByOwnerId: async (ownerId: string): Promise<Restaurant[]>  => {
@@ -256,8 +257,7 @@ export const restaurantAPI = {
     const response = await fetchWithError("/restaurant", {
       method: "POST",
       body: JSON.stringify({
-        ...data,
-        categoria: data.category 
+        ...data
       }),
     });
     return adaptRestaurant(response);
@@ -284,7 +284,21 @@ export const restaurantAPI = {
   //   getFeatured: () => fetchWithError("/restaurant/featured"),
 };
 
-// Categories
+// Restaurant Cuisines
+export const restaurantCuisinesAPI = {
+  getAll: async () => {
+    const data = await fetchWithError("/cuisines");
+    console.log("Data received from API Cuisines GetAll:", data);
+    return data;
+  },
+
+  // getById: async (id: string) => {
+  //   const data = await fetchWithError(`/cuisines/${id}`);
+  //   return data;
+  // }
+}
+
+// Product Categories
 export const categoryAPI = {
   getAll: async () => {
     const data = await fetchWithError("/category");

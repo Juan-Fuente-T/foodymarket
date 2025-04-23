@@ -14,7 +14,7 @@ const RestaurantHeader = ({ restaurant }: { restaurant: Restaurant }) => (
     />
     <div className="absolute top-4 left-4">
       <Badge variant="secondary" className="bg-white/90 text-food-700">
-        {restaurant.category}
+        {restaurant.cuisineName}
       </Badge>
     </div>
     <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/80 to-transparent p-4">

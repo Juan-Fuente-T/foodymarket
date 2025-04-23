@@ -197,8 +197,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const canAddProduct = (product: Product) => {
-    console.log("Data in ContextXX: ", restaurant);
-    console.log("Data in Context", restaurant.id, product, product.restaurantId);
+    console.log("Data in Context", restaurant?.id, product, product.restaurantId);
     return !restaurant || restaurant.id === Number(product.restaurantId);
   };
 
