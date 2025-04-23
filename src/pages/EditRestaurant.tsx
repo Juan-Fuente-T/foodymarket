@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { FileUpload } from '@/components/ui/file-upload';
 import {
   Select,
   SelectContent,
@@ -21,32 +22,14 @@ import {
 import { toast } from 'sonner';
 import { ArrowLeft, Save } from 'lucide-react';
 
-// const CATEGORIES = [
-//   'Italiana',
-//   'Mexicana',
-//   'China',
-//   'Japonesa',
-//   'India',
-//   'Americana',
-//   'Mediterránea',
-//   'Vegetariana',
-//   'Vegana',
-//   'Mariscos',
-//   'Parrilla',
-//   'Pizzería',
-//   'Hamburguesería',
-//   'Cafetería',
-//   'Pastelería',
-//   'Heladería',
-//   'Otro'
-// ];
-
 const EditRestaurant = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [coverImagePreview, setCoverImagePreview] = useState<string>('');
   const [logoImagePreview, setLogoImagePreview] = useState<string>('');
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
 
   const { register, handleSubmit, setValue, watch, reset, control, formState: { errors, isDirty } } = useForm<Restaurant>();
 
@@ -55,13 +38,12 @@ const EditRestaurant = () => {
     queryFn: () => restaurantAPI.getById(id as string),
     enabled: !!id,
   });
-  console.log("Restaurant in EditRestaurant:", restaurant);
+  
   const { data: cuisines } = useQuery<{ id: string; name: string }[]>({
     queryKey: ['restaurantCuisines'],
     queryFn: () => restaurantCuisinesAPI.getAll()
   });
-  console.log("Cuisines in EditRestaurant:", cuisines);
-
+  
   const { mutate: updateRestaurant, isPending: isUpdating } = useMutation({
     mutationFn: (data: Restaurant) => restaurantAPI.update(id as string, data),
     onSuccess: () => {
@@ -76,27 +58,8 @@ const EditRestaurant = () => {
     }
   });
 
-  // useEffect(() => {
-  //   if (restaurant) {
-  //     console.log("restaurant in EditRestaurant:", restaurant);
-  //     const fields = [
-  //       'name', 'description', 'address', 'phone', 
-  //       'email', 'cuisineId', 'openingHours', 'coverImage', 
-  //       'logo'
-  //     ];
-  //  fields.forEach(field => {
-  //   console.log("Fields in EditRestaurant:", restaurant[field as keyof Restaurant]);
-  //   if (field in restaurant) {
-  //     setValue(field as keyof Restaurant, restaurant[field as keyof Restaurant]);
-  //   }
-  // });
-  //   }
   useEffect(() => {
     if (restaurant) { // Modo edición: Rellenar el form con los datos
-      console.log("Edit Mode - Restaurant data received:", JSON.stringify(restaurant, null, 2));
-      console.log("Cuisine object inside restaurant:", restaurant.cuisineId);
-      console.log("Cuisine ID y Name to set:", restaurant.cuisineId, restaurant.cuisineName);
-
       reset({
         name: restaurant.name || '',
         description: restaurant.description || '',
@@ -109,7 +72,7 @@ const EditRestaurant = () => {
         cuisineId: restaurant.cuisineId ? restaurant.cuisineId : null,
         cuisineName: restaurant.cuisineName ? restaurant.cuisineName : ''
       });
-      console.log("Form reset complete with cuisineId:", restaurant.cuisineId ? String(restaurant.cuisineId) : null);
+      
       // Handle minOrderAmount and deliveryFee specially since they might be optional
       if (restaurant.minOrderAmount !== undefined) {
         setValue('minOrderAmount', restaurant.minOrderAmount);
@@ -123,7 +86,6 @@ const EditRestaurant = () => {
       setCoverImagePreview(restaurant.coverImage || '');
       setLogoImagePreview(restaurant.logo || restaurant.logoImage || '');
     } else { // Modo creación: Limpiar el form (o poner valores por defecto)
-      console.log("Create Mode - Resetting form");
       reset({
         name: '', description: '', phone: '', email: '', address: '',
         openingHours: '', logo: '', coverImage: '', cuisineId: null
@@ -131,16 +93,25 @@ const EditRestaurant = () => {
     }
   }, [restaurant, reset]);
 
-  const watchCoverImage = watch('coverImage');
-  const watchLogo = watch('logo');
+  const handleLogoFileSelected = (file: File) => {
+    setLogoFile(file);
+    // For now we'll use a placeholder URL until we connect with Supabase storage
+    if (file.size > 0) {
+      const objectUrl = URL.createObjectURL(file);
+      setValue('logo', objectUrl);
+      setLogoImagePreview(objectUrl);
+    }
+  };
 
-  useEffect(() => {
-    if (watchCoverImage) setCoverImagePreview(watchCoverImage);
-  }, [watchCoverImage]);
-
-  useEffect(() => {
-    if (watchLogo) setLogoImagePreview(watchLogo);
-  }, [watchLogo]);
+  const handleCoverImageFileSelected = (file: File) => {
+    setCoverImageFile(file);
+    // For now we'll use a placeholder URL until we connect with Supabase storage
+    if (file.size > 0) {
+      const objectUrl = URL.createObjectURL(file);
+      setValue('coverImage', objectUrl);
+      setCoverImagePreview(objectUrl);
+    }
+  };
 
   const onSubmit = (data: Restaurant) => {
     const updatedData = {
@@ -156,6 +127,9 @@ const EditRestaurant = () => {
     if (data.deliveryFee !== undefined) {
       updatedData.deliveryFee = parseFloat(data.deliveryFee.toString() || '0');
     }
+
+    // Here we would upload the files to Supabase and update the URLs
+    // For now we're just using the local URLs
 
     updateRestaurant(updatedData);
   };
@@ -254,7 +228,6 @@ const EditRestaurant = () => {
                           </Select>
                           {error && (
                             <p className="text-sm font-medium text-destructive">{error.message}</p>
-                            // O usa <p className="text-sm text-red-500">{error.message}</p> si prefieres tu clase anterior
                           )}
                         </>
                       )}
@@ -324,44 +297,28 @@ const EditRestaurant = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="coverImage">Imagen de Portada (URL)</Label>
-                  <Input
-                    id="coverImage"
-                    placeholder="https://ejemplo.com/imagen.jpg"
-                    {...register('coverImage')}
+                <div className="space-y-4">
+                  <FileUpload
+                    label="Logo del restaurante"
+                    id="restaurant-logo-edit"
+                    onFileSelected={handleLogoFileSelected}
+                    maxSize={2} // 2MB max
+                    accept="image/*"
+                    currentImage={logoImagePreview}
                   />
-                  {coverImagePreview && (
-                    <div className="mt-4">
-                      <p className="text-sm text-gray-500 mb-2">Vista previa:</p>
-                      <img
-                        src={coverImagePreview}
-                        alt="Portada"
-                        className="w-full h-48 object-cover rounded-md"
-                        onError={() => setCoverImagePreview('')}
-                      />
-                    </div>
-                  )}
+                  <input type="hidden" {...register('logo')} />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="logo">Logo (URL)</Label>
-                  <Input
-                    id="logo"
-                    placeholder="https://ejemplo.com/logo.jpg"
-                    {...register('logo')}
+                <div className="space-y-4">
+                  <FileUpload
+                    label="Imagen de portada"
+                    id="restaurant-cover-edit"
+                    onFileSelected={handleCoverImageFileSelected}
+                    maxSize={2} // 2MB max
+                    accept="image/*"
+                    currentImage={coverImagePreview}
                   />
-                  {logoImagePreview && (
-                    <div className="mt-4">
-                      <p className="text-sm text-gray-500 mb-2">Vista previa:</p>
-                      <img
-                        src={logoImagePreview}
-                        alt="Logo"
-                        className="w-24 h-24 object-cover rounded-md"
-                        onError={() => setLogoImagePreview('')}
-                      />
-                    </div>
-                  )}
+                  <input type="hidden" {...register('coverImage')} />
                 </div>
               </CardContent>
             </Card>

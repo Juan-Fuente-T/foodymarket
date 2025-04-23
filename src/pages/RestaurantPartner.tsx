@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { restaurantAPI, restaurantCuisinesAPI } from '@/services/api';
-import { UserRole } from '@/types/models';
+import { FileUpload } from '@/components/ui/file-upload';
 import { useQuery } from '@tanstack/react-query';
 
 type RestaurantFormData = {
@@ -36,6 +36,9 @@ const RestaurantPartner = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
 
   const { register, handleSubmit, setValue, control, watch, formState: { errors } } = useForm<RestaurantFormData>({
     defaultValues: {
@@ -48,8 +51,7 @@ const RestaurantPartner = () => {
     queryKey: ['restaurantCuisines'],
     queryFn: () => restaurantCuisinesAPI.getAll()
   });
-  console.log("Cuisines IN RESTAURANT PARTNER in EditRestaurant:", cuisines);
-
+  
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -89,10 +91,37 @@ const RestaurantPartner = () => {
     );
   }
 
+  const handleLogoFileSelected = (file: File) => {
+    setLogoFile(file);
+    // For now we'll use a placeholder URL until we connect with Supabase storage
+    if (file.size > 0) {
+      setValue('logo', URL.createObjectURL(file));
+    }
+  };
+
+  const handlePhotoFileSelected = (file: File) => {
+    setPhotoFile(file);
+    // For now we'll use a placeholder URL until we connect with Supabase storage
+    if (file.size > 0) {
+      setValue('photo', URL.createObjectURL(file));
+    }
+  };
+
+  const handleCoverImageFileSelected = (file: File) => {
+    setCoverImageFile(file);
+    // For now we'll use a placeholder URL until we connect with Supabase storage
+    if (file.size > 0) {
+      setValue('coverImage', URL.createObjectURL(file));
+    }
+  };
+
   const onSubmit = async (data: RestaurantFormData) => {
     try {
       setSubmitting(true);
-console.log("DATA IN RESTAURANT PARTNER in EditRestaurant:", data, user.id);
+      
+      // Here we would upload files to Supabase storage and get actual URLs
+      // For now we're just using the temporary URLs from the form
+      
       const restaurantData = {
         ...data,
         ownerId: user.id
@@ -108,10 +137,6 @@ console.log("DATA IN RESTAURANT PARTNER in EditRestaurant:", data, user.id);
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const handleCategoryChange = (value: string) => {
-    setValue('cuisineName', value);
   };
 
   return (
@@ -189,7 +214,6 @@ console.log("DATA IN RESTAURANT PARTNER in EditRestaurant:", data, user.id);
                           </Select>
                           {error && (
                             <p className="text-sm font-medium text-destructive">{error.message}</p>
-                            // O usa <p className="text-sm text-red-500">{error.message}</p> si prefieres tu clase anterior
                           )}
                         </>
                       )}
@@ -223,31 +247,60 @@ console.log("DATA IN RESTAURANT PARTNER in EditRestaurant:", data, user.id);
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="logo">Opening Hours</Label>
+                  <Label htmlFor="openingHours">Opening Hours</Label>
                   <Input
-                    id="logo"
+                    id="openingHours"
                     placeholder="The hours that your restaurant is open. Optional"
                     {...register('openingHours')}
                   />
-                  {errors.logo && <p className="text-red-500 text-sm">{errors.logo.message}</p>}
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="logo">Logo URL *</Label>
-                  <Input
-                    id="logo"
-                    placeholder="URL to your restaurant logo"
-                    {...register('logo', { required: 'Logo URL is required' })}
-                  />
-                  {errors.logo && <p className="text-red-500 text-sm">{errors.logo.message}</p>}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="photo">Foto URL *</Label>
-                  <Input
-                    id="photo"
-                    placeholder="URL to your restaurant photo"
-                    {...register('photo', { required: 'Photo URL is required' })}
-                  />
-                  {errors.photo && <p className="text-red-500 text-sm">{errors.photo.message}</p>}
+              </CardContent>
+            </Card>
+
+            {/* Restaurant Images */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Restaurant Images</CardTitle>
+                <CardDescription>
+                  Upload images for your restaurant
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-4">
+                  <div>
+                    <FileUpload
+                      label="Restaurant Logo *"
+                      id="restaurant-logo"
+                      onFileSelected={handleLogoFileSelected}
+                      maxSize={2} // 2MB max
+                      accept="image/*"
+                    />
+                    <input type="hidden" {...register('logo', { required: 'Logo is required' })} />
+                    {errors.logo && <p className="text-red-500 text-sm">{errors.logo.message}</p>}
+                  </div>
+
+                  <div>
+                    <FileUpload
+                      label="Restaurant Photo *"
+                      id="restaurant-photo"
+                      onFileSelected={handlePhotoFileSelected}
+                      maxSize={2} // 2MB max
+                      accept="image/*"
+                    />
+                    <input type="hidden" {...register('photo', { required: 'Photo is required' })} />
+                    {errors.photo && <p className="text-red-500 text-sm">{errors.photo.message}</p>}
+                  </div>
+
+                  <div>
+                    <FileUpload
+                      label="Cover Image (Optional)"
+                      id="restaurant-cover"
+                      onFileSelected={handleCoverImageFileSelected}
+                      maxSize={2} // 2MB max
+                      accept="image/*"
+                    />
+                    <input type="hidden" {...register('coverImage')} />
+                  </div>
                 </div>
               </CardContent>
             </Card>
