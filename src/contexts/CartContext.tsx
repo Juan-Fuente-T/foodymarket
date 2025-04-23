@@ -2,7 +2,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import { Product, OrderItem, Restaurant } from "@/types/models";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 
 interface CartContextType {
   items: OrderItem[];
@@ -82,10 +81,13 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     
     // Make sure we set the restaurant when adding the first item
     if (items.length === 0 && !restaurant) {
-      // Fetch restaurant info - we need to set the restaurant for the cart
+      // Ensure we have restaurant data when adding the first product
+      console.log("Restaurant not set, setting from product:", product.restaurantId);
+      // We need to fetch restaurant info from somewhere or create a placeholder
+      // For now, we'll create a minimal restaurant object to ensure checkout works
       const productRestaurant: Restaurant = {
         id: Number(product.restaurantId),
-        name: "", // These will be filled in by a real API call in a full implementation
+        name: "Restaurant", // These will be updated with real data in a full implementation
         description: "",
         address: "",
         phone: "",
@@ -100,7 +102,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         updatedAt: new Date().toISOString()
       };
       setRestaurant(productRestaurant);
-      console.log("Setting restaurant from product:", productRestaurant);
     } else if (restaurant && Number(product.restaurantId) !== restaurant.id) {
       toast.warning("Different Restaurants", {
         description: "Your cart contains items from a different restaurant. Would you like to clear your cart?",
@@ -124,7 +125,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             ? { 
                 ...item, 
                 quantity: item.quantity + quantity, 
-                subtotal: (item.quantity + quantity) * (product.price)
+                subtotal: (item.quantity + quantity) * (product.price),
+                productName: product.name // Store product name for display
               }
             : item
         )
@@ -134,7 +136,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         id: Date.now().toString(),
         productId: product.id,
         quantity,
-        subtotal: product.price * quantity
+        subtotal: product.price * quantity,
+        productName: product.name // Store product name for display
       };
       setItems([...items, newItem]);
     }

@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "../hooks/use-auth";
@@ -44,6 +44,11 @@ const Cart = () => {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
   const [isProcessing, setIsProcessing] = useState(false);
 
+  // Debug restaurant info
+  useEffect(() => {
+    console.log("Current restaurant in cart:", restaurant);
+  }, [restaurant]);
+
   const handleOpenCheckout = () => {
     if (!isAuthenticated) {
       toast.error("Login Required", {
@@ -62,10 +67,11 @@ const Cart = () => {
     }
   
     if (!restaurant) {
-      toast.error("No restaurant selected");
+      toast.error("No restaurant selected. Please try adding items to your cart again.");
       return;
     }
 
+    // If we reach here, we can open the checkout modal
     setIsCheckoutModalOpen(true);
   };
 
@@ -92,7 +98,9 @@ const Cart = () => {
         })),
       };
       
+      console.log("Submitting order:", orderData);
       const response = await orderAPI.create(orderData, currentUser.email);
+      console.log("Order created response:", response);
       
       // Close checkout modal and open confirmation
       setIsCheckoutModalOpen(false);
@@ -150,7 +158,7 @@ const Cart = () => {
                 <TableBody>
                   {items.map((item) => (
                     <TableRow key={item.id}>
-                      <TableCell className="font-medium">{item.productId}</TableCell>
+                      <TableCell className="font-medium">{item.productName || item.productId}</TableCell>
                       <TableCell>${(item.subtotal/item.quantity).toFixed(2)}</TableCell>
                       <TableCell>
                         <div className="flex items-center">
@@ -254,6 +262,12 @@ const Cart = () => {
                 <span>Items ({totalItems}):</span>
                 <span>${totalPrice.toFixed(2)}</span>
               </div>
+              {restaurant && (
+                <div className="flex justify-between mb-1">
+                  <span>Restaurant:</span>
+                  <span>{restaurant.name}</span>
+                </div>
+              )}
               <div className="flex justify-between font-bold text-lg mt-2 pt-2 border-t">
                 <span>Total:</span>
                 <span>${totalPrice.toFixed(2)}</span>

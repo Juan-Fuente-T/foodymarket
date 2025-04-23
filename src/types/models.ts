@@ -1,3 +1,4 @@
+
 // export type UserRole = 'cliente' | 'restaurante' | 'admin';
 export type UserRole = 'CLIENTE' | 'RESTAURANTE';
 
@@ -89,6 +90,7 @@ export interface OrderItem {
   productId: string;
   quantity: number;
   subtotal: number;
+  productName?: string; // Added for UI convenience
 }
 
 export interface Review {
