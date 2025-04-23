@@ -5,7 +5,7 @@ import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "../hooks/use-auth";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Minus, Plus, Trash2, ArrowLeft, ShoppingCart, CreditCard, Home } from "lucide-react";
+import { Minus, Plus, Trash2, ArrowLeft, ShoppingCart, CreditCard, Home, Truck } from "lucide-react";
 import { toast } from "sonner";
 import { orderAPI } from "@/services/api";
 import { 
@@ -31,9 +31,19 @@ import {
   DialogFooter,
   DialogDescription
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { OrderStatus } from "@/types/models";
 
-type PaymentMethod = "card" | "pickup";
+type DeliveryMethod = "pickup" | "delivery";
+
+interface CardDetails {
+  cardNumber: string;
+  cardExpiry: string;
+  cardName: string;
+  cardCvc: string;
+}
 
 const Cart = () => {
   const { items, totalItems, totalPrice, restaurant, updateItemQuantity, removeItem, clearCart } = useCart();
@@ -41,8 +51,20 @@ const Cart = () => {
   const navigate = useNavigate();
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
+  const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>("pickup");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [cardDetails, setCardDetails] = useState<CardDetails>({
+    cardNumber: "",
+    cardExpiry: "",
+    cardName: "",
+    cardCvc: ""
+  });
+  const [cardErrors, setCardErrors] = useState({
+    cardNumber: false,
+    cardExpiry: false,
+    cardName: false,
+    cardCvc: false
+  });
 
   // Debug restaurant info
   useEffect(() => {
@@ -75,9 +97,26 @@ const Cart = () => {
     setIsCheckoutModalOpen(true);
   };
 
+  const validateCardDetails = (): boolean => {
+    const errors = {
+      cardNumber: !cardDetails.cardNumber || cardDetails.cardNumber.length < 16,
+      cardExpiry: !cardDetails.cardExpiry || !cardDetails.cardExpiry.match(/^\d{2}\/\d{2}$/),
+      cardName: !cardDetails.cardName || cardDetails.cardName.length < 3,
+      cardCvc: !cardDetails.cardCvc || cardDetails.cardCvc.length < 3
+    };
+    
+    setCardErrors(errors);
+    return !Object.values(errors).some(error => error);
+  };
+
   const handlePayment = async () => {
     if (!currentUser || !currentUser.id || !restaurant) {
       toast.error("Missing information for checkout");
+      return;
+    }
+
+    if (!validateCardDetails()) {
+      toast.error("Please fill in all card details correctly");
       return;
     }
 
@@ -87,9 +126,9 @@ const Cart = () => {
       const orderData = {
         clientId: currentUser.id,
         restaurantId: restaurant.id.toString(),
-        status: paymentMethod === "card" ? "pagado" : "pendiente" as OrderStatus,
+        status: "pagado" as OrderStatus,
         total: totalPrice,
-        comments: paymentMethod === "pickup" ? "Payment on pickup" : "Paid by card",
+        comments: deliveryMethod === "pickup" ? "Customer will pickup" : "Delivery to customer address",
         items: items.map(item => ({
           id: '',
           productId: item.productId,
@@ -122,6 +161,59 @@ const Cart = () => {
     clearCart();
     navigate('/');
     toast.success("Thank you for your order!");
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setCardDetails(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const formatCardNumber = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let { value } = e.target;
+    // Remove anything that's not a digit
+    value = value.replace(/\D/g, '');
+    // Limit to max 16 digits
+    value = value.slice(0, 16);
+    
+    setCardDetails(prev => ({
+      ...prev,
+      cardNumber: value
+    }));
+  };
+
+  const formatCardExpiry = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let { value } = e.target;
+    // Remove anything that's not a digit or slash
+    value = value.replace(/[^\d/]/g, '');
+    
+    // If user is typing and gets to 2 digits, add slash automatically
+    if (value.length === 2 && !value.includes('/') && e.target.selectionStart === 2) {
+      value = `${value}/`;
+    }
+    
+    // Don't allow more than 5 chars (MM/YY)
+    value = value.slice(0, 5);
+    
+    setCardDetails(prev => ({
+      ...prev,
+      cardExpiry: value
+    }));
+  };
+
+  const formatCardCvc = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let { value } = e.target;
+    // Remove anything that's not a digit
+    value = value.replace(/\D/g, '');
+    // Limit to max 4 digits
+    value = value.slice(0, 4);
+    
+    setCardDetails(prev => ({
+      ...prev,
+      cardCvc: value
+    }));
   };
 
   return (
@@ -225,34 +317,108 @@ const Cart = () => {
       <Dialog open={isCheckoutModalOpen} onOpenChange={setIsCheckoutModalOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Checkout</DialogTitle>
+            <DialogTitle>Complete Your Order</DialogTitle>
             <DialogDescription>
-              Complete your order by selecting a payment method
+              Choose delivery method and enter your payment details
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div 
-                className={`border rounded-lg p-4 cursor-pointer flex flex-col items-center transition-all ${
-                  paymentMethod === "card" ? "border-food-600 bg-food-50" : "hover:border-gray-400"
-                }`}
-                onClick={() => setPaymentMethod("card")}
+          <div className="space-y-6 py-4">
+            {/* Delivery Method Selection */}
+            <div className="space-y-4">
+              <Label>Delivery Method</Label>
+              <RadioGroup 
+                defaultValue="pickup" 
+                value={deliveryMethod} 
+                onValueChange={value => setDeliveryMethod(value as DeliveryMethod)} 
+                className="grid grid-cols-2 gap-4"
               >
-                <CreditCard className="h-8 w-8 mb-2 text-food-600" />
-                <h3 className="font-medium">Pay with Card</h3>
-                <p className="text-sm text-gray-500 text-center">Process payment now</p>
+                <div className={`flex items-center space-x-2 border rounded-lg p-4 cursor-pointer ${
+                  deliveryMethod === "pickup" ? "border-food-600 bg-food-50" : ""
+                }`}>
+                  <RadioGroupItem value="pickup" id="pickup" />
+                  <Label htmlFor="pickup" className="flex items-center cursor-pointer">
+                    <Home className="h-5 w-5 mr-2 text-food-600" />
+                    Pickup
+                  </Label>
+                </div>
+                
+                <div className={`flex items-center space-x-2 border rounded-lg p-4 cursor-pointer ${
+                  deliveryMethod === "delivery" ? "border-food-600 bg-food-50" : ""
+                }`}>
+                  <RadioGroupItem value="delivery" id="delivery" />
+                  <Label htmlFor="delivery" className="flex items-center cursor-pointer">
+                    <Truck className="h-5 w-5 mr-2 text-food-600" />
+                    Delivery
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+            
+            {/* Card Payment Form */}
+            <div className="space-y-4 border rounded-lg p-4">
+              <div className="flex items-center mb-2">
+                <CreditCard className="h-5 w-5 mr-2 text-food-600" />
+                <h3 className="text-lg font-medium">Payment Details</h3>
               </div>
               
-              <div 
-                className={`border rounded-lg p-4 cursor-pointer flex flex-col items-center transition-all ${
-                  paymentMethod === "pickup" ? "border-food-600 bg-food-50" : "hover:border-gray-400"
-                }`}
-                onClick={() => setPaymentMethod("pickup")}
-              >
-                <Home className="h-8 w-8 mb-2 text-food-600" />
-                <h3 className="font-medium">Pay at Pickup</h3>
-                <p className="text-sm text-gray-500 text-center">Pay when collecting your order</p>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="cardName">Cardholder Name</Label>
+                  <Input 
+                    id="cardName" 
+                    name="cardName"
+                    placeholder="John Smith" 
+                    value={cardDetails.cardName}
+                    onChange={handleInputChange}
+                    className={cardErrors.cardName ? "border-red-500" : ""}
+                  />
+                  {cardErrors.cardName && <p className="text-red-500 text-xs mt-1">Please enter a valid name</p>}
+                </div>
+                
+                <div>
+                  <Label htmlFor="cardNumber">Card Number</Label>
+                  <Input 
+                    id="cardNumber" 
+                    name="cardNumber"
+                    placeholder="1234 5678 9012 3456"
+                    value={cardDetails.cardNumber}
+                    onChange={formatCardNumber}
+                    className={cardErrors.cardNumber ? "border-red-500" : ""}
+                    maxLength={16}
+                  />
+                  {cardErrors.cardNumber && <p className="text-red-500 text-xs mt-1">Please enter a valid card number</p>}
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="cardExpiry">Expiry Date</Label>
+                    <Input 
+                      id="cardExpiry"
+                      name="cardExpiry" 
+                      placeholder="MM/YY" 
+                      value={cardDetails.cardExpiry}
+                      onChange={formatCardExpiry}
+                      className={cardErrors.cardExpiry ? "border-red-500" : ""}
+                      maxLength={5}
+                    />
+                    {cardErrors.cardExpiry && <p className="text-red-500 text-xs mt-1">Please enter a valid date (MM/YY)</p>}
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="cardCvc">CVC</Label>
+                    <Input 
+                      id="cardCvc" 
+                      name="cardCvc"
+                      placeholder="123" 
+                      value={cardDetails.cardCvc}
+                      onChange={formatCardCvc}
+                      className={cardErrors.cardCvc ? "border-red-500" : ""}
+                      maxLength={4}
+                    />
+                    {cardErrors.cardCvc && <p className="text-red-500 text-xs mt-1">Please enter a valid CVC</p>}
+                  </div>
+                </div>
               </div>
             </div>
             
@@ -268,9 +434,17 @@ const Cart = () => {
                   <span>{restaurant.name}</span>
                 </div>
               )}
+              {deliveryMethod === "delivery" && (
+                <div className="flex justify-between mb-1">
+                  <span>Delivery Fee:</span>
+                  <span>${(restaurant?.deliveryFee || 2).toFixed(2)}</span>
+                </div>
+              )}
               <div className="flex justify-between font-bold text-lg mt-2 pt-2 border-t">
                 <span>Total:</span>
-                <span>${totalPrice.toFixed(2)}</span>
+                <span>${(
+                  totalPrice + (deliveryMethod === "delivery" ? (restaurant?.deliveryFee || 2) : 0)
+                ).toFixed(2)}</span>
               </div>
             </div>
           </div>
@@ -287,7 +461,7 @@ const Cart = () => {
               onClick={handlePayment}
               disabled={isProcessing}
             >
-              {isProcessing ? "Processing..." : paymentMethod === "card" ? "Pay Now" : "Place Order"}
+              {isProcessing ? "Processing..." : "Complete Payment"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -316,10 +490,21 @@ const Cart = () => {
             </div>
             
             <p className="text-center text-gray-600 mb-4">
-              {paymentMethod === "card" 
-                ? "Your payment was successful and your order has been placed." 
-                : "Your order has been placed. Please pay when you pick up your order."}
+              Your payment was successful and your order has been placed.
             </p>
+            
+            <div className="bg-gray-50 w-full p-4 rounded-lg mb-4">
+              <h4 className="font-medium mb-2 text-center">Order Details</h4>
+              {deliveryMethod === "pickup" ? (
+                <p className="text-center text-gray-500">
+                  You will pick up your order at the restaurant
+                </p>
+              ) : (
+                <p className="text-center text-gray-500">
+                  Your order will be delivered to your address
+                </p>
+              )}
+            </div>
             
             <p className="text-sm text-gray-500 text-center">
               You will receive an email confirmation shortly.

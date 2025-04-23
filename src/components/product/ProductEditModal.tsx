@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { FileUpload } from '@/components/ui/file-upload';
 import { Product, Category } from '@/types/models';
 import { toast } from 'sonner';
 
@@ -47,6 +48,8 @@ export const ProductEditModal = ({
   const [isActive, setIsActive] = useState(true);
   const [isNewProduct, setIsNewProduct] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
+  const [productImage, setProductImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   useEffect(() => {
     console.log("Categories in modal:", categories);
@@ -58,9 +61,9 @@ export const ProductEditModal = ({
       setValue('price', product.price || 0);
       setValue('image', product.image || '');
       setValue('quantity', product.quantity || 1);
-      // setValue('categoryName', CategoryInfo.name);
       setIsActive(product.isActive !== false);
       setIsNewProduct(false);
+      setImagePreview(product.image || null);
       
       // Convert the categoryId to string to match the select component expectations
       const initialCategoryId = product.categoryId ? String(product.categoryId) : '';
@@ -75,6 +78,7 @@ export const ProductEditModal = ({
       });
       setIsActive(true);
       setIsNewProduct(true);
+      setImagePreview(null);
       
       // Set default category if available
       const defaultCategoryId = categories.length > 0 ? String(categories[0].id) : '';
@@ -83,16 +87,39 @@ export const ProductEditModal = ({
     }
   }, [product, categories, setValue, reset]);
 
+  const handleFileSelected = (file: File) => {
+    // This would normally upload to Supabase storage, but for now we'll simulate it
+    if (file.size > 0) {
+      setProductImage(file);
+      // Here we'd store the file but for now we'll just set the image to a fake URL
+      // This would be replaced with actual Supabase storage URL in a real implementation
+      // For now, we'll use a "fake" URL that at least indicates the file name
+      setValue('image', `https://storage.example.com/${file.name}`);
+    } else {
+      setProductImage(null);
+      setValue('image', '');
+      setImagePreview(null);
+    }
+  };
+  
+  const handleFileOptimized = (url: string) => {
+    setImagePreview(url);
+  };
+
   const onSubmit = (data: Product) => {
     if (!selectedCategoryId) {
       toast.error("Por favor, selecciona una categoría válida.");
       return; 
     }
     
+    // In a real implementation, we would upload the image here
+    // and get back a URL from Supabase storage
+    
     const productData = {
       ...product,
       ...data,
       isActive,
+      available: isActive, // Sync available with isActive
       categoryId: selectedCategoryId,
     };
 
@@ -157,11 +184,13 @@ export const ProductEditModal = ({
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="image">URL de la imagen</Label>
-            <Input
-              id="image"
-              placeholder="https://example.com/imagen.jpg"
-              {...register('image')}
+            <FileUpload 
+              label="Imagen del producto" 
+              id="product-image"
+              onFileSelected={handleFileSelected}
+              onFileOptimized={handleFileOptimized}
+              currentImage={product?.image}
+              maxSize={2} // 2MB max
             />
           </div>
           

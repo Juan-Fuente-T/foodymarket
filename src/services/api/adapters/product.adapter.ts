@@ -1,27 +1,22 @@
 
-import { Product } from '@/types/models';
-import { GroupedProduct } from '@/types/models';
+import { Product } from "@/types/models";
 
 export const adaptProduct = (data: any): Product => ({
-  id: data.prd_id?.toString() || '',
-  name: data.name || '',
-  description: data.description || '',
-  price: data.price || 0,
-  image: data.image || '',
-  isActive: data.isActive !== false, // Default to true if not explicitly false
-  available: data.isActive !== false, // Always set available field to same value as isActive
-  quantity: data.quantity || 0,
-  restaurantId: data.restaurantId?.toString() || '',
-  categoryId: data.categoryId?.toString() || '',
-  createdAt: data.prd_fecha_alta?.toString() || new Date().toISOString(),
-  updatedAt: data.prd_fecha_actualizacion?.toString() || new Date().toISOString(),
-  categoryName: data.categoryName
+  id: data.id.toString() || "",
+  name: data.name || "",
+  description: data.description || "",
+  price: parseFloat(data.price) || 0,
+  image: data.image || "",
+  isActive: data.isActive === undefined ? true : Boolean(data.isActive),
+  available: data.available === undefined ? true : Boolean(data.available), // Always set to same value as isActive
+  quantity: parseInt(data.quantity) || 1,
+  restaurantId: data.restaurantId?.toString() || "",
+  categoryId: data.categoryId?.toString() || "",
+  createdAt: data.createdAt?.toString() || new Date().toISOString(),
+  updatedAt: data.updatedAt?.toString() || new Date().toISOString(),
+  categoryName: data.categoryName || "",
 });
 
-export const adaptGroupedProduct = (data: any): GroupedProduct => ({
-  categoryName: data.categoryName,
-  categoryId: data.categoryId,
-  restaurantName: data.restaurantName,
-  restaurantId: data.restaurantId,
-  products: data.products
-});
+export const adaptProducts = (data: any[]): Product[] => {
+  return data.map(adaptProduct);
+};
