@@ -1,3 +1,4 @@
+
 import { Restaurant } from "@/types/models";
 
 export const adaptRestaurant = (data: any): Restaurant => ({
@@ -13,6 +14,7 @@ export const adaptRestaurant = (data: any): Restaurant => ({
   // cuisine: data.cuisine || null,
   cuisineId: data.cuisineId || 0,
   cuisineName: data.cuisineName || '',
+  category: data.cuisineName || '', // Map cuisineName to category for compatibility
   ownerId: data.rst_user_id?.toString() || '',
   createdAt: data.createdAt?.toString() || new Date().toISOString(),
   updatedAt: data.updatedAt?.toString() || new Date().toISOString(),

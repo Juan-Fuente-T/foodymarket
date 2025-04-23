@@ -39,6 +39,11 @@ const RestaurantDetails = () => {
     setSelectedProduct(null);
   };
 
+  // Get the category name (either from category or cuisineName)
+  const getCategoryName = (restaurant) => {
+    return restaurant?.category || restaurant?.cuisineName || 'Uncategorized';
+  };
+
   return (
     <Layout>
       <div className="container mx-auto py-8 px-4">
@@ -81,7 +86,7 @@ const RestaurantDetails = () => {
                     <div className="flex flex-wrap gap-3 text-sm">
                       <span className="flex items-center gap-1">
                         <Utensils className="h-4 w-4" />
-                        {restaurant.category}
+                        {getCategoryName(restaurant)}
                       </span>
                       {restaurant.rating && (
                         <span className="flex items-center gap-1">

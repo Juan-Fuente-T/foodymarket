@@ -1,4 +1,3 @@
-
 // export type UserRole = 'cliente' | 'restaurante' | 'admin';
 export type UserRole = 'CLIENTE' | 'RESTAURANTE';
 
@@ -44,6 +43,7 @@ export interface Restaurant {
   logoImage?: string; // Added for backward compatibility
   minOrderAmount?: number;
   deliveryFee?: number;
+  category?: string; // Added for backward compatibility - maps to cuisineName
 }
 
 export interface Product {

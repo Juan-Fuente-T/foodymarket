@@ -34,8 +34,10 @@ const Restaurants = () => {
     
     const uniqueCategories = new Set<string>();
     restaurants.forEach(restaurant => {
-      if (restaurant.category) {
-        uniqueCategories.add(restaurant.category);
+      // Check for both category and cuisineName as fallback
+      const categoryName = restaurant.category || restaurant.cuisineName;
+      if (categoryName) {
+        uniqueCategories.add(categoryName);
       }
     });
     
@@ -50,7 +52,7 @@ const Restaurants = () => {
       : true;
       
     const matchesCategory = selectedCategory
-      ? restaurant.category === selectedCategory
+      ? (restaurant.category === selectedCategory || restaurant.cuisineName === selectedCategory)
       : true;
       
     return matchesSearch && matchesCategory;
