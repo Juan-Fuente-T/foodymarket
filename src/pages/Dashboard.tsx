@@ -325,21 +325,25 @@ const RestaurantDashboard = () => {
     }
   });
 
-  const { mutate: deleteProduct } = useMutation({
-    mutationFn: (productId: string) => {
-      console.log("Deleting product with ID:", productId);
-      if (!productId || productId === "undefined" || productId === "") {
-        throw new Error("Invalid product ID for deletion");
+  const { mutate: deleteCategory } = useMutation({
+    mutationFn: (vars: { categoryId: string; restaurantId: string }) => {
+      console.log("Deleting category with ID:", vars.categoryId);
+      if (!vars.categoryId || vars.categoryId === "undefined" || vars.categoryId === "") {
+        throw new Error("Invalid categoryId ID for category deletion");
       }
-      return productAPI.delete(productId);
+      if (!vars.restaurantId || vars.restaurantId  === "undefined" || vars.restaurantId  === "") {
+        throw new Error("Invalid restaurantId ID for category deletion");
+      }
+      return categoryAPI.delete(vars.categoryId, vars.restaurantId);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["groupedProducts", selectedRestaurant?.id] });
-      toast.success("Producto eliminado con éxito");
+    onSuccess: (data, vars) => {
+      toast.success(`Categoría global (ID: ${vars.categoryId}) eliminada con éxito`);
+      queryClient.invalidateQueries({ queryKey: ['restaurantProductCategories', vars.restaurantId] });
+      queryClient.invalidateQueries({ queryKey: ['groupedProducts', vars.restaurantId] });
     },
-    onError: (error) => {
-      console.error("Error deleting product:", error);
-      toast.error("Error al eliminar el producto");
+    onError: (error: Error) => {
+      console.error("Error deleting global category:", error);
+      toast.error(`Error al eliminar categoría global: ${error.message}`);
     }
   });
 
@@ -361,28 +365,6 @@ const RestaurantDashboard = () => {
     onError: (error: Error) => {
       console.error("Error creating category:", error);
       toast.error(`Error al añadir categoría: ${error.message}`);
-    }
-  });
-
-  const { mutate: deleteCategory } = useMutation({
-    mutationFn: (vars: { categoryId: string; restaurantId: string }) => {
-      console.log("Deleting category with ID:", vars.categoryId);
-      if (!vars.categoryId || vars.categoryId === "undefined" || vars.categoryId === "") {
-        throw new Error("Invalid categoryId ID for category deletion");
-      }
-      if (!vars.restaurantId || vars.restaurantId  === "undefined" || vars.restaurantId  === "") {
-        throw new Error("Invalid restaurantId ID for category deletion");
-      }
-      return categoryAPI.delete(vars.categoryId, vars.restaurantId);
-    },
-    onSuccess: (data, vars) => {
-      toast.success(`Categoría global (ID: ${vars.categoryId}) eliminada con éxito`);
-      queryClient.invalidateQueries({ queryKey: ['restaurantProductCategories', vars.restaurantId] });
-      queryClient.invalidateQueries({ queryKey: ['groupedProducts', vars.restaurantId] });
-    },
-    onError: (error: Error) => {
-      console.error("Error deleting global category:", error);
-      toast.error(`Error al eliminar categoría global: ${error.message}`);
     }
   });
 
@@ -504,19 +486,6 @@ const RestaurantDashboard = () => {
     });
   };
 
-  const handleDeleteCategory = (categoryId: string) => {
-    const restaurantId = selectedRestaurant?.id;
-    if (restaurantId === undefined || restaurantId === null) {
-      console.error("ERROR: selectedRestaurant.id es undefined o null.");
-      toast.error("Error: No se ha seleccionado un restaurante válido.");
-      return;
-    }
-    deleteCategory({
-      categoryId: categoryId,
-      restaurantId: restaurantId.toString()
-    });
-  };
-
   const orderStatusData = useMemo(() => {
     const statusCounts: { [key: string]: number } = {
       pending: 0,
@@ -588,33 +557,6 @@ const RestaurantDashboard = () => {
       </Layout>
     );
   }
-
-  const deleteProduct = async (productId: string, imagePath?: string) => {
-    try {
-      await productAPI.delete(productId);
-      
-      if (imagePath) {
-        const imageUrl = new URL(imagePath);
-        const pathParts = imageUrl.pathname.split('/');
-        const bucketPath = pathParts.slice(2).join('/');
-
-        const { error } = await supabase.storage
-          .from('fotos-c24-39-t-webapp')
-          .remove([bucketPath]);
-          
-        if (error) {
-          console.error('Error deleting image:', error);
-          toast.error('Product deleted but failed to delete image');
-        }
-      }
-      
-      toast.success('Product deleted successfully');
-      queryClient.invalidateQueries({ queryKey: ['groupedProducts'] });
-    } catch (error) {
-      console.error('Error deleting product:', error);
-      toast.error('Failed to delete product');
-    }
-  };
 
   return (
     <Layout>
@@ -743,8 +685,49 @@ const RestaurantDashboard = () => {
           </>
         )}
       </div>
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure you want to delete this product?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the product.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteProduct}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Layout>
   );
+
+  const deleteProduct = async (productId: string, imagePath?: string) => {
+    try {
+      await productAPI.delete(productId);
+      
+      if (imagePath) {
+        const imageUrl = new URL(imagePath);
+        const pathParts = imageUrl.pathname.split('/');
+        const bucketPath = pathParts.slice(2).join('/');
+
+        const { error } = await supabase.storage
+          .from('fotos-c24-39-t-webapp')
+          .remove([bucketPath]);
+          
+        if (error) {
+          console.error('Error deleting image:', error);
+          toast.error('Product deleted but failed to delete image');
+        }
+      }
+      
+      toast.success('Product deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ['groupedProducts'] });
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      toast.error('Failed to delete product');
+    }
+  };
 };
 
 export default Dashboard;
