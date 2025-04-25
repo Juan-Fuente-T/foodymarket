@@ -1,3 +1,4 @@
+
 import React, { useEffect, useMemo, useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useAuth } from "../hooks/use-auth";
@@ -410,7 +411,7 @@ const RestaurantDashboard = () => {
   const confirmDeleteProduct = () => {
     if (productToDelete && productToDelete.id) {
       console.log("Confirming delete for product:", productToDelete.id);
-      deleteProduct(productToDelete.id);
+      deleteProduct(productToDelete.id, productToDelete.image);
     } else {
       console.error("Attempted to delete product without ID");
       toast.error("Error: No se puede eliminar un producto sin ID");
@@ -533,6 +534,34 @@ const RestaurantDashboard = () => {
   }, [completedOrders]);
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
+
+  // Function to delete a product and its image
+  const deleteProduct = async (productId: string, imagePath?: string) => {
+    try {
+      await productAPI.delete(productId);
+      
+      if (imagePath) {
+        const imageUrl = new URL(imagePath);
+        const pathParts = imageUrl.pathname.split('/');
+        const bucketPath = pathParts.slice(2).join('/');
+
+        const { error } = await supabase.storage
+          .from('fotos-c24-39-t-webapp')
+          .remove([bucketPath]);
+          
+        if (error) {
+          console.error('Error deleting image:', error);
+          toast.error('Product deleted but failed to delete image');
+        }
+      }
+      
+      toast.success('Product deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ['groupedProducts'] });
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      toast.error('Failed to delete product');
+    }
+  };
 
   if (isLoadingRestaurants) {
     return <Layout><div className="p-8">Loading your restaurants...</div></Layout>;
@@ -701,33 +730,6 @@ const RestaurantDashboard = () => {
       </AlertDialog>
     </Layout>
   );
-
-  const deleteProduct = async (productId: string, imagePath?: string) => {
-    try {
-      await productAPI.delete(productId);
-      
-      if (imagePath) {
-        const imageUrl = new URL(imagePath);
-        const pathParts = imageUrl.pathname.split('/');
-        const bucketPath = pathParts.slice(2).join('/');
-
-        const { error } = await supabase.storage
-          .from('fotos-c24-39-t-webapp')
-          .remove([bucketPath]);
-          
-        if (error) {
-          console.error('Error deleting image:', error);
-          toast.error('Product deleted but failed to delete image');
-        }
-      }
-      
-      toast.success('Product deleted successfully');
-      queryClient.invalidateQueries({ queryKey: ['groupedProducts'] });
-    } catch (error) {
-      console.error('Error deleting product:', error);
-      toast.error('Failed to delete product');
-    }
-  };
 };
 
 export default Dashboard;
