@@ -12,7 +12,7 @@ const Orders = () => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
-  const { data: orders = [], isLoading } = useQuery({
+  const { data: orders = [], isLoading, refetch } = useQuery({
     queryKey: ['orders', user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
@@ -37,6 +37,11 @@ const Orders = () => {
   const handleViewDetails = (order: Order) => {
     setSelectedOrder(order);
     setIsDetailsModalOpen(true);
+  };
+
+  const handleStatusUpdate = () => {
+    // Refetch orders after status update
+    refetch();
   };
 
   return (
@@ -95,19 +100,7 @@ const Orders = () => {
             setIsDetailsModalOpen(false);
             setSelectedOrder(null);
           }}
-          onStatusChange={() => {
-            if (user?.id) {
-              if (user.role === "RESTAURANTE") {
-                getRestaurantsForUser(user.id).then(restaurants => {
-                  if (restaurants.length > 0) {
-                    orderAPI.getByRestaurant(restaurants[0].id.toString());
-                  }
-                });
-              } else {
-                orderAPI.getByClient(user.id);
-              }
-            }
-          }}
+          onStatusChange={handleStatusUpdate}
         />
       </div>
     </Layout>
