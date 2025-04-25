@@ -1,12 +1,20 @@
+
 // lib/supabaseClient.ts
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Default values for development (these should be replaced with proper values in production)
+const defaultSupabaseUrl = 'https://your-project-id.supabase.co';
+const defaultSupabaseKey = 'your-anon-key';
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error("Supabase URL or Anon Key is missing in environment variables.");
-  // Se podría lanzar un error o manejarlo de otra forma
+// Try to get environment variables, fallback to defaults for development
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || defaultSupabaseUrl;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || defaultSupabaseKey;
+
+// Check if we're using default values in production
+if (import.meta.env.PROD && (supabaseUrl === defaultSupabaseUrl || supabaseAnonKey === defaultSupabaseKey)) {
+  console.error("Production environment detected but using default Supabase credentials. Please set proper environment variables.");
 }
 
-export const supabase = createClient(supabaseUrl!, supabaseAnonKey!);
+console.log("Initializing Supabase with URL:", supabaseUrl);
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
