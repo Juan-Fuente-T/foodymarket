@@ -1,3 +1,4 @@
+
 import { Order } from '@/types/models';
 import { adaptOrderItem } from './order-details.adapter.ts';
 
@@ -10,5 +11,8 @@ export const adaptOrder = (data: any): Order => ({
   comments: data.comments || '',
   createdAt: data.createdAt?.toString() || new Date().toISOString(),
   updatedAt: data.updatedAt?.toString() || new Date().toISOString(),
-  details: data.details?.map(adaptOrderItem) || []
+  details: Array.isArray(data.details) ? data.details.map((item: any) => ({
+    ...adaptOrderItem(item),
+    productName: item.product?.name || 'Unknown Product'
+  })) : []
 });
