@@ -82,7 +82,7 @@ export interface Order {
   comments?: string;
   createdAt: string;
   updatedAt: string;
-  items: OrderItem[]; // Relación con OrderDetails
+  details: OrderItem[]; // Relación con OrderDetails
 }
 
 export interface OrderItem {

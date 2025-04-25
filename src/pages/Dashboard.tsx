@@ -23,6 +23,7 @@ import { CategoryManagement } from "@/components/category/CategoryManagement";
 import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
+
 const Dashboard = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
@@ -159,11 +160,11 @@ const CustomerDashboard = () => {
                       <TableCell>{order.restaurantId}</TableCell>
                       <TableCell>
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${order?.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                          order.status === 'preparing' ? 'bg-blue-100 text-blue-800' :
-                            order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                          order?.status === 'preparing' ? 'bg-blue-100 text-blue-800' :
+                            order?.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                               'bg-gray-100 text-gray-800'
                           }`}>
-                          {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                          {order?.status.charAt(0).toUpperCase() + order?.status.slice(1)}
                         </span>
                       </TableCell>
                       <TableCell className="text-right">${order?.total.toFixed(2)}</TableCell>
@@ -259,7 +260,6 @@ const RestaurantDashboard = () => {
     groupedProductsData.forEach((categoryGroup: any) => {
       const currentGroupId = categoryGroup.categoryId ?? null;
       const currentGroupName = categoryGroup.categoryName || '';
-      console.log("MERDA", currentGroupId, currentGroupId);
 
       if (!categoryGroup.products || !Array.isArray(categoryGroup.products)) {
         return;
@@ -290,10 +290,9 @@ const RestaurantDashboard = () => {
 
   const { data: offeredCategories = [], isLoading: isLoadingCategories } = useQuery({
     queryKey: ["restaurantProductCategories", selectedRestaurant?.id], // Clave más clara
-    queryFn: () => restaurantAPI.getProductGategories(selectedRestaurant!.id.toString()),
+    queryFn: () => restaurantAPI.getProductCategories(selectedRestaurant!.id.toString()),
     enabled: !!selectedRestaurant?.id,
   });
-  // Usar el nuevo nombre en el log (opcional, quitar logs cuando funcione)
   console.log("restaurantProductCategories:", offeredCategories ? offeredCategories : 'NADA');
 
   const categoriesDataForModal = useMemo(() => {
@@ -481,7 +480,7 @@ const RestaurantDashboard = () => {
     } else {
       quantityNum = 1; // Default 1 si no viene? O error?
     }
-
+    console.log("PRODUCTDATA:", productData);
     const finalData: any = {
       name: productData.name,
       description: productData.description,
@@ -549,7 +548,7 @@ const RestaurantDashboard = () => {
 
     orders.forEach((order: any) => {
       if (order?.status in statusCounts) {
-        statusCounts[order.status]++;
+        statusCounts[order?.status]++;
       }
     });
 
@@ -832,12 +831,12 @@ const RestaurantDashboard = () => {
                               <TableCell className="font-medium">{order.id.slice(0, 8)}</TableCell>
                               <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
                               <TableCell>
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${order.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                                  order.status === 'preparing' ? 'bg-blue-100 text-blue-800' :
-                                    order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${order?.status === 'delivered' ? 'bg-green-100 text-green-800' :
+                                  order?.status === 'preparing' ? 'bg-blue-100 text-blue-800' :
+                                    order?.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                                       'bg-gray-100 text-gray-800'
                                   }`}>
-                                  {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                                  {order?.status.charAt(0).toUpperCase() + order?.status.slice(1)}
                                 </span>
                               </TableCell>
                               <TableCell className="text-right">${order.total.toFixed(2)}</TableCell>
@@ -886,13 +885,14 @@ const RestaurantDashboard = () => {
                             <TableRow key={order.id}>
                               <TableCell className="font-medium">{order.id.slice(0, 8)}</TableCell>
                               <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
+                              {/* <TableCell>{order.createdAt}</TableCell> */}
                               <TableCell>
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${order.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                                  order.status === 'preparing' ? 'bg-blue-100 text-blue-800' :
-                                    order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                      'bg-gray-100 text-gray-800'
-                                  }`}>
-                                  {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${order?.status === 'delivered' ? 'bg-green-100 text-green-800' :
+                                  order?.status === 'preparing' ? 'bg-blue-100 text-blue-800' :
+                                  order?.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                  'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {order?.status.charAt(0).toUpperCase() + order?.status.slice(1)}
                                 </span>
                               </TableCell>
                               <TableCell className="text-right">${order.total.toFixed(2)}</TableCell>

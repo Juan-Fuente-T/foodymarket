@@ -129,7 +129,7 @@ const Cart = () => {
         status: "pagado" as OrderStatus,
         total: totalPrice,
         comments: deliveryMethod === "pickup" ? "Customer will pickup" : "Delivery to customer address",
-        items: items.map(item => ({
+        details: items.map(item => ({
           id: '',
           productId: item.productId,
           quantity: item.quantity,

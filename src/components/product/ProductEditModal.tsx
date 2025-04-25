@@ -23,6 +23,8 @@ import {
 import { FileUpload } from '@/components/ui/file-upload';
 import { Product, Category } from '@/types/models';
 import { toast } from 'sonner';
+import { uploadFileToSupabase } from '@/lib/supabaseStorage';
+import { useAuth } from '@/hooks/use-auth';
 
 interface CategoryInfo {
   id: string | number;
@@ -36,6 +38,10 @@ interface ProductEditModalProps {
   onClose: () => void;
   onSave: (product: Product, isNew: boolean) => void;
 }
+type UploadResult = {
+  url: string; // La URL pública de Supabase
+  path: string; // La ruta interna del archivo en Supabase (para borrarlo si es necesario)
+};
 
 export const ProductEditModal = ({ 
   product, 
@@ -50,6 +56,9 @@ export const ProductEditModal = ({
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
   const [productImage, setProductImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  // const { user, isAuthenticated, isLoading } = useAuth();
+  const { user } = useAuth();
 
   useEffect(() => {
     console.log("Categories in modal:", categories);
@@ -87,18 +96,11 @@ export const ProductEditModal = ({
     }
   }, [product, categories, setValue, reset]);
 
-  const handleFileSelected = (file: File) => {
-    // This would normally upload to Supabase storage, but for now we'll simulate it
-    if (file.size > 0) {
-      setProductImage(file);
-      // Here we'd store the file but for now we'll just set the image to a fake URL
-      // This would be replaced with actual Supabase storage URL in a real implementation
-      // For now, we'll use a "fake" URL that at least indicates the file name
-      setValue('image', `https://storage.example.com/${file.name}`);
-    } else {
-      setProductImage(null);
-      setValue('image', '');
-      setImagePreview(null);
+  const handleFileSelected = (imageFile: File | null) => {
+    setProductImage(imageFile);
+
+    if (!imageFile) {
+        setImagePreview(product?.image || null); // Volver a la original o null
     }
   };
   
@@ -106,32 +108,60 @@ export const ProductEditModal = ({
     setImagePreview(url);
   };
 
-  const onSubmit = (data: Product) => {
+  const onSubmit = async (data: Product) => {
+    if (!user) { toast.error("User not authenticated."); return; } 
+
     if (!selectedCategoryId) {
       toast.error("Por favor, selecciona una categoría válida.");
       return; 
     }
-    
-    // In a real implementation, we would upload the image here
-    // and get back a URL from Supabase storage
+  
+    const submittingToast = toast.loading("Guardando producto..."); 
+    let uploadResult: UploadResult | null = null; // Usamos el tipo consistente { url, path } | null
+    let uploadAttempted = false;
+
+    try {
+        // --- Subida de Imagen (SOLO si se seleccionó una NUEVA) ---
+        if (productImage) { // <-- Comprueba si hay un archivo nuevo en el estado
+            uploadAttempted = true;
+            console.log("Intentando subir nueva imagen de producto...");
+            uploadResult = await uploadFileToSupabase(productImage, 'fotos-productos', user.id);
+            if (!uploadResult) {
+                // El error ya se muestra en uploadFileToSupabase, lanzamos para ir al catch
+                 throw new Error("Fallo al subir la imagen del producto.");
+            }
+             // TODO Opcional: Borrar imagen antigua si la subida fue exitosa y estamos editando
+             // if (uploadResult && !isNewProduct && product?.image) { /* Lógica borrar */ }
+        }
     
     const productData = {
       ...product,
       ...data,
+      image: uploadResult ? uploadResult.url : data.image,
       isActive,
-      available: isActive, // Sync available with isActive
+      available: isActive, 
       categoryId: selectedCategoryId,
+      restaurantId: product?.restaurantId,
     };
-
+     // Quitar campos que no deben enviarse (si EditRestaurantApiPayload fuera más estricto)
+     // delete productData.categoryName; // Si el tipo Product lo tiene y la API no lo quiere
+ 
     const finalProductData = isNewProduct
       ? productData 
       : { ...productData, id: product!.id };
       
     console.log("Sending product data to save:", finalProductData);
     onSave(finalProductData, isNewProduct);
+    toast.success(isNewProduct ? 'Producto Creado' : 'Producto Actualizado', { id: submittingToast });
     onClose();
-  };
-
+  }catch (error: any) {
+    console.error("Error en onSubmit del producto:", error);
+    toast.error(error.message || "Error al guardar el producto.", { id: submittingToast });
+    // Aquí NO se hace rollback de Supabase porque onSave es quien confirma la operación final
+    // El rollback iría DENTRO de la lógica de onSave si la llamada a la API backend falla DESPUÉS de subir a Supabase.
+    // Pero como aquí onSave viene después, si upload falla, ya ha parado.
+}
+};
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px]">
@@ -189,7 +219,7 @@ export const ProductEditModal = ({
               id="product-image"
               onFileSelected={handleFileSelected}
               onFileOptimized={handleFileOptimized}
-              currentImage={product?.image}
+              currentImage={imagePreview}
               maxSize={2} // 2MB max
             />
           </div>

@@ -13,6 +13,7 @@ import { adaptProduct } from '../services/api/adapters/product.adapter';
 import { adaptOrder } from '../services/api/adapters/order.adapter';
 import { adaptReview } from '../services/api/adapters/review.adapter';
 import { adaptUser } from '../services/api/adapters/user.adapter';
+import { adaptCategory } from "./api/adapters/category.adapter";
 
 // Base URL for API requests - Using localhost for development
 const API_BASE_URL = "http://localhost:8080/api";
@@ -241,11 +242,19 @@ export const restaurantAPI = {
     console.log("Data received from API getByOwnerId:", data);
     return data.map(adaptRestaurant);
   },
-  getProductGategories: async(id: string): Promise<Category[]> =>{
-    const data = await fetchWithError(`/restaurant/${id}/categories`); // <-- Añade false
-    console.log("Categories received from API getProductGategories:", data);
-    return data;
-  },
+  getProductCategories: async (restaurantId: string): Promise<Category[]> => { // Asegura que devuelve Category[]
+    console.log(`Workspaceing product categories for restaurant ${restaurantId}`);
+    const rawData = await fetchWithError(`/restaurant/${restaurantId}/categories`); // O la URL correcta
+    console.log("Raw product categories received:", rawData);
+
+    if (!Array.isArray(rawData)) {
+         console.error("getProductCategories did not return an array:", rawData);
+         return [];
+    }
+    const adaptedData = rawData.map(adaptCategory);
+    console.log("Adapted product categories (from API function):", adaptedData);
+    return adaptedData; 
+},
 
   // getByCategory: async (categoryId: string) => {
   //   const data = await fetchWithError(`/restaurant/byCategory/${categoryId}`);
@@ -302,12 +311,12 @@ export const restaurantCuisinesAPI = {
 export const categoryAPI = {
   getAll: async () => {
     const data = await fetchWithError("/category");
-    return data.map();
+    return data.map(adaptCategory);
   },
 
   getById: async (id: string) => {
     const data = await fetchWithError(`/category/${id}`);
-    return data;
+    return adaptCategory(data);
   },
 
   // update: async (id: string, data: Partial<Category>) => {
@@ -409,8 +418,11 @@ export const orderAPI = {
   getByRestaurant: async (restaurantId: string) => {
     console.log("RestaurantID en Order: ", restaurantId);
     const data = await fetchWithError(`/order?restaurantId=${restaurantId}`);
-    console.log("ORDERS: ", data);
-    return data.map(adaptOrder);
+    console.log("DATA ORDERS: ", data);
+    const orders = data.map(adaptOrder);
+    console.log("ORDERS: ", orders);
+    // return data.map(adaptOrder);
+    return orders;
   },
 
   getById: async (ord_id: string) => {

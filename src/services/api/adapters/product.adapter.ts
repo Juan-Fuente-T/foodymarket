@@ -2,7 +2,7 @@
 import { Product } from "@/types/models";
 
 export const adaptProduct = (data: any): Product => ({
-  id: data.id.toString() || "",
+  id: data.prd_id.toString() || "",
   name: data.name || "",
   description: data.description || "",
   price: parseFloat(data.price) || 0,
