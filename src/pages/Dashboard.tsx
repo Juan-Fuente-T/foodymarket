@@ -24,7 +24,6 @@ import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { supabase } from "@/lib/supabaseClient";
 
-
 const Dashboard = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
@@ -245,19 +244,17 @@ const RestaurantDashboard = () => {
   });
 
   const { data: groupedProductsData = [], isLoading: isLoadingProducts } = useQuery({
-    queryKey: ["groupedProducts", selectedRestaurant?.id], // Clave específica para productos agrupados
+    queryKey: ["groupedProducts", selectedRestaurant?.id],
     queryFn: () => productAPI.getByRestaurantAndCategory(selectedRestaurant!.id.toString()),
     enabled: !!selectedRestaurant?.id,
   });
 
   const allProducts = useMemo((): Product[] => {
-    // Usa 'groupedProductsData' COMO INPUT!!
     if (!groupedProductsData || !Array.isArray(groupedProductsData)) {
       return [];
     }
     const flattenedProducts: Product[] = [];
     console.log("FLATTENED: ", flattenedProducts);
-    // Itera sobre la estructura agrupada que devuelve getByRestaurantAndCategory
     groupedProductsData.forEach((categoryGroup: any) => {
       const currentGroupId = categoryGroup.categoryId ?? null;
       const currentGroupName = categoryGroup.categoryName || '';
@@ -267,7 +264,6 @@ const RestaurantDashboard = () => {
       }
 
       categoryGroup.products.forEach((backendProduct: any) => {
-        // Mapea los campos del backendProduct a tu tipo Product del frontend
         const frontendProduct = {
           id: String(backendProduct.prd_id ?? ''),
           name: backendProduct.name || '',
@@ -290,11 +286,10 @@ const RestaurantDashboard = () => {
   }, [groupedProductsData]);
 
   const { data: offeredCategories = [], isLoading: isLoadingCategories } = useQuery({
-    queryKey: ["restaurantProductCategories", selectedRestaurant?.id], // Clave más clara
+    queryKey: ["restaurantProductCategories", selectedRestaurant?.id],
     queryFn: () => restaurantAPI.getProductCategories(selectedRestaurant!.id.toString()),
     enabled: !!selectedRestaurant?.id,
   });
-  console.log("restaurantProductCategories:", offeredCategories ? offeredCategories : 'NADA');
 
   const categoriesDataForModal = useMemo(() => {
     if (!Array.isArray(offeredCategories)) return [];
@@ -303,7 +298,6 @@ const RestaurantDashboard = () => {
       name: category.name
     }));
   }, [offeredCategories]);
-  console.log("CATEGORIAS UNICAS", categoriesDataForModal);
 
   const createProductMutation = useMutation({
     mutationFn: (createData: any) => productAPI.create(createData),
@@ -355,16 +349,14 @@ const RestaurantDashboard = () => {
       if (!vars.restaurantId) throw new Error("Restaurant ID es necesario");
       if (!vars.categoryData || !vars.categoryData.name) throw new Error("Nombre de categoría es necesario");
 
-      // Asume que tienes esta función en tu API client que hace el POST correcto
       return restaurantAPI.addProductCategory(vars.restaurantId, vars.categoryData);
     },
-    onSuccess: (returnedCategory, vars) => { // data es la CategoryResponseDto devuelta por el POST
+    onSuccess: (returnedCategory, vars) => {
       toast.success(`Categoría '${returnedCategory.name}' creada con éxito.`);
       queryClient.invalidateQueries({ queryKey: ['restaurantProductCategories', vars.restaurantId] });
       queryClient.invalidateQueries({ queryKey: ['groupedProducts', vars.restaurantId] });
 
       console.log(`Queries invalidadas después de añadir/asociar categoría a restaurante ${vars.restaurantId}`);
-      // setIsAddCategoryModalOpen(false);
     },
     onError: (error: Error) => {
       console.error("Error creating category:", error);
@@ -383,14 +375,13 @@ const RestaurantDashboard = () => {
       }
       return categoryAPI.delete(vars.categoryId, vars.restaurantId);
     },
-    onSuccess: (data, vars) => { // El segundo argumento es la variable pasada a mutate()
+    onSuccess: (data, vars) => {
       toast.success(`Categoría global (ID: ${vars.categoryId}) eliminada con éxito`);
       queryClient.invalidateQueries({ queryKey: ['restaurantProductCategories', vars.restaurantId] });
       queryClient.invalidateQueries({ queryKey: ['groupedProducts', vars.restaurantId] });
     },
     onError: (error: Error) => {
       console.error("Error deleting global category:", error);
-      // El backend debería devolver un error claro si la categoría está en uso (ej: 409 Conflict o 400 Bad Request)
       toast.error(`Error al eliminar categoría global: ${error.message}`);
     }
   });
@@ -411,11 +402,8 @@ const RestaurantDashboard = () => {
   };
 
   const handleEditProduct = (product: Product) => {
-    // <<< --- AÑADE ESTE LOG AQUÍ --- >>>
     console.log('PRODUCTO QUE LLEGA A handleEditProduct:', JSON.stringify(product, null, 2));
-    // <<< --- FIN DEL LOG AÑADIDO --- >>>
     console.log('PASO 1 - handleEditProductClick - Recibido productToEdit:', product);
-    // Make sure we have a valid product with all required fields
     if (!product.id) {
       console.error("Product missing ID:", product);
       toast.error("Error: ID de producto no encontrado");
@@ -451,14 +439,13 @@ const RestaurantDashboard = () => {
   const handleSaveProduct = (productData: any, isNew: boolean) => {
     console.log("handleSaveProduct received:", productData)
     console.log("isNew???:", isNew);
-    // --- Validación y parseo de tipos ANTES de enviar ---
     let categoryIdNum: number | null = null;
     if (productData.categoryId != null && productData.categoryId !== '') {
       categoryIdNum = parseInt(String(productData.categoryId), 10);
       if (isNaN(categoryIdNum)) {
         toast.error("ID de categoría inválido."); return;
       }
-    } else if (isNew) { // Es obligatorio para crear
+    } else if (isNew) {
       toast.error("La categoría es obligatoria."); return;
     }
 
@@ -479,16 +466,16 @@ const RestaurantDashboard = () => {
         toast.error("Cantidad inválida."); return;
       }
     } else {
-      quantityNum = 1; // Default 1 si no viene? O error?
+      quantityNum = 1;
     }
-    console.log("PRODUCTDATA:", productData);
+
     const finalData: any = {
       name: productData.name,
       description: productData.description,
-      price: priceNum, // Usa el número parseado (o BigDecimal si usas eso)
+      price: priceNum,
       image: productData.image,
       isActive: productData.isActive,
-      quantity: quantityNum, // Usa el número parseado
+      quantity: quantityNum,
       categoryId: categoryIdNum
     };
 
@@ -497,7 +484,6 @@ const RestaurantDashboard = () => {
     }
 
     if (isNew) {
-      console.log("Calling CREATE mutation with:", finalData);
       createProductMutation.mutate(finalData);
     } else {
       if (!productData.id) {
@@ -505,24 +491,18 @@ const RestaurantDashboard = () => {
         return;
       }
       updateProductMutation.mutate({ id: String(productData.id), data: finalData });
-      setIsProductModalOpen(false); // Cierra el modal después de guardar (o en onSuccess)
+      setIsProductModalOpen(false);
       setSelectedProduct(null);
     }
   };
 
-  // const handleAddCategory = (categoryName: string) => {
   const handleAddCategory = (formData: { name: string; description: string }) => {
     console.log("DATA addCategory: ", formData, formData.name, formData.description);
     createCategoryMutation.mutate({
-          restaurantId: selectedRestaurant!.id.toString(),
-          categoryData: { name: formData.name, description: formData.description }
-        });
-    // toast.success(`Categoría "${categoryName}" agregada con éxito`);
+      restaurantId: selectedRestaurant!.id.toString(),
+      categoryData: { name: formData.name, description: formData.description }
+    });
   };
-
-  // const handleEditCategory = (oldName: string, newName: string) => {
-  //   toast.success(`Categoría actualizada de "${oldName}" a "${newName}"`);
-  // };
 
   const handleDeleteCategory = (categoryId: string) => {
     const restaurantId = selectedRestaurant?.id;
@@ -535,7 +515,6 @@ const RestaurantDashboard = () => {
       categoryId: categoryId,
       restaurantId: restaurantId.toString()
     });
-    // toast.success(`Categoría "${categoryId}" eliminada con éxito`);
   };
 
   const orderStatusData = useMemo(() => {
@@ -612,15 +591,13 @@ const RestaurantDashboard = () => {
 
   const deleteProduct = async (productId: string, imagePath?: string) => {
     try {
-      // Delete the product first
       await productAPI.delete(productId);
       
-      // If there's an image associated, delete it from storage
       if (imagePath) {
         const imageUrl = new URL(imagePath);
         const pathParts = imageUrl.pathname.split('/');
-        const bucketPath = pathParts.slice(2).join('/'); // Remove /storage/v1/object/
-        
+        const bucketPath = pathParts.slice(2).join('/');
+
         const { error } = await supabase.storage
           .from('fotos-c24-39-t-webapp')
           .remove([bucketPath]);
@@ -763,3 +740,11 @@ const RestaurantDashboard = () => {
                 </CardContent>
               </Card>
             </div>
+          </>
+        )}
+      </div>
+    </Layout>
+  );
+};
+
+export default Dashboard;
