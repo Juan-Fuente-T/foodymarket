@@ -176,8 +176,8 @@ export default function Home() {
             <div className="bg-white rounded-lg shadow-md p-6">
               <div className="flex items-center mb-4">
                 <img 
-                  className="w-12 h-12 rounded-full mr-4 object-cover" 
-                  src="https://images.unsplash.com/photo-1494790108377-be9c29b2933e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=4&w=256&h=256&q=60" 
+                  className="w-20 h-20 rounded-full mr-4 object-cover" 
+                  src="public/JaneDoe_Photo.webp" 
                   alt="Customer avatar" 
                 />
                 <div>
@@ -192,8 +192,8 @@ export default function Home() {
             <div className="bg-white rounded-lg shadow-md p-6">
               <div className="flex items-center mb-4">
                 <img 
-                  className="w-12 h-12 rounded-full mr-4 object-cover" 
-                  src="https://images.unsplash.com/photo-1500648767791-00d56c3f6955?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=4&w=256&h=256&q=60" 
+                  className="w-20 h-20 rounded-full mr-4 object-cover" 
+                  src="public/JohnSmith_Photo.webp" 
                   alt="Customer avatar" 
                 />
                 <div>
