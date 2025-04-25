@@ -265,7 +265,7 @@ export const restaurantAPI = {
 
   update: async (id: string, data: Partial<Restaurant>) => {
     const response = await fetchWithError(`/restaurant/${id}`, {
-      method: "PUT",
+      method: "PATCH",
       body: JSON.stringify(data),
     });
     return adaptRestaurant(response);
@@ -360,7 +360,7 @@ export const productAPI = {
         image: product.image,
         description: product.description,
         category: categoryGroup.categoryName, 
-        available: product.isActive,
+        isActive: product.isActive,
         quantity: product.quantity,
         restaurantId: product.restaurantId
         // Opcional: agregar más campos si los necesitas en Product

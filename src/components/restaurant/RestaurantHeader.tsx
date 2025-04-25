@@ -1,9 +1,9 @@
 
 import React from 'react';
-import { Star, MapPin, Clock, Phone } from 'lucide-react'; // o el icon library que uses
-import { Badge } from '@/components/ui/badge'; // Ajusta la ruta según tu estructura
-import { Button } from '@/components/ui/button'; // Ajusta la ruta
-import { Restaurant } from '@/types/models'; // Ajusta la ruta de tus tipos
+import { Star, MapPin, Clock, Phone } from 'lucide-react'; 
+import { Badge } from '@/components/ui/badge'; 
+import { Button } from '@/components/ui/button'; 
+import { Restaurant } from '@/types/models'; 
 
 const RestaurantHeader = ({ restaurant }: { restaurant: Restaurant }) => (
   <div className="relative rounded-2xl overflow-hidden mb-8">

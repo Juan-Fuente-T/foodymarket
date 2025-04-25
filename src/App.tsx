@@ -35,8 +35,13 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <CartProvider>
-            <Toaster />
-            <Sonner />
+            <Toaster/>
+            <Sonner  
+            position="top-right"
+            richColors
+            duration={5000}
+            closeButton
+            />
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />

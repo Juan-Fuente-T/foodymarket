@@ -14,6 +14,9 @@ import { toast } from 'sonner';
 import { restaurantAPI, restaurantCuisinesAPI } from '@/services/api';
 import { FileUpload } from '@/components/ui/file-upload';
 import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabaseClient';
+// import { supabase } from '../lib/supabaseClient';
+import { v4 as uuidv4 } from 'uuid';
 
 type RestaurantFormData = {
   restaurantId: number;
@@ -24,7 +27,6 @@ type RestaurantFormData = {
   address: string;
   openingHours: string;
   logo: string;
-  photo: string;
   coverImage: string;
   cuisineId: number;
   cuisineName: string;
@@ -32,17 +34,25 @@ type RestaurantFormData = {
   deliveryFee?: number;
 };
 
+type RestaurantApiPayload = Omit<RestaurantFormData, 'cuisineId'> & {
+  cuisineId: number; // Aseguramos tipo number
+  logo: string | null;
+  coverImage: string | null;
+  ownerId: string | null; 
+};
+
 const RestaurantPartner = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
   const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
+  const BUCKET_NAME = "fotos-c24-39-t-webapp";
 
-  const { register, handleSubmit, setValue, control, watch, formState: { errors } } = useForm<RestaurantFormData>({
+  const { register, handleSubmit, setValue, control, watch, setError, formState: { errors } } = useForm<RestaurantFormData>({
     defaultValues: {
-      cuisineName: 'Familiar',
+      // cuisineName: 'Familiar',
+      cuisineId: null,
       minOrderAmount: 0,
       deliveryFee: 0,
     }
@@ -51,6 +61,53 @@ const RestaurantPartner = () => {
     queryKey: ['restaurantCuisines'],
     queryFn: () => restaurantCuisinesAPI.getAll()
   });
+
+  const uploadFileToSupabase = async (file: File, folder: string, userId: string | number): Promise<string | null> => {
+    // Crear un nombre de archivo único para evitar colisiones
+    const fileExt = file.name.split('.').pop();
+    const uniqueFileName = `${uuidv4()}.${fileExt}`;
+    const filePath = `${folder}/${userId}/${uniqueFileName}`;
+  
+    console.log(`Subiendo ${file.name} a ${BUCKET_NAME}/${filePath}...`);  
+
+    try {
+      const { data, error: uploadError } = await supabase.storage
+        .from(BUCKET_NAME)
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false, // Poner 'true' si se quisiera reemplazar con el mismo nombre exacto (menos probable con UUID)
+        });
+  
+      if (uploadError) {
+        console.error('Error al subir el archivo:', uploadError);
+        toast.error(`Fallo al subir ${folder === 'logos' ? 'logo' : 'imagen de portada'}: ${uploadError.message}`);
+        return null;
+      }
+  
+      console.log('Subida exitosa:', data);
+  
+      // Obtener la URL pública
+      const { data: urlData } = supabase.storage
+        .from(BUCKET_NAME)
+        .getPublicUrl(filePath);
+  
+      if (!urlData || !urlData.publicUrl) {
+          console.error('Error al obtener la URL pública para:', filePath);
+          toast.error(`Fallo al obtener la URL pública para ${folder === 'logos' ? 'logo' : 'imagen de portada'}.`);
+          // Considerar borrar el archivo si la URL falla? (Opcional)
+          // await supabase.storage.from(BUCKET_NAME).remove([filePath]);
+          return null;
+      }
+  
+      console.log('URL Pública:', urlData.publicUrl);
+      return urlData.publicUrl;
+  
+    } catch (error) {
+      console.error('Error inesperado durante la subida:', error);
+      toast.error('Error inesperado durante la subida del archivo.');
+      return null;
+    }
+  };
   
   if (isLoading) {
     return <div>Loading...</div>;
@@ -60,7 +117,7 @@ const RestaurantPartner = () => {
     return <Navigate to="/login" state={{ from: '/partner' }} />;
   }
 
-  // Check if user is a restaurant owner
+
   if (user?.role !== "RESTAURANTE") {
     return (
       <Layout>
@@ -93,47 +150,73 @@ const RestaurantPartner = () => {
 
   const handleLogoFileSelected = (file: File) => {
     setLogoFile(file);
-    // For now we'll use a placeholder URL until we connect with Supabase storage
-    if (file.size > 0) {
-      setValue('logo', URL.createObjectURL(file));
-    }
-  };
-
-  const handlePhotoFileSelected = (file: File) => {
-    setPhotoFile(file);
-    // For now we'll use a placeholder URL until we connect with Supabase storage
-    if (file.size > 0) {
-      setValue('photo', URL.createObjectURL(file));
-    }
-  };
-
+};
   const handleCoverImageFileSelected = (file: File) => {
     setCoverImageFile(file);
-    // For now we'll use a placeholder URL until we connect with Supabase storage
-    if (file.size > 0) {
-      setValue('coverImage', URL.createObjectURL(file));
-    }
   };
 
   const onSubmit = async (data: RestaurantFormData) => {
-    try {
-      setSubmitting(true);
-      
-      // Here we would upload files to Supabase storage and get actual URLs
-      // For now we're just using the temporary URLs from the form
-      
-      const restaurantData = {
-        ...data,
-        ownerId: user.id
-      };
+    if (!user) {
+      toast.error("User not authenticated.");
+      return;
+  }
+  if (!logoFile) {
+      toast.error('Por favor, sube un logo para el restaurante.');
+      setError(
+        'logo', // Nombre del campo registrado en RHF (el del input hidden)
+        {
+            type: 'manual', // Tipo de error (puede ser 'required' o uno proio a elegir)
+            message: 'The logo is required.'
+        },
+        {
+            shouldFocus: true // Opcional: Intenta poner el foco en el campo (puede que no funcione bien con FileUpload)
+        }
+    );
+      return;
+  }
+  if (data.cuisineId === null || data.cuisineId === undefined) {
+      toast.error('Por favor, selecciona un tipo de cocina.');
+      return;
+  }
+  setSubmitting(true);
+      let logoUrl: string | null = null;
+      let coverImageUrl: string | null = null;
+      let uploadError = false;
+      try {
+        console.log("Intentando subir logo...");
+        logoUrl = await uploadFileToSupabase(logoFile, 'imagenes-logos', user.id);
+        if (!logoUrl) uploadError = true;
 
-      await restaurantAPI.create(restaurantData);
+        if (coverImageFile && !uploadError) {
+          console.log("Intentando subir imagen de portada...");
+          coverImageUrl = await uploadFileToSupabase(coverImageFile, 'restaurants-coverImages', user.id);
+          if (!coverImageUrl) uploadError = true;
+        }
+
+        if (uploadError) {
+            console.error("Envío detenido debido a error(es) en la subida.");
+            toast.error("Fallo al subir una o más imágenes. Inténtalo de nuevo.");
+            setSubmitting(false);
+            return;
+        }
+
+        const restaurantApiPayload: RestaurantApiPayload = {
+          ...data, // name, description, phone, email, address, openingHours, minOrderAmount, deliveryFee
+          logo: logoUrl,
+          coverImage: coverImageUrl,
+          ownerId: user.id
+        };
+
+        console.log("Enviando datos al backend:", JSON.stringify(restaurantApiPayload, null, 2));
+
+        await restaurantAPI.create(restaurantApiPayload);
 
       toast.success('Restaurant registered successfully!');
       navigate('/dashboard');
     } catch (error) {
       console.error('Error registering restaurant:', error);
-      toast.error('Failed to register restaurant. Please try again.');
+      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to register restaurant.';
+      toast.error(`Error trying to register restaurant: ${errorMessage}. Please try again.`);
     } finally {
       setSubmitting(false);
     }
@@ -275,20 +358,9 @@ const RestaurantPartner = () => {
                       maxSize={2} // 2MB max
                       accept="image/*"
                     />
-                    <input type="hidden" {...register('logo', { required: 'Logo is required' })} />
+                    {/* <input type="hidden" {...register('logo', { required: 'Logo is required' })} /> */}
+                    <input type="hidden" {...register('logo')} />
                     {errors.logo && <p className="text-red-500 text-sm">{errors.logo.message}</p>}
-                  </div>
-
-                  <div>
-                    <FileUpload
-                      label="Restaurant Photo *"
-                      id="restaurant-photo"
-                      onFileSelected={handlePhotoFileSelected}
-                      maxSize={2} // 2MB max
-                      accept="image/*"
-                    />
-                    <input type="hidden" {...register('photo', { required: 'Photo is required' })} />
-                    {errors.photo && <p className="text-red-500 text-sm">{errors.photo.message}</p>}
                   </div>
 
                   <div>
@@ -300,6 +372,8 @@ const RestaurantPartner = () => {
                       accept="image/*"
                     />
                     <input type="hidden" {...register('coverImage')} />
+                    {/* <input type="hidden" {...register('coverImage', { required: 'Cover image is required' })} />
+                    {errors.coverImage && <p className="text-red-500 text-sm">{errors.coverImage.message}</p>} */}
                   </div>
                 </div>
               </CardContent>
@@ -373,3 +447,12 @@ const RestaurantPartner = () => {
 };
 
 export default RestaurantPartner;
+function setError(arg0: string, arg1: {
+  type: string; // Tipo de error (puede ser 'required' o uno proio a elegir)
+  message: string;
+}, arg2: {
+  shouldFocus: boolean; // Opcional: Intenta poner el foco en el campo (puede que no funcione bien con FileUpload)
+}) {
+  throw new Error('Function not implemented.');
+}
+
