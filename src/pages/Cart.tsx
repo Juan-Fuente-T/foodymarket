@@ -34,6 +34,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Textarea } from "@/components/ui/textarea"; 
 import { OrderStatus } from "@/types/models";
 
 type DeliveryMethod = "pickup" | "delivery";
@@ -65,11 +66,7 @@ const Cart = () => {
     cardName: false,
     cardCvc: false
   });
-
-  // Debug restaurant info
-  useEffect(() => {
-    console.log("Current restaurant in cart:", restaurant);
-  }, [restaurant]);
+  const [orderComments, setOrderComments] = useState<string>('');
 
   const handleOpenCheckout = () => {
     if (!isAuthenticated) {
@@ -93,7 +90,6 @@ const Cart = () => {
       return;
     }
 
-    // If we reach here, we can open the checkout modal
     setIsCheckoutModalOpen(true);
   };
 
@@ -128,7 +124,8 @@ const Cart = () => {
         restaurantId: restaurant.id.toString(),
         status: "pagado" as OrderStatus,
         total: totalPrice,
-        comments: deliveryMethod === "pickup" ? "Customer will pickup" : "Delivery to customer address",
+        // comments: deliveryMethod === "pickup" ? "Customer will pickup" : "Delivery to customer address",
+        comments: orderComments,
         details: items.map(item => ({
           id: '',
           productId: item.productId,
@@ -289,10 +286,21 @@ const Cart = () => {
             )}
           </CardContent>
           {items.length > 0 && (
+            
+              <div className="p-4">
             <CardFooter className="flex justify-between items-center">
               <div className="font-semibold">Total Items: {totalItems}</div>
               <div className="text-2xl font-bold">Total Price: ${totalPrice.toFixed(2)}</div>
             </CardFooter>
+              <Textarea 
+              id="orderComments"
+              value={orderComments}
+              placeholder="Commets about your order..."      
+              // className="w-5/6 h-16 my-4 mx-auto" 
+              className=" h-16 my-4" 
+              onChange={(e) => setOrderComments(e.target.value)}>
+              </Textarea>
+            </div>
           )}
           <CardFooter className="flex justify-between items-center">
             <Button asChild variant="link">

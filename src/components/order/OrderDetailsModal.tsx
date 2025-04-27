@@ -53,7 +53,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
         <div className="grid gap-6">
           <div className="flex justify-between items-center">
             <div>
-              <p className="text-sm text-gray-500">Order Status</p>
+              <p className="text-sm text-gray-500 mb-2">Order Status</p>
               <Select
                 defaultValue={order.status}
                 onValueChange={(value) => handleStatusChange(value as OrderStatus)}
@@ -71,13 +71,13 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
               </Select>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Total Amount</p>
+              <p className="text-sm text-gray-500 mb-2">Total Amount</p>
               <p className="text-lg font-semibold">${order.total.toFixed(2)}</p>
             </div>
           </div>
           {order.comments && (
             <div>
-              <p className="text-sm text-gray-500">Customer Comments</p>
+              <p className="text-sm text-gray-500 mb-2">Customer Comments</p>
               <p className="p-3 bg-gray-50 rounded-md">{order.comments}</p>
             </div>
           )}

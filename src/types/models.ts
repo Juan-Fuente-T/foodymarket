@@ -77,6 +77,7 @@ export interface Order {
   id: string;
   clientId: string;
   restaurantId: string;
+  restaurantName: string;
   status: OrderStatus;
   total: number;
   comments?: string;
@@ -84,13 +85,28 @@ export interface Order {
   updatedAt: string;
   details: OrderItem[]; // Relación con OrderDetails
 }
+export interface OrderRequestDto {
+  clientId: string; 
+  restaurantId: string; 
+  status: OrderStatus;
+  total: number;
+  comments: string; 
+  details: OrderItemRequestDto[];
+}
 
 export interface OrderItem {
   id: string;
   productId: string;
+  productName: string;
   quantity: number;
+  productPrice: number;
   subtotal: number;
-  productName?: string; // Added for UI convenience
+}
+
+export interface OrderItemRequestDto {
+  productId: string; 
+  quantity: number;
+  subtotal: number; 
 }
 
 export interface Review {

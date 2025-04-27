@@ -23,6 +23,7 @@ import { CategoryManagement } from "@/components/category/CategoryManagement";
 import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import OrderDetailsModal from "@/components/order/OrderDetailsModal";
+import { set } from "date-fns";
 
 
 const Dashboard = () => {
@@ -58,13 +59,18 @@ const Dashboard = () => {
 
 const CustomerDashboard = () => {
   const { user } = useAuth();
+  const [isOrderDetailsOpen, setIsOrderDetailsOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order>(null);
 
   const { data: orders = [], isLoading: isLoadingOrders } = useQuery({
     queryKey: ["customerOrders", user?.id],
     queryFn: () => orderAPI.getByClient(user?.id as string),
     enabled: !!user?.id,
   });
-
+  const handleCloseModal = () => {
+    setIsOrderDetailsOpen(false);
+    setSelectedOrder(null);
+  };
   return (
     <Layout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -144,6 +150,7 @@ const CustomerDashboard = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Order ID</TableHead>
+                    <TableHead>Restaurant</TableHead>
                     <TableHead>Date</TableHead>
                     <TableHead>Restaurant</TableHead>
                     <TableHead>Status</TableHead>
@@ -155,10 +162,10 @@ const CustomerDashboard = () => {
                   {orders.slice(0, 5).map((order) => (
                     <TableRow key={order?.id}>
                       <TableCell className="font-medium">{order.id.slice(0, 8)}</TableCell>
+                      <TableCell className="font-medium">{order.restaurantName.slice(0, 30)}</TableCell>
                       <TableCell>
                         {new Date(order.createdAt).toLocaleDateString()}
                       </TableCell>
-                      <TableCell>{order.restaurantId}</TableCell>
                       <TableCell>
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${order?.status === 'pendiente' ? 'bg-green-100 text-green-800' :
                           order?.status === 'pagado' ? 'bg-blue-100 text-blue-800' :
@@ -171,9 +178,20 @@ const CustomerDashboard = () => {
                       </TableCell>
                       <TableCell className="text-right">${order?.total.toFixed(2)}</TableCell>
                       <TableCell>
-                        <Button variant="ghost" size="sm">
+                        <Button variant="outline" size="sm"
+                          onClick={() => {
+                            setSelectedOrder(order);
+                            setIsOrderDetailsOpen(true);
+                          }}>
                           View
                         </Button>
+                        {isOrderDetailsOpen && selectedOrder && (
+                          <OrderDetailsModal
+                            isOpen={isOrderDetailsOpen}
+                            order={selectedOrder}
+                            onClose={handleCloseModal}
+                          />
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -892,26 +910,26 @@ const RestaurantDashboard = () => {
                             <TableHead>Order ID</TableHead>
                             <TableHead>Date</TableHead>
                             <TableHead>Status</TableHead>
-                            <TableHead className="text-right">Amount</TableHead>
-                            <TableHead></TableHead>
+                            <TableHead>Amount</TableHead>
+                            <TableHead>Change status</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {orders.slice(0, 5).map((order) => (
+                          {orders.slice(0, 5).map((order: Order) => (
                             <TableRow key={order.id}>
                               <TableCell className="font-medium">{order.id.slice(0, 8)}</TableCell>
                               <TableCell>{new Date(order.createdAt).toLocaleDateString('es-ES', { timeZone: 'UTC' })}</TableCell>
                               <TableCell>
                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${order?.status === 'pendiente' ? 'bg-green-100 text-green-800' :
-                                  order?.status === 'pagado' ? 'bg-blue-100 text-blue-800' :
-                                    order?.status === 'entregado' ? 'bg-yellow-100 text-yellow-800' :
-                                      order?.status === 'cancelado' ? 'bg-red-100 text-red-800' :
-                                        'bg-gray-100 text-gray-800'
+                                    order?.status === 'pagado' ? 'bg-blue-100 text-blue-800' :
+                                      order?.status === 'entregado' ? 'bg-yellow-100 text-yellow-800' :
+                                        order?.status === 'cancelado' ? 'bg-red-100 text-red-800' :
+                                          'bg-gray-100 text-gray-800'
                                   }`}>
                                   {order?.status.charAt(0).toUpperCase() + order?.status.slice(1)}
                                 </span>
                               </TableCell>
-                              <TableCell className="text-right">${order.total.toFixed(2)}</TableCell>
+                              <TableCell className="text-left">${order.total.toFixed(2)}</TableCell>
                               <TableCell>
                                 <Select
                                   value={order.status}
@@ -935,11 +953,12 @@ const RestaurantDashboard = () => {
                                 </Select>
                               </TableCell>
                               <TableCell>
-                                <Button variant="ghost" size="sm" className="ml-2"
+                                <Button variant="outline" size="sm" className="ml-2"
                                   onClick={() => {
                                     setSelectedOrder(order);
                                     setIsOrderDetailsOpen(true);
-                                  }}>View</Button>
+                                  }}>View
+                                </Button>
                               </TableCell>
                             </TableRow>
                           ))}
@@ -974,12 +993,12 @@ const RestaurantDashboard = () => {
                             <TableHead>Order ID</TableHead>
                             <TableHead>Date</TableHead>
                             <TableHead>Status</TableHead>
-                            <TableHead className="text-right">Amount</TableHead>
-                            <TableHead>Actions</TableHead>
-                          </TableRow>
+                            <TableHead>Amount</TableHead>
+                            <TableHead>Change status</TableHead>
+                          </TableRow>Orders
                         </TableHeader>
                         <TableBody>
-                          {orders.map((order) => (
+                          {orders.map((order: Order) => (
                             <TableRow key={order.id}>
                               <TableCell className="font-medium">{order.id.slice(0, 8)}</TableCell>
                               <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
@@ -994,9 +1013,31 @@ const RestaurantDashboard = () => {
                                   {order?.status.charAt(0).toUpperCase() + order?.status.slice(1)}
                                 </span>
                               </TableCell>
-                              <TableCell className="text-right">${order.total.toFixed(2)}</TableCell>
+                              <TableCell>${order.total.toFixed(2)}</TableCell>
                               <TableCell>
-                                <Button variant="ghost" size="sm"
+                                <Select
+                                  value={order.status}
+                                  // Se dispara cuando se selecciona un nuevo valor
+                                  onValueChange={(newStatus: OrderStatus) => {
+                                    updateOrderStatus({ orderId: order.id, status: newStatus });
+                                  }}
+                                  // Deshabilita todos si isUpdatingStatus es true (más simple)
+                                  disabled={isUpdatingStatus}
+                                >
+                                  <SelectTrigger className="w-[180px]">
+                                    <SelectValue placeholder="Change status..." />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {possibleStatus.map((statusOption) => (
+                                      <SelectItem key={statusOption} value={statusOption}>
+                                        {statusOption.charAt(0).toUpperCase() + statusOption.slice(1)}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </TableCell>
+                              <TableCell>
+                                <Button variant="outline" size="sm"
                                   onClick={() => {
                                     setSelectedOrder(order);
                                     setIsOrderDetailsOpen(true);
