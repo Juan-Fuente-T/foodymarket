@@ -3,7 +3,7 @@ package com.c24_39_t_webapp.restaurants.controllers;
 import com.c24_39_t_webapp.restaurants.dtos.request.OrderRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.request.OrderUpdateRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.OrderResponseDto;
-import com.c24_39_t_webapp.restaurants.models.OrderState;
+import com.c24_39_t_webapp.restaurants.models.OrderStatus;
 import com.c24_39_t_webapp.restaurants.repository.OrderRepository;
 import com.c24_39_t_webapp.restaurants.services.IOrderService;
 import lombok.AllArgsConstructor;
@@ -49,7 +49,7 @@ public class OrderController {
      * @return A list of {@code OrderResponseDto} objects representing all orders in the system.
      */
     @GetMapping
-    @PreAuthorize("hasRole('restaurante')")
+    @PreAuthorize("hasRole('RESTAURANTE')")
     public ResponseEntity<List<OrderResponseDto>> findAllOrders(Long restaurantId) {
         log.info("Solicitud recibida para obtener todos los pedidos del RESTAURANTE con id: {}", restaurantId);
         List<OrderResponseDto> orders = orderService.findAllOrders(restaurantId);
@@ -139,6 +139,21 @@ public class OrderController {
         log.info("Se recuperaron {} pedidos exitosamente para el cliente {}.", clientOrders.size(), cln_id);
         return clientOrders;
     }
+    /**
+     * Endpoint to retrieve all {@link ResponseEntity} Order objects from the system by restaurant ID.
+     * Delegates the retrieval logic to {@link IOrderService#findAllOrdersByOwnerId(Long)}.
+     *
+     * @param ownerId The ID of the restaurant to retrieve orders for.
+     * @return A list of {@code OrderResponseDto} objects representing all orders for the specified restaurant.
+     */
+    @GetMapping(value = "/byOwnerId/{ownerId}")
+    @PreAuthorize("hasRole('RESTAURANTE')")
+    public List<OrderResponseDto> getOrdersByRestaurantId(@PathVariable Long ownerId) {
+        log.info("Solicitud recibida para obtener todos los pedidos realizados por el cliente con id: {}", ownerId);
+        List<OrderResponseDto> restaurantOrders = orderService.findAllOrdersByOwnerId(ownerId);
+        log.info("Se recuperaron {} pedidos exitosamente para el cliente {}.", restaurantOrders.size(), ownerId);
+        return restaurantOrders;
+    }
 
     /**
      * Endpoint to retrieve all {@link ResponseEntity} Order objects from the system by client ID and date range.
@@ -162,18 +177,18 @@ public class OrderController {
     }
     /**
      * Endpoint to retrieve all {@link ResponseEntity} Order objects from the system by state.
-     * Delegates the retrieval logic to {@link IOrderService#findByStateAndRestaurantId(OrderState, Long)}.
+     * Delegates the retrieval logic to {@link IOrderService#findByStatusAndRestaurantId(OrderStatus, Long)}.
      *
-     * @param state The state of the orders to retrieve.
+     * @param status The state of the orders to retrieve.
      * @return A list of {@code OrderResponseDto} objects representing all orders in the specified state.
      */
     @GetMapping(value = "/byRestaurantAndState")
     @PreAuthorize("hasRole('RESTAURANTE')")
     public List<OrderResponseDto> findByRestaurantIdAndState(
-            @RequestParam OrderState state,
+            @RequestParam OrderStatus status,
             @RequestParam Long restaurantId) {
-        log.info("Solicitud recibida para obtener todos los pedidos realizados en el restaurante con id: {} en estado {}", restaurantId, state);
-        List<OrderResponseDto> byRestaurantStateOrders = orderService.findByStateAndRestaurantId(state, restaurantId);
+        log.info("Solicitud recibida para obtener todos los pedidos realizados en el restaurante con id: {} en estado {}", restaurantId, status);
+        List<OrderResponseDto> byRestaurantStateOrders = orderService.findByStatusAndRestaurantId(status, restaurantId);
         log.info("Se recuperaron {} pedidos exitosamente.", byRestaurantStateOrders.size());
         return byRestaurantStateOrders;
     }

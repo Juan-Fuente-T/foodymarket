@@ -67,8 +67,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/api/order/**").hasRole("RESTAURANTE")
                         .requestMatchers(HttpMethod.DELETE, "/api/order/**").hasRole("RESTAURANTE")
                         // Rutas exclusivas de RESTAURANTE, salvo GET
-                        .requestMatchers("/api/category/**", "/api/restaurant/**", "/api/product/**").hasRole(
-                                "RESTAURANTE")
+                        .requestMatchers("/api/category/**", "/api/restaurant/**", "/api/cuisines/**",
+                                "/api/product/**").hasRole("RESTAURANTE")
                         // Rutas exclusivas de cliente
                         .requestMatchers("/api/user/**").hasRole("CLIENTE")
                         .anyRequest().authenticated())

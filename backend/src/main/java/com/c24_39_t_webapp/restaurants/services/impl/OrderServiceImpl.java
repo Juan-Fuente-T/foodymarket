@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -50,7 +51,7 @@ public class OrderServiceImpl implements IOrderService {
         Order order = new Order();
         order.setClientId(client);
         order.setRestaurantId(restaurant);
-        order.setState(OrderState.pendiente);
+        order.setStatus(OrderStatus.pendiente);
         order.setTotal(orderRequestDto.total());
         order.setComments(orderRequestDto.comments());
         order = orderRepository.save(order);
@@ -70,8 +71,24 @@ public class OrderServiceImpl implements IOrderService {
         orderDetailsRepository.saveAll(details);
         log.info("Pedido creado con éxito");
 
-        List<OrderDetailsResponseDto> detailsResponse = details.stream().map(detail -> new OrderDetailsResponseDto(detail.getOdt_id(), detail.getProduct().getPrd_id(), detail.getQuantity(), detail.getSubtotal())).collect(Collectors.toList());
-        return new OrderResponseDto(order.getOrd_id(), order.getClientId().getId(), order.getRestaurantId().getId(), order.getState(), order.getTotal(), order.getComments(), detailsResponse);
+        List<OrderDetailsResponseDto> detailsResponse = details.stream().map(
+                detail -> new OrderDetailsResponseDto(
+                detail.getOdt_id(),
+                detail.getProduct().getPrd_id(),
+                detail.getProduct().getName(),
+                detail.getQuantity(),
+                detail.getProduct().getPrice(),
+                detail.getSubtotal())).collect(Collectors.toList()
+        );
+        return new OrderResponseDto(
+                order.getOrd_id(),
+                order.getClientId().getId(),
+                order.getRestaurantId().getId(),
+                restaurant.getName(),
+                order.getStatus(),
+                order.getTotal(),
+                order.getComments(),
+                detailsResponse);
     }
 
     private void validateOrderRequest(OrderRequestDto dto) {
@@ -111,13 +128,16 @@ public class OrderServiceImpl implements IOrderService {
                 order.getOrd_id(),
                 order.getClientId().getId(),
                 order.getRestaurantId().getId(),
-                order.getState(), order.getTotal(),
+                order.getRestaurantId().getName(),
+                order.getStatus(), order.getTotal(),
                 order.getComments(),
                 order.getDetails().stream().map(
                         detail -> new OrderDetailsResponseDto(
                                 detail.getOdt_id(),
                                 detail.getProduct().getPrd_id(),
+                                detail.getProduct().getName(),
                                 detail.getQuantity(),
+                                detail.getProduct().getPrice(),
                                 detail.getSubtotal())).collect(Collectors.toList()))).collect(Collectors.toList(
 
         ));
@@ -133,7 +153,7 @@ public class OrderServiceImpl implements IOrderService {
         }
 
         // Buscar el pedido
-        Order order = orderRepository.findById(ord_id).orElseThrow(() -> {
+        Order order = orderRepository.findByIdFetchingAll(ord_id).orElseThrow(() -> {
             log.warn("No se encontró el pedido con ID: {}", ord_id);
             return new OrderNotFoundException("Pedido no encontrado con ID: " + ord_id);
         });
@@ -149,7 +169,24 @@ public class OrderServiceImpl implements IOrderService {
         }
 
         log.info("Pedido con ID {} encontrado y autorizado para el restaurante", ord_id);
-        return new OrderResponseDto(order.getOrd_id(), order.getClientId().getId(), order.getRestaurantId().getId(), order.getState(), order.getTotal(), order.getComments(), order.getDetails().stream().map(detail -> new OrderDetailsResponseDto(detail.getOdt_id(), detail.getProduct().getPrd_id(), detail.getQuantity(), detail.getSubtotal())).collect(Collectors.toList()));
+        return new OrderResponseDto(
+                order.getOrd_id(),
+                order.getClientId().getId(),
+                order.getRestaurantId().getId(),
+                order.getRestaurantId().getName(),
+                order.getStatus(),
+                order.getTotal(),
+                order.getComments(),
+                order.getDetails().stream().map(
+                        detail -> new OrderDetailsResponseDto(
+                                detail.getOdt_id(),
+                                detail.getProduct().getPrd_id(),
+                                detail.getProduct().getName(),
+                                detail.getQuantity(),
+                                detail.getProduct().getPrice(),
+                                detail.getSubtotal())).collect(Collectors.toList()
+                )
+        );
     }
 
 
@@ -173,8 +210,8 @@ public class OrderServiceImpl implements IOrderService {
         log.info("El email del dueño del restuarente es válido: {}", userEmail);
 
 
-        if (orderUpdateRequestDto.estate() != null) {
-            order.setState(orderUpdateRequestDto.estate());
+        if (orderUpdateRequestDto.status() != null) {
+            order.setStatus(orderUpdateRequestDto.status());
         }
         if (orderUpdateRequestDto.comments() != null) {
             order.setComments(orderUpdateRequestDto.comments());
@@ -186,7 +223,24 @@ public class OrderServiceImpl implements IOrderService {
         log.info("Pedido actualizado con éxito");
 
 
-        return new OrderResponseDto(order.getOrd_id(), order.getClientId().getId(), order.getRestaurantId().getId(), order.getState(), order.getTotal(), order.getComments(), order.getDetails().stream().map(detail -> new OrderDetailsResponseDto(detail.getOdt_id(), detail.getProduct().getPrd_id(), detail.getQuantity(), detail.getSubtotal())).collect(Collectors.toList()));
+        return new OrderResponseDto(
+                order.getOrd_id(),
+                order.getClientId().getId(),
+                order.getRestaurantId().getId(),
+                order.getRestaurantId().getName(),
+                order.getStatus(),
+                order.getTotal(),
+                order.getComments(),
+                order.getDetails().stream().map(
+                        detail -> new OrderDetailsResponseDto(
+                                detail.getOdt_id(),
+                                detail.getProduct().getPrd_id(),
+                                detail.getProduct().getName(),
+                                detail.getQuantity(),
+                                detail.getProduct().getPrice(),
+                                detail.getSubtotal())).collect(Collectors.toList()
+                )
+        );
     }
 
     @Override
@@ -212,8 +266,8 @@ public class OrderServiceImpl implements IOrderService {
             throw new SecurityException("No tienes permiso para eliminar este pedido");
         }
         // Validar el estado del pedido
-        if (order.getState() != OrderState.pendiente && order.getState() != OrderState.cancelado) {
-            log.warn("No se puede eliminar el pedido {} porque está en estado: {}", ord_id, order.getState());
+        if (order.getStatus() != OrderStatus.pendiente && order.getStatus() != OrderStatus.cancelado) {
+            log.warn("No se puede eliminar el pedido {} porque está en estado: {}", ord_id, order.getStatus());
             throw new IllegalStateException("Solo se pueden eliminar pedidos en estado pendiente o cancelado");
         }
         orderRepository.delete(order); // Hibernate eliminará los OrderDetails automáticamente en cascada
@@ -236,7 +290,26 @@ public class OrderServiceImpl implements IOrderService {
         if (orders.isEmpty()) {
             throw new OrderNotFoundException("No se encontraron pedidos entre " + start + " y " + end);
         }
-        return orders.stream().map(order -> new OrderResponseDto(order.getOrd_id(), order.getClientId().getId(), order.getRestaurantId().getId(), order.getState(), order.getTotal(), order.getComments(), order.getDetails().stream().map(detail -> new OrderDetailsResponseDto(detail.getOdt_id(), detail.getProduct().getPrd_id(), detail.getQuantity(), detail.getSubtotal())).collect(Collectors.toList()))).collect(Collectors.toList());
+        return orders.stream().map(
+                order -> new OrderResponseDto(
+                        order.getOrd_id(),
+                        order.getClientId().getId(),
+                        order.getRestaurantId().getId(),
+                        order.getRestaurantId().getName(),
+                        order.getStatus(),
+                        order.getTotal(),
+                        order.getComments(),
+                        order.getDetails().stream().map(
+                                detail -> new OrderDetailsResponseDto(
+                                        detail.getOdt_id(),
+                                        detail.getProduct().getPrd_id(),
+                                        detail.getProduct().getName(),
+                                        detail.getQuantity(),
+                                        detail.getProduct().getPrice(),
+                                        detail.getSubtotal())).collect(Collectors.toList()
+                        )
+                )
+        ).collect(Collectors.toList());
     }
 
     @Override
@@ -244,18 +317,17 @@ public class OrderServiceImpl implements IOrderService {
     public List<OrderResponseDto> findByClientId(Long cln_id) {
         log.info("Recuperando todos los pedidos del cliente con ID: {}", cln_id);
         if (cln_id == null || cln_id <= 0) {
-            throw new OrderNotFoundException("ID de cliente no válido: " + cln_id);
+            throw new UserNotFoundException("ID de cliente no válido: " + cln_id);
         }
         // Buscar el cliente
         UserEntity client = userRepository.findById(cln_id).orElseThrow(() -> {
             log.warn("No se encontró el cliente con ID: {}", cln_id);
-            return new UserNotFoundException("Pedido no encontrado con ID: " + cln_id);
+            return new UserNotFoundException("Cliente no encontrado con ID: " + cln_id);
         });
         log.info("Cliente encontrado con éxito: {}", client);
         // Obtener el email del usuario autenticado (restaurante)
         String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
-        log.info("Usuario autenticado: {}", userEmail);
-        log.info("Email del cliente: {}", client.getEmail());
+        log.info("Usuario autenticado: {}, su email es {}.", userEmail, client.getEmail());
 
         // Validar que el pedido pertenece al restaurante del usuario autenticado
         if (!client.getEmail().equals(userEmail)) {
@@ -266,8 +338,80 @@ public class OrderServiceImpl implements IOrderService {
         if (orders.isEmpty()) {
             throw new OrderNotFoundException("No se encontraron pedidos para el cliente con ID: " + cln_id);
         }
-        return orders.stream().map(order -> new OrderResponseDto(order.getOrd_id(), order.getClientId().getId(), order.getRestaurantId().getId(), order.getState(), order.getTotal(), order.getComments(), order.getDetails().stream().map(detail -> new OrderDetailsResponseDto(detail.getOdt_id(), detail.getProduct().getPrd_id(), detail.getQuantity(), detail.getSubtotal())).collect(Collectors.toList()))).collect(Collectors.toList());
+        return orders.stream().map(
+                order -> new OrderResponseDto(
+                order.getOrd_id(),
+                        order.getClientId().getId(),
+                        order.getRestaurantId().getId(),
+                        order.getRestaurantId().getName(),
+                        order.getStatus(),
+                        order.getTotal(),
+                        order.getComments(),
+                        order.getDetails().stream().map(
+                                detail -> new OrderDetailsResponseDto(
+                                        detail.getOdt_id(),
+                                        detail.getProduct().getPrd_id(),
+                                        detail.getProduct().getName(),
+                                        detail.getQuantity(),
+                                        detail.getProduct().getPrice(),
+                                        detail.getSubtotal())).collect(Collectors.toList()
+                        )
+                )
+        ).collect(Collectors.toList());
     }
+    @Override
+    @Transactional(readOnly = true)
+    public List<OrderResponseDto> findAllOrdersByOwnerId(Long ownerId) {
+        log.info("Recuperando todos los pedidos de los restaurantes del user con ID: {}", ownerId);
+        if (ownerId == null || ownerId <= 0) {
+            throw new RestaurantNotFoundException("ID de user no válido: " + ownerId);
+        }
+        UserEntity owner = userRepository.findById(ownerId).orElseThrow(() -> {
+            log.warn("No se encontró el user con ID: {}", ownerId);
+            return new UserNotFoundException("User no encontrado con ID: " + ownerId);
+        });
+        // Obtener el email del usuario autenticado (restaurante)
+        String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        log.info("Usuario autenticado: {}, su email es {}.", userEmail, owner.getEmail());
+
+        // Validar que el pedido pertenece al restaurante del usuario autenticado
+        if (!owner.getEmail().equals(userEmail)) {
+            log.warn("Intento de acceso no autorizado al pedido del restaurante {} por el usuario {}", ownerId, userEmail);
+            throw new SecurityException("No tienes permiso para acceder a los pedidos de este cliente");
+        }
+        List<Long> restaurantIds = restaurantRepository.findRestaurantIdsByOwnerId(ownerId);
+        // Validar que el dueño tiene restaurantes asociados
+        if (restaurantIds.isEmpty()) {
+            log.warn("El dueño {} no tiene restaurantes asociados.", ownerId);
+            return Collections.emptyList(); //
+        }
+        log.info("IDs de restaurantes encontrados para dueño {}: {}", ownerId, restaurantIds);
+
+        List<Order> allOrders = orderRepository.findByRestaurantId_IdInWithDetails(restaurantIds);
+        log.info("Devolviendo {} órdenes para restaurantId: {}", allOrders.size(), ownerId);
+
+        if (allOrders.isEmpty()) {
+            throw new OrderNotFoundException("No se encontraron pedidos para el cliente con ID: " + ownerId);
+        }
+        return allOrders.stream().map(
+                order -> new OrderResponseDto(
+                        order.getOrd_id(),
+                        order.getClientId().getId(),
+                        order.getRestaurantId().getId(),
+                        order.getRestaurantId().getName(),
+                        order.getStatus(), order.getTotal(),
+                        order.getComments(),
+                        order.getDetails().stream().map(
+                                detail -> new OrderDetailsResponseDto(
+                                        detail.getOdt_id(),
+                                        detail.getProduct().getPrd_id(),
+                                        detail.getProduct().getName(),
+                                        detail.getQuantity(),
+                                        detail.getProduct().getPrice(),
+                                        detail.getSubtotal())).collect(Collectors.toList()))).collect(Collectors.toList()
+        );
+    }
+
 
     @Override
     @Transactional(readOnly = true)
@@ -302,22 +446,26 @@ public class OrderServiceImpl implements IOrderService {
                         order.getOrd_id(),
                         order.getClientId().getId(),
                         order.getRestaurantId().getId(),
-                        order.getState(),
+                        order.getRestaurantId().getName(),
+                        order.getStatus(),
                         order.getTotal(),
                         order.getComments(),
                         order.getDetails().stream().map(
                                 detail -> new OrderDetailsResponseDto(
                                         detail.getOdt_id(),
                                         detail.getProduct().getPrd_id(),
+                                        detail.getProduct().getName(),
                                         detail.getQuantity(),
+                                        detail.getProduct().getPrice(),
                                         detail.getSubtotal())).collect(
                                 Collectors.toList()))).collect(Collectors.toList());
     }
 
+    //   LISTO
     @Override
     @Transactional(readOnly = true)
-    public List<OrderResponseDto> findByStateAndRestaurantId(OrderState state, Long restaurantId) {
-        log.info("Recuperando todos los pedidos en estado: {} del restaurante con ID: {}", state, restaurantId);
+    public List<OrderResponseDto> findByStatusAndRestaurantId(OrderStatus status, Long restaurantId) {
+        log.info("Recuperando todos los pedidos en estado: {} del restaurante con ID: {}", status, restaurantId);
         // Obtener el email del usuario autenticado
         String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
 //        String userEmail = "dueno1@example.com";
@@ -328,23 +476,26 @@ public class OrderServiceImpl implements IOrderService {
                 .orElseThrow(() -> new RestaurantNotFoundException("No se encontró un restaurante asociado al usuario"));
         log.info("Restaurante encontrado con éxito: {}", restaurant);
 
-        List<Order> orders = orderRepository.findByStateAndRestaurantId_Id(state, restaurantId);
+        List<Order> orders = orderRepository.findByStatusAndRestaurantId_Id(status, restaurantId);
         if (orders.isEmpty()) {
-            throw new OrderNotFoundException("No se encontraron pedidos en estado: " + state + " para el restaurante con ID: " + restaurantId);
+            throw new OrderNotFoundException("No se encontraron pedidos en estado: " + status + " para el restaurante con ID: " + restaurantId);
         }
         return orders.stream()
                 .map(order -> new OrderResponseDto(
                         order.getOrd_id(),
                         order.getClientId().getId(),
                         order.getRestaurantId().getId(),
-                        order.getState(),
+                        order.getRestaurantId().getName(),
+                        order.getStatus(),
                         order.getTotal(),
                         order.getComments(),
                         order.getDetails().stream()
                                 .map(detail -> new OrderDetailsResponseDto(
                                         detail.getOdt_id(),
                                         detail.getProduct().getPrd_id(),
+                                        detail.getProduct().getName(),
                                         detail.getQuantity(),
+                                        detail.getProduct().getPrice(),
                                         detail.getSubtotal()
                                 ))
                                 .collect(Collectors.toList())

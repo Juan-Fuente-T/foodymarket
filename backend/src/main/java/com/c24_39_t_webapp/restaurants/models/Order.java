@@ -31,7 +31,7 @@ public class Order {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "pdd_estado", nullable = false)
-     OrderState state = OrderState.pendiente;
+     OrderStatus status;
 
     @Column(name = "pdd_total", nullable = false)
      Double total;

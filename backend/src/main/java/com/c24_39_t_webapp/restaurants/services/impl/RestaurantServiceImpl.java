@@ -1,16 +1,23 @@
 package com.c24_39_t_webapp.restaurants.services.impl;
 
 import com.c24_39_t_webapp.restaurants.dtos.request.CategoryRequestDto;
+import com.c24_39_t_webapp.restaurants.dtos.request.RestaurantRequestDto;
+import com.c24_39_t_webapp.restaurants.dtos.response.CategoryResponseDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.RestaurantResponseDto;
 import com.c24_39_t_webapp.restaurants.exception.RestaurantNotFoundException;
 import com.c24_39_t_webapp.restaurants.exception.user_implementations.ResourceNotFoundException;
 import com.c24_39_t_webapp.restaurants.models.Category;
 import com.c24_39_t_webapp.restaurants.models.Restaurant;
+import com.c24_39_t_webapp.restaurants.models.RestaurantCuisine;
 import com.c24_39_t_webapp.restaurants.models.UserEntity;
+import com.c24_39_t_webapp.restaurants.repository.RestaurantCuisineRepository;
 import com.c24_39_t_webapp.restaurants.repository.RestaurantRepository;
 import com.c24_39_t_webapp.restaurants.repository.UserRepository;
+import com.c24_39_t_webapp.restaurants.services.ICategoryService;
 import com.c24_39_t_webapp.restaurants.services.IRestaurantService;
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.PersistenceContext;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -18,10 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -32,11 +36,14 @@ public class RestaurantServiceImpl implements IRestaurantService {
 
     private final RestaurantRepository restaurantRepository;
     private final UserRepository userRepository;
-    private final CategoryServiceImpl categoryService;
+    private final ICategoryService categoryService;
+    private final RestaurantCuisineRepository cuisineRepository;
+    @PersistenceContext
+    private EntityManager entityManager;
 
-    public RestaurantResponseDto registerRestaurant(Restaurant restaurant, String email) {
+    public RestaurantResponseDto registerRestaurant(RestaurantRequestDto restaurantRequestDto, String email) {
         log.info("Intentando crear un restaurante para el usuario con email: {}", email);
-        System.out.println("restaurant = " + restaurant);
+
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> {
                     log.warn("Intento fallido: Usuario con email {} no encontrado", email);
@@ -47,19 +54,44 @@ public class RestaurantServiceImpl implements IRestaurantService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tienes permisos para crear un Restaurante");
         }
 
+        RestaurantCuisine cuisine = cuisineRepository.findById(restaurantRequestDto.cuisineId())
+                .orElseThrow(() -> { // <<< Maneja el Optional<> devuelto por findById
+                    log.warn("Tipo de cocina con ID {} no encontrado.", restaurantRequestDto.cuisineId());
+                    return new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tipo de cocina inválido: ID "
+                            + restaurantRequestDto.cuisineId());
+                });
+        Restaurant restaurant = new Restaurant();
         restaurant.setUserEntity(user);
+        restaurant.setName(restaurantRequestDto.name());
+        restaurant.setDescription(restaurantRequestDto.description());
+        restaurant.setCuisine(cuisine);
+        restaurant.setPhone(restaurantRequestDto.phone());
+        restaurant.setEmail(restaurantRequestDto.email());
+        restaurant.setAddress(restaurantRequestDto.address());
+        restaurant.setOpeningHours(restaurantRequestDto.openingHours());
+        restaurant.setLogo(restaurantRequestDto.logo());
+        restaurant.setCoverImage(restaurantRequestDto.coverImage());
 
-        restaurantRepository.save(restaurant);
-        log.info("¡Restaurante creado Exitosamente!");
+//        restaurantRepository.save(restaurant);
+//        log.info("¡Restaurante con ID {} creado Exitosamente!", restaurant.getId());
+        entityManager.persist(restaurant); // persist() es para entidades NUEVAS
+        entityManager.flush(); // Fuerza la ejecución del SQL (INSERT) ahora mismo
+
+        log.info("¡Restaurante persistido! ID asignado por BD debería ser: {}", restaurant.getId());
+
         return new RestaurantResponseDto(
                 restaurant.getId(),
-                restaurant.getUserEntity().getId(),
+                user.getId(),
                 restaurant.getName(),
                 restaurant.getDescription(),
-                restaurant.getCategory(),
                 restaurant.getPhone(),
+                restaurant.getEmail(),
                 restaurant.getAddress(),
-                restaurant.getLogo()
+                restaurant.getOpeningHours(),
+                restaurant.getLogo(),
+                restaurant.getCoverImage(),
+                (cuisine != null) ? cuisine.getId() : null,
+                (cuisine != null) ? cuisine.getName() : null
         );
     }
 
@@ -71,18 +103,25 @@ public class RestaurantServiceImpl implements IRestaurantService {
         if (restaurants.isEmpty()) {
             throw new RuntimeException("No se encontraron restaurantes.");
         }
-
         return restaurants.stream()
-                .map(restaurant -> new RestaurantResponseDto(
-                        restaurant.getId(),
-                        restaurant.getUserEntity().getId(),
-                        restaurant.getName(),
-                        restaurant.getDescription(),
-                        restaurant.getCategory(),
-                        restaurant.getPhone(),
-                        restaurant.getAddress(),
-                        restaurant.getLogo()
-                ))
+                .map(restaurant -> {
+                    RestaurantCuisine cuisine = restaurant.getCuisine();
+
+                    return new RestaurantResponseDto(
+                            restaurant.getId(),
+                            (restaurant.getUserEntity() != null) ? restaurant.getUserEntity().getId() : null,
+                            restaurant.getName(),
+                            restaurant.getDescription(),
+                            restaurant.getPhone(),
+                            restaurant.getEmail(),
+                            restaurant.getAddress(),
+                            restaurant.getOpeningHours(),
+                            restaurant.getLogo(),
+                            restaurant.getCoverImage(),
+                            (cuisine != null) ? cuisine.getId() : null,
+                            (cuisine != null) ? cuisine.getName() : null
+                    );
+                })
                 .collect(Collectors.toList());
     }
 
@@ -96,31 +135,65 @@ public class RestaurantServiceImpl implements IRestaurantService {
             throw new RestaurantNotFoundException("El ID del restaurante no es válido " + id);
         }
         return restaurantRepository.findById(id)
-                .map(restaurant -> new RestaurantResponseDto(
-                        restaurant.getId(),
-                        restaurant.getUserEntity().getId(),
-                        restaurant.getName(),
-                        restaurant.getDescription(),
-                        restaurant.getCategory(),
-                        restaurant.getPhone(),
-                        restaurant.getAddress(),
-                        restaurant.getLogo()
-                ))
+                .map(restaurant -> {
+                    RestaurantCuisine cuisine = restaurant.getCuisine();
+
+                    RestaurantResponseDto dto = new RestaurantResponseDto(
+                            restaurant.getId(),
+
+                            (restaurant.getUserEntity() != null) ? restaurant.getUserEntity().getId() : null,
+                            restaurant.getName(),
+                            restaurant.getDescription(),
+                            restaurant.getPhone(),
+                            restaurant.getEmail(),
+                            restaurant.getAddress(),
+                            restaurant.getOpeningHours(),
+                            restaurant.getLogo(),
+                            restaurant.getCoverImage(),
+                            (cuisine != null) ? cuisine.getId() : null,
+                            (cuisine != null) ? cuisine.getName() : null
+                    );
+                    log.info("DTO creado en findById ANTES de retornar: {}", dto);
+                    return dto;
+                })
                 .orElseThrow(() -> {
-                    log.warn("No se encontro un gasto con el ID: {}", id);
+                    log.warn("No se encontro un restaurante con el ID: {}", id);
                     return new RestaurantNotFoundException("No se encontro un restaurante con ese ID: " + id);
                 });
     }
 
     @Transactional
     @Override
-    public RestaurantResponseDto updateRestaurant(Restaurant restaurant) {
-        if (!restaurantRepository.existsById(restaurant.getId())) {
-            throw new RestaurantNotFoundException("Restaurante no encontrado con id: " + restaurant.getId());
+    public RestaurantResponseDto updateRestaurant(RestaurantRequestDto restaurantRequestDto, Long rst_id) {
+        if (!restaurantRepository.existsById(rst_id)) {
+            throw new RestaurantNotFoundException("Restaurante no encontrado con id: " + rst_id);
         }
-        log.info("Actualizando el restaurante con ID: {}", restaurant.getId());
+        log.info("Actualizando el restaurante con ID: {}", rst_id);
 
-        Restaurant updatedRestaurant = restaurantRepository.save(restaurant);
+        RestaurantCuisine cuisine = cuisineRepository.findById(restaurantRequestDto.cuisineId())
+                .orElseThrow(() -> { // <<< Maneja el Optional<> devuelto por findById
+                    log.warn("Tipo de cocina con ID {} no encontrado.", restaurantRequestDto.cuisineId());
+                    return new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tipo de cocina inválido: ID "
+                            + restaurantRequestDto.cuisineId());
+                });
+
+        Restaurant newRestaurant = restaurantRepository.findById(rst_id)
+                .orElseThrow(() -> {
+                    log.warn("No se encontró un restaurante con ese ID para editar: {}", rst_id);
+                    return new RestaurantNotFoundException(("No se encontró un restaurante con ese ID para editar: " + rst_id));
+                });
+
+        newRestaurant.setName(restaurantRequestDto.name());
+        newRestaurant.setDescription(restaurantRequestDto.description());
+        newRestaurant.setCuisine(cuisine);
+        newRestaurant.setPhone(restaurantRequestDto.phone());
+        newRestaurant.setEmail(restaurantRequestDto.email());
+        newRestaurant.setAddress(restaurantRequestDto.address());
+        newRestaurant.setOpeningHours(restaurantRequestDto.openingHours());
+        newRestaurant.setLogo(restaurantRequestDto.logo());
+        newRestaurant.setCoverImage(restaurantRequestDto.coverImage());
+
+        Restaurant updatedRestaurant = restaurantRepository.save(newRestaurant);
 
         log.info("Restaurante actualizado exitosamente: {}", updatedRestaurant);
         return new RestaurantResponseDto(
@@ -128,10 +201,14 @@ public class RestaurantServiceImpl implements IRestaurantService {
                 updatedRestaurant.getUserEntity().getId(),
                 updatedRestaurant.getName(),
                 updatedRestaurant.getDescription(),
-                restaurant.getCategory(),
                 updatedRestaurant.getPhone(),
+                updatedRestaurant.getEmail(),
                 updatedRestaurant.getAddress(),
-                updatedRestaurant.getLogo()
+                updatedRestaurant.getOpeningHours(),
+                updatedRestaurant.getLogo(),
+                updatedRestaurant.getCoverImage(),
+                (cuisine != null) ? cuisine.getId() : null,
+                (cuisine != null) ? cuisine.getName() : null
         );
     }
 
@@ -144,21 +221,11 @@ public class RestaurantServiceImpl implements IRestaurantService {
         restaurantRepository.deleteById(id);
     }
 
-    private Restaurant getRestaurantById(Long id) {
-        return restaurantRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("El restaurante no existe!"));
-    }
+//    private Restaurant getRestaurantById(Long id) {
+//        return restaurantRepository.findById(id)
+//                .orElseThrow(() -> new ResourceNotFoundException("El restaurante no existe!"));
+//    }
 
-    @Transactional(readOnly = true)
-    @Override
-    public Restaurant findRestaurantEntityById(Long id) { // Este devuelve un Restaurant
-        log.info("Buscando el restaurante con ID: {} para actualización", id);
-        return restaurantRepository.findById(id)
-                .orElseThrow(() -> {
-                    log.warn("No se encontró un restaurante con ese ID para editar: {}", id);
-                    return new RestaurantNotFoundException(("No se encontró un restaurante con ese ID para editar: " + id));
-                });
-    }
 
     @Transactional(readOnly = true)
     @Override
@@ -172,7 +239,7 @@ public class RestaurantServiceImpl implements IRestaurantService {
 
     @Transactional(readOnly = true)
     @Override
-    public Set<Category> getOfferedCategories(Long restaurantId) {
+    public Set<CategoryResponseDto> getOfferedCategories(Long restaurantId) {
         log.info("Obteniedo las categorias de producto del restaurantes on id {}", restaurantId);
         Optional<Restaurant> restaurantOpt = restaurantRepository.findById(restaurantId);
 
@@ -184,7 +251,15 @@ public class RestaurantServiceImpl implements IRestaurantService {
             Set<Category> categories = restaurant.getOfferedCategories();
             categories.size(); // Acceso simple para forzar la inicialización
             log.info("Se encontraron {} categorias de restaurantes con el ID {}", categories.size(), restaurantId);
-            return categories;
+
+            Set<CategoryResponseDto> categoryDtos = categories.stream()
+                    .map(category -> new CategoryResponseDto(
+                            category.getId(),
+                            category.getName(),
+                            category.getDescription()
+                    ))
+                    .collect(Collectors.toSet());
+            return categoryDtos;
             // O simplemente: return restaurant.getOfferedCategories();
             // Spring/Hibernate a menudo gestionan la inicialización al devolverla desde un método transaccional.
         } else {
@@ -195,7 +270,7 @@ public class RestaurantServiceImpl implements IRestaurantService {
 
     @Transactional
     @Override
-    public Category addCategoryToRestaurant(Long restaurantId, CategoryRequestDto categoryInput) {
+    public CategoryResponseDto addCategoryToRestaurant(Long restaurantId, CategoryRequestDto categoryInput) {
         log.info("Intentando asociar la categoría '{}' al restaurante con ID {}", categoryInput.name(), restaurantId);
         Category categoryToAdd = categoryService.findOrCreateCategory(categoryInput);
 
@@ -216,8 +291,11 @@ public class RestaurantServiceImpl implements IRestaurantService {
             log.info("La categoría '{}' (ID: {}) ya estaba asociada al restaurante '{}' (ID: {}). No se requiere guardar.",
                     categoryToAdd.getName(), categoryToAdd.getId(), restaurant.getName(), restaurant.getId());
         }
-        // El llamador (Controller) decidirá si mapea esto a un DTO si es necesario
-        return categoryToAdd;
+        return new CategoryResponseDto(
+                categoryToAdd.getId(),
+                categoryToAdd.getName(),
+                categoryToAdd.getDescription()
+        );
     }
 }
 

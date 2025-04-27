@@ -31,8 +31,12 @@ public class Restaurant {
     @Column(name = "rst_descripcion", nullable = false)
     private String description;
 
-    @Column(name = "rst_categoria", nullable = false)
-    private String category;
+//    @Column(name = "rst_categoria", nullable = false)
+//    private String category;
+
+    @ManyToOne(fetch = FetchType.EAGER) // EAGER puede ser útil aquí para tener siempre el tipo
+    @JoinColumn(name = "rst_tipologias_restaurant_id", nullable = false)
+    private RestaurantCuisine cuisine;
 
     @Column(name = "rst_telefono", nullable = false)
     private String phone;

@@ -1,6 +1,6 @@
 package com.c24_39_t_webapp.restaurants.dtos.response;
 
-import com.c24_39_t_webapp.restaurants.models.OrderState;
+import com.c24_39_t_webapp.restaurants.models.OrderStatus;
 
 import java.util.List;
 
@@ -8,7 +8,8 @@ public record OrderResponseDto(
     Long ord_Id,
     Long clientId,
     Long restaurantId,
-    OrderState estate,
+    String restaurantName,
+    OrderStatus status,
     Double total,
     String comments,
     List<OrderDetailsResponseDto> details

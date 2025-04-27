@@ -1,5 +1,5 @@
 package com.c24_39_t_webapp.restaurants.models;
 
-public enum OrderState {
+public enum OrderStatus{
     pendiente, pagado, entregado, cancelado
 }

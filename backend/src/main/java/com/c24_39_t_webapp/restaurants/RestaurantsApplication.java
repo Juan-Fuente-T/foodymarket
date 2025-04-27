@@ -1,12 +1,20 @@
 package com.c24_39_t_webapp.restaurants;
 
+import com.c24_39_t_webapp.restaurants.config.segurity.JwtUtil;
+import lombok.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+
 
 @SpringBootApplication
 public class RestaurantsApplication {
 
     public static void main(String[] args) {
+//        JwtUtil jwtUtil = new JwtUtil();
+//        jwtUtil.testSelfVerification();
+//        String jwtSecret = System.getenv("JWT_SECRET");
+//        System.out.println("Secreto JWT leído vía @Value: " + jwtSecret);
+//        ------------------------------------------
         // Cargar variables .env
 //        Dotenv dotenv = Dotenv.configure().load();
 

@@ -1,6 +1,6 @@
 package com.c24_39_t_webapp.restaurants.dtos.request;
 
-import com.c24_39_t_webapp.restaurants.models.OrderState;
+import com.c24_39_t_webapp.restaurants.models.OrderStatus;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
@@ -16,7 +16,7 @@ public record OrderRequestDto(
     @NotNull(message = "El ID del restaurante del pedido  no puede ser nulo.")
     Long restaurantId,
     @NotNull(message = "El estado del pedido  no puede ser nulo.")
-    OrderState estate,
+    OrderStatus status,
 
     @NotNull(message = "El total del pedido  no puede ser nulo.")
     Double total,

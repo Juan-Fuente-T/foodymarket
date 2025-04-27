@@ -6,9 +6,12 @@ import com.c24_39_t_webapp.restaurants.dtos.request.RestaurantRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.RestaurantResponseDto;
 import com.c24_39_t_webapp.restaurants.models.Category;
 import com.c24_39_t_webapp.restaurants.models.Restaurant;
+import com.c24_39_t_webapp.restaurants.models.RestaurantCuisine;
+import com.c24_39_t_webapp.restaurants.repository.RestaurantCuisineRepository;
 import com.c24_39_t_webapp.restaurants.services.IRestaurantService;
 import com.c24_39_t_webapp.restaurants.services.impl.UserDetailsImpl;
 import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,18 +19,21 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.server.ResponseStatusException;
 
 //import java.net.URI;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Slf4j
 @RestController
+@AllArgsConstructor
 @RequestMapping("/api/restaurant")
 public class RestaurantController {
-    @Autowired
-    private IRestaurantService restaurantService;
-    private RestaurantResponseDto restaurantResponseDto;
+
+    private final IRestaurantService restaurantService;
+
 
     /**
      * Test endpoint to verify that the controller handles POST requests correctly.
@@ -55,9 +61,10 @@ public class RestaurantController {
     /**
      * Endpoint to register a restaurant.
      * Responds with the status for the new restaurant request.
+     *
      * @param restaurantRequestDto get the necessary information to create the request.
-     * @param userDetails Request to the token the user details, avoiding to the user enter again their information.
-     *                    (did not allow to the user enter any other wrong information)
+     * @param userDetails          Request to the token the user details, avoiding to the user enter again their information.
+     *                             (did not allow to the user enter any other wrong information)
      * @return a response entity with the new restaurant uri
      */
 
@@ -67,31 +74,10 @@ public class RestaurantController {
     public ResponseEntity<?> registerRestaurant(@RequestBody @Valid final RestaurantRequestDto restaurantRequestDto,
                                                 @AuthenticationPrincipal final UserDetailsImpl userDetails) {
         log.info("Solicitud recibida para registrar un restaurante para el usuario con email: {}", userDetails.getUsername());
+        RestaurantResponseDto outputResponseDto= restaurantService.registerRestaurant(restaurantRequestDto, userDetails.getUsername());
 
-        System.out.println("restaurantRequestDto = " + restaurantRequestDto);
-
-        Restaurant restaurant = new Restaurant();
-        restaurant.setName(restaurantRequestDto.name());
-        restaurant.setDescription(restaurantRequestDto.description());
-        restaurant.setCategory(restaurantRequestDto.categoria());
-        restaurant.setPhone(restaurantRequestDto.phone());
-        restaurant.setEmail(restaurantRequestDto.email());
-        restaurant.setAddress(restaurantRequestDto.address());
-        restaurant.setOpeningHours(restaurantRequestDto.openingHours());
-        restaurant.setLogo(restaurantRequestDto.logo());
-        restaurant.setCoverImage(restaurantRequestDto.coverImage());
-
-        RestaurantResponseDto restaurantResponseDto = restaurantService.
-                registerRestaurant(restaurant, userDetails.getUsername());
-
-//        URI uri = ServletUriComponentsBuilder
-//                .fromCurrentContextPath()
-//                .path("/api/restaurant/{rst_id}")
-//                .buildAndExpand(restaurant.rst_id())
-//                .toUri();
-//
-//        return ResponseEntity.created(uri).build();
-        return ResponseEntity.status(HttpStatus.CREATED).body(restaurantResponseDto);
+        log.info("Se creo el restaurante con ID {}exitosamente.", outputResponseDto.rst_id());
+        return ResponseEntity.status(HttpStatus.CREATED).body(outputResponseDto);
     }
 
     /**
@@ -102,11 +88,11 @@ public class RestaurantController {
      */
     @GetMapping("/all")
     public ResponseEntity<List<RestaurantResponseDto>> getAllRestaurants() {
-            log.info("Solicitud recibida para obtener todos los restaurantes.");
-            List<RestaurantResponseDto> restaurants = restaurantService.findAll();
+        log.info("Solicitud recibida para obtener todos los restaurantes.");
+        List<RestaurantResponseDto> restaurants = restaurantService.findAll();
 
-            log.info("Se recuperaron {} restaurantes exitosamente.", restaurants.size());
-            return ResponseEntity.ok(restaurants);
+        log.info("Se recuperaron {} restaurantes exitosamente.", restaurants.size());
+        return ResponseEntity.ok(restaurants);
     }
 
     /**
@@ -118,18 +104,18 @@ public class RestaurantController {
      */
     @GetMapping("/{rst_id}")
     public ResponseEntity<RestaurantResponseDto> findRestaurantById(@PathVariable Long rst_id) {
-            log.info("Solicitud recibida para obtener un restaurante usando un id.");
-            RestaurantResponseDto restaurant = restaurantService.findById(rst_id);
+        log.info("Solicitud recibida para obtener un restaurante usando un id.");
+        RestaurantResponseDto restaurant = restaurantService.findById(rst_id);
 
-            log.info("Se recuperaró el restaurante exitosamente.");
-            return ResponseEntity.ok(restaurant);
+        log.info("Se recuperaró el restaurante exitosamente.");
+        return ResponseEntity.ok(restaurant);
     }
 
     /**
      * Endpoint to update an existing restaurant in the system using the provided {@link RestaurantRequestDto}.
-     * Delegates the update logic to {@link IRestaurantService#updateRestaurant( Restaurant)}.
+     * Delegates the update logic to {@link IRestaurantService#updateRestaurant(RestaurantRequestDto, Long)}.
      *
-     * @param rst_id The ID of the restaurant to update.
+     * @param rst_id               The ID of the restaurant to update.
      * @param restaurantRequestDto The {@link RestaurantRequestDto} object containing the updated details of the restaurant.
      * @return The {@code RestaurantResponseDto} object representing the updated restaurant.
      */
@@ -141,21 +127,14 @@ public class RestaurantController {
             @PathVariable Long rst_id,
             @RequestBody @Valid RestaurantRequestDto restaurantRequestDto
     ) {
-            log.info("Solicitud recibida para actualizar el restaurante con ID: {}", rst_id);
+        log.info("Solicitud recibida para actualizar el restaurante con ID: {}", rst_id);
 
-        Restaurant restaurant = restaurantService.findRestaurantEntityById(rst_id);
-
-        restaurant.setName(restaurantRequestDto.name());
-        restaurant.setDescription(restaurantRequestDto.description());
-        restaurant.setCategory(restaurantRequestDto.categoria());
-        restaurant.setPhone(restaurantRequestDto.phone());
-        restaurant.setAddress(restaurantRequestDto.address());
-        restaurant.setLogo(restaurantRequestDto.logo());
-
-        RestaurantResponseDto updatedRestaurant = restaurantService.updateRestaurant(restaurant);
-            log.info("Restaurante con ID: {} actualizado exitosamente", rst_id);
-            return ResponseEntity.ok(updatedRestaurant);
+        RestaurantResponseDto outputUpdatedDto = restaurantService.updateRestaurant(restaurantRequestDto, rst_id);
+        log.info("Restaurante con ID: {} actualizado exitosamente", rst_id);
+        return ResponseEntity.status(HttpStatus.CREATED).body(outputUpdatedDto);
+//        return ResponseEntity.ok(updatedRestaurant);
     }
+
     @GetMapping("/byOwnerId/{ownerId}")
 //    @PreAuthorize("hasRole('RESTAURANTE')")
     public ResponseEntity<List<RestaurantResponseDto>> getByOwnerId(
@@ -177,34 +156,28 @@ public class RestaurantController {
      */
     @GetMapping("{restaurantId}/categories")
     @PreAuthorize("hasRole('RESTAURANTE')")
-    public ResponseEntity<Set<Category>> getOfferedCategories(@PathVariable Long restaurantId) {
+    public ResponseEntity<Set<CategoryResponseDto>> getOfferedCategories(@PathVariable Long restaurantId) {
         log.info("Solicitud recibida para obtener las categorias ofrecidas por el restaurante {}", restaurantId);
-        Set<Category> categories = restaurantService.getOfferedCategories(restaurantId);
+        Set<CategoryResponseDto> categories = restaurantService.getOfferedCategories(restaurantId);
 
         log.info("Se recuperaron {} categorias exitosamente para el restaurante {}.", categories.size(), restaurantId);
         return ResponseEntity.ok(categories);
     }
+
     @PostMapping("{restaurantId}/categories")
     @PreAuthorize("hasRole('RESTAURANTE')")
     public ResponseEntity<CategoryResponseDto> addCategoryToRestaurant(
             @PathVariable Long restaurantId,
-            @Valid @RequestBody CategoryRequestDto categoryInput
-            ) {
-        log.info("Solicitud recibida para añadir la categoria {} al restaurante con ID {}", categoryInput.name(), restaurantId);
+            @Valid @RequestBody CategoryRequestDto categoryRequestDto
+    ) {
+        log.info("Solicitud recibida para añadir la categoria {} al restaurante con ID {}", categoryRequestDto.name(), restaurantId);
 
-        Category associatedCategory = restaurantService.addCategoryToRestaurant(restaurantId, categoryInput);
-        // Mapea la entidad devuelta a un DTO de respuesta
-        CategoryResponseDto associatedCategoryResponseDto = new CategoryResponseDto(
-                associatedCategory.getId(),
-                associatedCategory.getName(),
-                associatedCategory.getDescription()
-        );
+        CategoryResponseDto associatedCategoryResponseDto = restaurantService.addCategoryToRestaurant(restaurantId, categoryRequestDto);
 
         log.info("Categoría {} asociada/creada para restaurante {}. Devolviendo DTO.",
                 associatedCategoryResponseDto.name(), restaurantId);
         return ResponseEntity.status(HttpStatus.CREATED).body(associatedCategoryResponseDto);
     }
-
 
 
     /**
@@ -217,9 +190,10 @@ public class RestaurantController {
     @DeleteMapping("/{rst_id}")
     @PreAuthorize("hasRole('RESTAURANTE')")
     public ResponseEntity<Void> deleteRestaurant(@PathVariable Long rst_id) {
-            log.info("Solicitud recibida para eliminar el restaurante con ID: {}", rst_id);
-            restaurantService.deleteById(rst_id);
-            log.info("Restaurante con ID: {} eliminado exitosamente", rst_id);
-            return ResponseEntity.noContent().build();
+        log.info("Solicitud recibida para eliminar el restaurante con ID: {}", rst_id);
+        restaurantService.deleteById(rst_id);
+
+        log.info("Restaurante con ID: {} eliminado exitosamente", rst_id);
+        return ResponseEntity.noContent().build();
     }
 }

@@ -5,9 +5,13 @@ public record RestaurantResponseDto(
         Long rst_user_id,
         String name,
         String description,
-        String category,
         String phone,
+        String email,
         String address,
-        String logo
+        String openingHours,
+        String logo,
+        String coverImage,
+        Long cuisineId,
+        String cuisineName
 ) {
 }

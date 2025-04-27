@@ -14,9 +14,16 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
 
     // Este método ahora devuelve DIRECTAMENTE la lista de DTOs.
     @Query("SELECT new com.c24_39_t_webapp.restaurants.dtos.response.RestaurantResponseDto(" +
-            "r.id, r.userEntity.id, r.name, r.description, r.category, r.phone, r.address, r.logo) " +
-            "FROM Restaurant r JOIN r.userEntity ue WHERE ue.id = :ownerUserId")
+            "r.id, ue.id, r.name, r.description, r.phone, r.email, r.address, r.openingHours, r.logo, r.coverImage, " +
+            "rc.id, rc.name) " +
+            "FROM Restaurant r JOIN r.userEntity ue JOIN r.cuisine rc "  +
+            "WHERE ue.id = :ownerUserId")
     List<RestaurantResponseDto> findRestaurantsByOwnerId(@Param("ownerUserId") Long ownerUserId);
+
+    // Este devuelve solo los IDs de los restaurantes de un dueño
+    @Query("SELECT r.id FROM Restaurant r WHERE r.userEntity.id = :ownerId")
+    List<Long> findRestaurantIdsByOwnerId(@Param("ownerId") Long ownerId);
+
     //Estos dan problemas de rendimiento, necesitan que el Dto haga una llamada a la base de datos.
     //List<Restaurant> findByUserEntityId(Long ownerId);
     //@Query("SELECT r FROM Restaurant r JOIN FETCH r.userEntity WHERE r.userEntity.id = :ownerId")
