@@ -15,13 +15,14 @@ import {
   Users, DollarSign, ShoppingBag, User, Settings,
   Edit, Trash2, Package, Star, Building
 } from "lucide-react";
-import { Product, Restaurant, GroupedProduct } from "@/types/models";
+import { Product, Restaurant, GroupedProduct, Order, OrderStatus } from "@/types/models";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { ProductEditModal } from "@/components/product/ProductEditModal";
 import { CategoryManagement } from "@/components/category/CategoryManagement";
 import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import OrderDetailsModal from "@/components/order/OrderDetailsModal";
 
 
 const Dashboard = () => {
@@ -159,10 +160,11 @@ const CustomerDashboard = () => {
                       </TableCell>
                       <TableCell>{order.restaurantId}</TableCell>
                       <TableCell>
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${order?.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                          order?.status === 'preparing' ? 'bg-blue-100 text-blue-800' :
-                            order?.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-gray-100 text-gray-800'
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${order?.status === 'pendiente' ? 'bg-green-100 text-green-800' :
+                          order?.status === 'pagado' ? 'bg-blue-100 text-blue-800' :
+                            order?.status === 'entregado' ? 'bg-yellow-100 text-yellow-800' :
+                              order?.status === 'cancelado' ? 'bg-red-100 text-red-800' :
+                                'bg-gray-100 text-gray-800'
                           }`}>
                           {order?.status.charAt(0).toUpperCase() + order?.status.slice(1)}
                         </span>
@@ -202,6 +204,15 @@ const RestaurantDashboard = () => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isOrderDetailsOpen, setIsOrderDetailsOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order>(null);
+
+  const possibleStatus: OrderStatus[] = [
+    'pendiente',
+    'pagado',
+    'entregado',
+    'cancelado'
+  ];
 
   const { data: ownedRestaurants = [], isLoading: isLoadingRestaurants, error: errorRestaurants } =
     useQuery<Restaurant[], Error>({
@@ -377,7 +388,7 @@ const RestaurantDashboard = () => {
       if (!vars.categoryId || vars.categoryId === "undefined" || vars.categoryId === "") {
         throw new Error("Invalid categoryId ID for category deletion");
       }
-      if (!vars.restaurantId || vars.restaurantId  === "undefined" || vars.restaurantId  === "") {
+      if (!vars.restaurantId || vars.restaurantId === "undefined" || vars.restaurantId === "") {
         throw new Error("Invalid restaurantId ID for category deletion");
       }
       return categoryAPI.delete(vars.categoryId, vars.restaurantId);
@@ -394,9 +405,35 @@ const RestaurantDashboard = () => {
     }
   });
 
-  const pendingOrders = useMemo(() => orders.filter((o: any) => o.status === 'pending' || o.status === 'preparing'), [orders]);
-  const completedOrders = useMemo(() => orders.filter((o: any) => o.status === 'delivered' || o.status === 'completed'), [orders]);
-  const totalRevenue = useMemo(() => completedOrders.reduce((sum: number, o: any) => sum + (o.total || 0), 0), [completedOrders]);
+  const { mutate: updateOrderStatus, isPending: isUpdatingStatus } = useMutation({
+    mutationFn: ({ orderId, status }: { orderId: string; status: OrderStatus }) =>
+      orderAPI.updateStatus(orderId, status),
+
+    onSuccess: (updatedOrderData) => {
+      toast.success(`Order #${updatedOrderData.id} status updated to ${updatedOrderData.status}!`);
+      // Invalida la query de pedidos para refrescar la lista automáticamente
+      queryClient.invalidateQueries({ queryKey: ['restaurantOrders', selectedRestaurant?.id] });
+      // queryClient.invalidateQueries({ queryKey: ['¿?'] });
+    },
+    onError: (error) => {
+      toast.error(`Failed to update order status: ${error.message}`);
+    },
+  });
+
+
+  const pendingOrders = useMemo(() => orders.filter((o: any) => o.status === 'pendiente' || o.status === 'cancelado'), [orders]);
+  const completedOrders = useMemo(() => orders.filter((o: any) => o.status === 'entregado' || o.status === 'pagado'), [orders]);
+  const totalRevenue = useMemo(() => {
+    return completedOrders.reduce((sum: number, order: Order) => {
+      let orderTotal = 0;
+      if (typeof order.total === 'number') {
+        orderTotal = order.total;
+      } else if (typeof order.total === 'object' && order.total !== null && typeof order.total === 'number') {
+        orderTotal = order.total; // O order.total/ 100;
+      }
+      return sum + orderTotal;
+    }, 0);
+  }, [completedOrders]);
 
   const handleRestaurantChange = (restaurantId: string) => {
     const restaurant = ownedRestaurants.find(r => String(r.id) === restaurantId) || null;
@@ -513,9 +550,9 @@ const RestaurantDashboard = () => {
   const handleAddCategory = (formData: { name: string; description: string }) => {
     console.log("DATA addCategory: ", formData, formData.name, formData.description);
     createCategoryMutation.mutate({
-          restaurantId: selectedRestaurant!.id.toString(),
-          categoryData: { name: formData.name, description: formData.description }
-        });
+      restaurantId: selectedRestaurant!.id.toString(),
+      categoryData: { name: formData.name, description: formData.description }
+    });
     // toast.success(`Categoría "${categoryName}" agregada con éxito`);
   };
 
@@ -539,26 +576,42 @@ const RestaurantDashboard = () => {
 
   const orderStatusData = useMemo(() => {
     const statusCounts: { [key: string]: number } = {
-      pending: 0,
-      preparing: 0,
-      delivered: 0,
-      completed: 0,
-      cancelled: 0
+      pendiente: 0,
+      pagado: 0,
+      entregado: 0,
+      cancelado: 0,
+      // completed: 0
     };
 
-    orders.forEach((order: any) => {
+    orders.forEach((order: Order) => {
       if (order?.status in statusCounts) {
         statusCounts[order?.status]++;
       }
+      // Opcional: Contar estados no definidos inicialmente
+      // else {
+      //    console.warn(`Estado no esperado encontrado: ${status}`);
+      //    // Podrías añadirlo al objeto si quieres contarlos también:
+      //    // if (!statusCounts[status]) statusCounts[status] = 0;
+      //    // statusCounts[status]++;
+      // }
     });
 
-    return Object.entries(statusCounts).map(([status, count]) => ({
-      name: status.charAt(0).toUpperCase() + status.slice(1),
-      value: count
-    }));
+    return Object.entries(statusCounts)
+      // Opcional: filtrar estados con conteo 0 si no se desea mostrarlos en el gráfico
+      .filter(([name, value]) => value > 0)
+      .map(([name, count]) => ({
+        name: name.charAt(0).toUpperCase() + name.slice(1),
+        value: count
+      }));
   }, [orders]);
 
+  const handleCloseModal = () => {
+    setIsOrderDetailsOpen(false);
+    setSelectedOrder(null);
+  };
+
   const revenueData = useMemo(() => {
+    // --- Generación de Fechas ---
     const last7Days = Array.from({ length: 7 }, (_, i) => {
       const date = new Date();
       date.setDate(date.getDate() - i);
@@ -570,17 +623,35 @@ const RestaurantDashboard = () => {
       dailyRevenue[day] = 0;
     });
 
-    completedOrders.forEach((order: any) => {
-      const orderDate = new Date(order?.createdAt).toISOString().split('T')[0];
-      if (orderDate in dailyRevenue) {
-        dailyRevenue[orderDate] += order?.total || 0;
+    completedOrders.forEach((order: Order) => {
+      try {
+        const orderDate = new Date(order.createdAt).toISOString().split('T')[0];
+
+        let orderTotalValue = 0;
+        const total = order.total;
+        if (typeof total === 'number') {
+          orderTotalValue = total;
+        } else if (typeof total === 'object' && total !== null && typeof total === 'number') {
+          orderTotalValue = total; // Ajusta /100 si aplica
+        }
+        if (orderDate in dailyRevenue) {
+          dailyRevenue[orderDate] += orderTotalValue;
+        }
+      } catch (e) {
+        console.error(`Error procesando fecha para pedido ID ${order.id}`, e); // <-- LOG 7 (Error de fecha?)
       }
     });
 
-    return Object.entries(dailyRevenue).map(([date, amount]) => ({
-      date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      amount
-    }));
+    // --- Transformación Final ---
+    const finalData = Object.entries(dailyRevenue).map(([date, amount]) => {
+      const formattedDate = new Date(date).toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
+      return {
+        date: formattedDate,
+        amount
+      };
+    });
+    return finalData;
+
   }, [completedOrders]);
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
@@ -829,19 +900,46 @@ const RestaurantDashboard = () => {
                           {orders.slice(0, 5).map((order) => (
                             <TableRow key={order.id}>
                               <TableCell className="font-medium">{order.id.slice(0, 8)}</TableCell>
-                              <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
+                              <TableCell>{new Date(order.createdAt).toLocaleDateString('es-ES', { timeZone: 'UTC' })}</TableCell>
                               <TableCell>
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${order?.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                                  order?.status === 'preparing' ? 'bg-blue-100 text-blue-800' :
-                                    order?.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                      'bg-gray-100 text-gray-800'
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${order?.status === 'pendiente' ? 'bg-green-100 text-green-800' :
+                                  order?.status === 'pagado' ? 'bg-blue-100 text-blue-800' :
+                                    order?.status === 'entregado' ? 'bg-yellow-100 text-yellow-800' :
+                                      order?.status === 'cancelado' ? 'bg-red-100 text-red-800' :
+                                        'bg-gray-100 text-gray-800'
                                   }`}>
                                   {order?.status.charAt(0).toUpperCase() + order?.status.slice(1)}
                                 </span>
                               </TableCell>
                               <TableCell className="text-right">${order.total.toFixed(2)}</TableCell>
                               <TableCell>
-                                <Button variant="ghost" size="sm">View</Button>
+                                <Select
+                                  value={order.status}
+                                  // Se dispara cuando se selecciona un nuevo valor
+                                  onValueChange={(newStatus: OrderStatus) => {
+                                    updateOrderStatus({ orderId: order.id, status: newStatus });
+                                  }}
+                                  // Deshabilita todos si isUpdatingStatus es true (más simple)
+                                  disabled={isUpdatingStatus}
+                                >
+                                  <SelectTrigger className="w-[180px]">
+                                    <SelectValue placeholder="Change status..." />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {possibleStatus.map((statusOption) => (
+                                      <SelectItem key={statusOption} value={statusOption}>
+                                        {statusOption.charAt(0).toUpperCase() + statusOption.slice(1)}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </TableCell>
+                              <TableCell>
+                                <Button variant="ghost" size="sm" className="ml-2"
+                                  onClick={() => {
+                                    setSelectedOrder(order);
+                                    setIsOrderDetailsOpen(true);
+                                  }}>View</Button>
                               </TableCell>
                             </TableRow>
                           ))}
@@ -887,17 +985,25 @@ const RestaurantDashboard = () => {
                               <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
                               {/* <TableCell>{order.createdAt}</TableCell> */}
                               <TableCell>
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${order?.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                                  order?.status === 'preparing' ? 'bg-blue-100 text-blue-800' :
-                                  order?.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                  'bg-gray-100 text-gray-800'
-                                }`}>
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${order?.status === 'pendiente' ? 'bg-green-100 text-green-800' :
+                                  order?.status === 'pagado' ? 'bg-blue-100 text-blue-800' :
+                                    order?.status === 'entregado' ? 'bg-yellow-100 text-yellow-800' :
+                                      order?.status === 'cancelado' ? 'bg-red-100 text-red-800' :
+                                        'bg-gray-100 text-gray-800'
+                                  }`}>
                                   {order?.status.charAt(0).toUpperCase() + order?.status.slice(1)}
                                 </span>
                               </TableCell>
                               <TableCell className="text-right">${order.total.toFixed(2)}</TableCell>
                               <TableCell>
-                                <Button variant="ghost" size="sm">View Details</Button>
+                                <Button variant="ghost" size="sm"
+                                  onClick={() => {
+                                    setSelectedOrder(order);
+                                    setIsOrderDetailsOpen(true);
+                                  }}
+                                >
+                                  View Details
+                                </Button>
                               </TableCell>
                             </TableRow>
                           ))}
@@ -911,6 +1017,14 @@ const RestaurantDashboard = () => {
                   </CardContent>
                 </Card>
               </TabsContent>
+              {isOrderDetailsOpen && selectedOrder && (
+                <OrderDetailsModal
+                  isOpen={isOrderDetailsOpen}
+                  order={selectedOrder}
+                  onClose={handleCloseModal}
+                // onStatusChange={tuFuncionParaRefrescarLista}
+                />
+              )}
 
               <TabsContent value="products">
                 <div className="flex justify-between items-center mb-6">

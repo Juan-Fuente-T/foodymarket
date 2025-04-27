@@ -433,7 +433,10 @@ export const orderAPI = {
   updateStatus: async (ord_id: string, status: OrderStatus) => {
     const response = await fetchWithError(`/order/${ord_id}`, {
       method: "PATCH",
-      body: JSON.stringify(status),
+      body: JSON.stringify({ status: status}),
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
     return adaptOrder(response);
   },
@@ -444,6 +447,11 @@ export const orderAPI = {
 
   getByClient: async (cln_id: string) => {
     const data = await fetchWithError(`/order/byClientId/${cln_id}`);
+    return data.map(adaptOrder);
+  },
+  getAllByRestaurant: async (ownerId: string) => {
+    const data = await fetchWithError(`/order/byOwnerId/${ownerId}`);
+    console.log("DATA ORDERS en api for all by restaurant: ", data);
     return data.map(adaptOrder);
   },
 

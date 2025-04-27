@@ -1,53 +1,48 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { useAuth } from '@/hooks/use-auth';
 import { useQuery } from '@tanstack/react-query';
-import { orderAPI } from '@/services/api';
+import { orderAPI, restaurantAPI } from '@/services/api';
 import { UserRole } from '@/types/models';
+import { Order } from '@/types/models';
+import OrderDetailsModal from '@/components/order/OrderDetailsModal';
 
 const Orders = () => {
   const { user } = useAuth();
+  const [selectedOrders, setSelectedOrders] = useState<Order[] | null>(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
-  // Fetch orders based on user role
-  const { data: orders = [], isLoading } = useQuery({
+  const { data: allOrdersRestaurant = [], isLoading } = useQuery({
     queryKey: ['orders', user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
-      
-      // If user is a restaurant owner, get restaurant orders
       if (user.role === "RESTAURANTE") {
-        const restaurants = await getRestaurantsForUser(user.id);
-        if (restaurants.length > 0) {
-          return orderAPI.getByRestaurant(restaurants[0].id.toString());
-        }
+        const allOrdersRestaurant = await orderAPI.getAllByRestaurant(user.id);
+        setSelectedOrders(allOrdersRestaurant);
+        return allOrdersRestaurant;
+      }else if (user.role === "CLIENTE") {
+        const ordersClient = await orderAPI.getByClient(user.id);
+        return ordersClient;
+      } else {
         return [];
       }
-      
-      // Otherwise get customer orders
-      return orderAPI.getByClient(user.id);
     },
     enabled: !!user?.id,
   });
-
-  // Fetch restaurants owned by user
-  const getRestaurantsForUser = async (userId: string) => {
-    // Implementation would depend on your restaurant API
-    // This is a placeholder
-    return []; 
-  };
-
+ 
   return (
     <Layout>
       <div className="container mx-auto py-8">
         <h1 className="text-2xl font-bold mb-6">Your Orders</h1>
-        
+
         {isLoading ? (
           <div>Loading orders...</div>
-        ) : orders.length === 0 ? (
+        ) : allOrdersRestaurant.length === 0 ? (
           <div className="text-center py-12">
+            <p>RAYOS</p>
             <h2 className="text-xl font-medium text-gray-600">You don't have any orders yet</h2>
             <p className="mt-2 text-gray-500">
-              {user?.role === "RESTAURANTE" 
+              {user?.role === "RESTAURANTE"
                 ? "When customers place orders with your restaurant, they'll appear here."
                 : "When you place an order, it will appear here."}
             </p>
@@ -55,7 +50,7 @@ const Orders = () => {
         ) : (
           <div className="space-y-4">
             {/* Order list would be rendered here */}
-            {orders.map(order => (
+            {selectedOrders.map(order => (
               <div key={order.id} className="border rounded-lg p-4">
                 Order #{order.id}
               </div>
