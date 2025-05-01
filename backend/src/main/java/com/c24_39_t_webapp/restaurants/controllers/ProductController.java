@@ -128,7 +128,7 @@ public class ProductController {
         * @param categoryId The category to retrieve products for.
         * @return A list of {@code ProductSummaryResponseDto} objects representing all products in the specified category.
         */
-    @GetMapping(value = "/byCategory/{category}")
+    @GetMapping(value = "/byCategory/{categoryId}")
     public ResponseEntity<List<ProductSummaryResponseDto>> findProductsByCategoryId(@PathVariable Long categoryId) {
         log.info("Solicitud recibida para obtener productos por categoria con ID: {}", categoryId);
         List<ProductSummaryResponseDto> products = productService.findProductsByCategoryId(categoryId);
