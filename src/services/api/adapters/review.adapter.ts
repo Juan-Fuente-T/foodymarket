@@ -6,5 +6,5 @@ export const adaptReview = (data: any): Review => ({
   userId: data.userEntity?.id?.toString() || '',
   score: data.score || 0,
   comments: data.comments || '',
-  createdAt: data.createdAt?.toString() || new Date().toISOString()
+  createdAt: data.createdAt?.toString() || 'N/D'
 });

@@ -16,8 +16,8 @@ export const adaptRestaurant = (data: any): Restaurant => ({
   cuisineName: data.cuisineName || '',
   category: data.cuisineName || '', // Map cuisineName to category for compatibility
   ownerId: data.rst_user_id?.toString() || '',
-  createdAt: data.createdAt?.toString() || new Date().toISOString(),
-  updatedAt: data.updatedAt?.toString() || new Date().toISOString(),
+  createdAt: data.createdAt?.toString() || 'N/D',
+  updatedAt: data.updatedAt?.toString() || 'N/D',
   rating: data.reviews?.reduce((acc: number, r: any) => acc + r.rvw_puntaje, 0) / data.reviews?.length || 0,
   reviewCount: data.reviews?.length || 0,
   minOrderAmount: data.minOrderAmount || 0,

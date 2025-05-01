@@ -12,8 +12,8 @@ export const adaptProduct = (data: any): Product => ({
   quantity: parseInt(data.quantity) || 1,
   restaurantId: data.restaurantId?.toString() || "",
   categoryId: data.categoryId?.toString() || "",
-  createdAt: data.createdAt?.toString() || new Date().toISOString(),
-  updatedAt: data.updatedAt?.toString() || new Date().toISOString(),
+  createdAt: data.createdAt?.toString() || 'N/D',
+  updatedAt: data.updatedAt?.toString() || 'N/D',
   categoryName: data.categoryName || "",
 });
 

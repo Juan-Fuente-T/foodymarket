@@ -16,7 +16,7 @@ export const adaptUser = (data: any): User => {
     role,
     phone: data.phone || '',
     address: data.address || '',
-    createdAt: data.createdAt || new Date().toISOString(),
+    createdAt: data.createdAt || 'N/D',
     avatar: data.avatar || ''
   };
 };

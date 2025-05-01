@@ -9,7 +9,7 @@ export const adaptOrder = (data: any): Order => ({
   status: data.status || '',
   total: data.total || 0,
   comments: data.comments || '',
-  createdAt: data.createdAt?.toString() || new Date().toISOString(),
-  updatedAt: data.updatedAt?.toString() || new Date().toISOString(),
+  createdAt: data.createdAt?.toString() || 'N/D',
+  updatedAt: data.updatedAt?.toString() || 'N/D',
   details: data.details?.map(adaptOrderItem) || []
 });

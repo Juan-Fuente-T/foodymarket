@@ -164,7 +164,7 @@ const CustomerDashboard = () => {
                       <TableCell className="font-medium">{order.id.slice(0, 8)}</TableCell>
                       <TableCell className="font-medium">{order.restaurantName.slice(0, 30)}</TableCell>
                       <TableCell>
-                        {new Date(order.createdAt).toLocaleDateString()}
+                        {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/D'}
                       </TableCell>
                       <TableCell>
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${order?.status === 'pendiente' ? 'bg-green-100 text-green-800' :
@@ -1001,7 +1001,7 @@ const RestaurantDashboard = () => {
                           {orders.map((order: Order) => (
                             <TableRow key={order.id}>
                               <TableCell className="font-medium">{order.id.slice(0, 8)}</TableCell>
-                              <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
+                              <TableCell>{order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/D'}</TableCell>
                               {/* <TableCell>{order.createdAt}</TableCell> */}
                               <TableCell>
                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${order?.status === 'pendiente' ? 'bg-green-100 text-green-800' :
