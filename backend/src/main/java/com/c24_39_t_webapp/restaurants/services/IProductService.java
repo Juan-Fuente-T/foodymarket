@@ -5,8 +5,6 @@ import com.c24_39_t_webapp.restaurants.dtos.request.ProductUpdateDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.GroupedProductsResponseDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.ProductResponseDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.ProductSummaryResponseDto;
-import com.c24_39_t_webapp.restaurants.models.Category;
-import com.c24_39_t_webapp.restaurants.models.Product;
 
 import java.util.List;
 

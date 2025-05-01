@@ -1,7 +1,6 @@
 package com.c24_39_t_webapp.restaurants.repository;
 
 import com.c24_39_t_webapp.restaurants.dtos.response.ProductResponseDto;
-import com.c24_39_t_webapp.restaurants.models.Category;
 import com.c24_39_t_webapp.restaurants.models.Product;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
