@@ -1,7 +1,5 @@
 package com.c24_39_t_webapp.restaurants;
 
-import com.c24_39_t_webapp.restaurants.config.segurity.JwtUtil;
-import lombok.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 

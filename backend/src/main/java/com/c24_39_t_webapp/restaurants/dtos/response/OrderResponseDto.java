@@ -12,6 +12,8 @@ public record OrderResponseDto(
     OrderStatus status,
     Double total,
     String comments,
-    List<OrderDetailsResponseDto> details
+    List<OrderDetailsResponseDto> details,
+    String createdAt,
+    String updatedAt
 ) {
 }

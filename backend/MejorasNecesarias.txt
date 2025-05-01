@@ -1,0 +1,12 @@
+-Añadir un campo * en el pedido para guardar si es entrega a domicilio o recodiga en local
+-Añadir el bot de aviso de pedido de telegram
+-Corregir el borrar las imagenes, de producto(quizás restaurante) al eliminar
+-Añadir foto PERFIL en Profile, pudiendo editar el perfil
+-Corregir y ajustar toda la parte correspondiente a REVIEWS
+-Correguir/hacer la parte de settings, ahora inexistente
+-Ajustar analitics, ahora la mayoria tiene datos simulados
+
+*Restaurante ahora mismo no se puede borrar, como se gestiona esto? No es sencillo, dejaria ademas de las imagenes
+colgadas las categorias de Cuisine y los productos, y no se puede borrar un producto sin borrar el restaurante.
+Quizás lo mejor es dejarlo como inactivo, y que no se muestre en la app, pero que quede en la base de datos por si acaso.
+Necesitaria un campo en el restaurante para indicar si es activo o no, y en la app filtrar por este campo.

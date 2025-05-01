@@ -1,6 +1,5 @@
 package com.c24_39_t_webapp.restaurants.dtos.request;
 
-import com.c24_39_t_webapp.restaurants.models.RestaurantCuisine;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 

@@ -5,7 +5,7 @@ import com.c24_39_t_webapp.restaurants.dtos.request.RestaurantRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.CategoryResponseDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.RestaurantResponseDto;
 import com.c24_39_t_webapp.restaurants.exception.RestaurantNotFoundException;
-import com.c24_39_t_webapp.restaurants.exception.user_implementations.ResourceNotFoundException;
+import com.c24_39_t_webapp.restaurants.exception.UserNotFoundException;
 import com.c24_39_t_webapp.restaurants.models.Category;
 import com.c24_39_t_webapp.restaurants.models.Restaurant;
 import com.c24_39_t_webapp.restaurants.models.RestaurantCuisine;
@@ -20,6 +20,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceContext;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
@@ -100,9 +101,9 @@ public class RestaurantServiceImpl implements IRestaurantService {
     public List<RestaurantResponseDto> findAll() {
         List<Restaurant> restaurants = restaurantRepository.findAll();
 
-        if (restaurants.isEmpty()) {
-            throw new RuntimeException("No se encontraron restaurantes.");
-        }
+        if (restaurants.isEmpty()) return Collections.emptyList();
+        log.info("Se encontraron {} restaurantes", restaurants.size());
+
         return restaurants.stream()
                 .map(restaurant -> {
                     RestaurantCuisine cuisine = restaurant.getCuisine();
@@ -140,7 +141,6 @@ public class RestaurantServiceImpl implements IRestaurantService {
 
                     RestaurantResponseDto dto = new RestaurantResponseDto(
                             restaurant.getId(),
-
                             (restaurant.getUserEntity() != null) ? restaurant.getUserEntity().getId() : null,
                             restaurant.getName(),
                             restaurant.getDescription(),
@@ -165,10 +165,15 @@ public class RestaurantServiceImpl implements IRestaurantService {
     @Transactional
     @Override
     public RestaurantResponseDto updateRestaurant(RestaurantRequestDto restaurantRequestDto, Long rst_id) {
-        if (!restaurantRepository.existsById(rst_id)) {
-            throw new RestaurantNotFoundException("Restaurante no encontrado con id: " + rst_id);
-        }
+//        if (!restaurantRepository.existsById(rst_id)) {
+//            throw new RestaurantNotFoundException("Restaurante no encontrado con id: " + rst_id);
+//        }
         log.info("Actualizando el restaurante con ID: {}", rst_id);
+        Restaurant newRestaurant = restaurantRepository.findById(rst_id)
+                .orElseThrow(() -> {
+                    log.warn("No se encontró un restaurante con ese ID para editar: {}", rst_id);
+                    return new RestaurantNotFoundException(("No se encontró un restaurante con ese ID para editar: " + rst_id));
+                });
 
         RestaurantCuisine cuisine = cuisineRepository.findById(restaurantRequestDto.cuisineId())
                 .orElseThrow(() -> { // <<< Maneja el Optional<> devuelto por findById
@@ -177,11 +182,11 @@ public class RestaurantServiceImpl implements IRestaurantService {
                             + restaurantRequestDto.cuisineId());
                 });
 
-        Restaurant newRestaurant = restaurantRepository.findById(rst_id)
-                .orElseThrow(() -> {
-                    log.warn("No se encontró un restaurante con ese ID para editar: {}", rst_id);
-                    return new RestaurantNotFoundException(("No se encontró un restaurante con ese ID para editar: " + rst_id));
-                });
+        String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (newRestaurant.getUserEntity() == null || !newRestaurant.getUserEntity().getEmail().equals(userEmail)) {
+            log.warn("Permiso denegado: Usuario {} intentando actualizar restaurante {}", userEmail, rst_id);
+            throw new SecurityException("No tienes permiso para actualizar este restaurante");
+        }
 
         newRestaurant.setName(restaurantRequestDto.name());
         newRestaurant.setDescription(restaurantRequestDto.description());
@@ -218,6 +223,13 @@ public class RestaurantServiceImpl implements IRestaurantService {
         if (!restaurantRepository.existsById(id)) {
             throw new RestaurantNotFoundException("Restaurante no encontrado con id: " + id);
         }
+        String authenticatedUsername = SecurityContextHolder.getContext().getAuthentication().getName();
+        UserEntity owner = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("Dueño de restaurante no encontrado con ID: " + id));
+        if (!owner.getEmail().equals(authenticatedUsername /* && !SecurityUtils.isAdmin() */ )) { // Añadir lógica si admin puede ver
+            log.warn("Usuario {} intentando acceder a restaurantes del dueño {}", authenticatedUsername, id);
+            throw new SecurityException("No tienes permiso para ver los restaurantes de este dueño.");
+        }
         restaurantRepository.deleteById(id);
     }
 
@@ -231,7 +243,18 @@ public class RestaurantServiceImpl implements IRestaurantService {
     @Override
     public List<RestaurantResponseDto> findRestaurantsByOwnerId(Long ownerId) { // Este devuelve un array de  Restaurant
         log.info("Buscando los restaurantes del dueño con id {}", ownerId);
+        String authenticatedUsername = SecurityContextHolder.getContext().getAuthentication().getName();
+        UserEntity owner = userRepository.findById(ownerId)
+                .orElseThrow(() -> new UserNotFoundException("Dueño no encontrado con ID: " + ownerId));
+        if (!owner.getEmail().equals(authenticatedUsername)) {
+            log.warn("Usuario {} intentando acceder a restaurantes del dueño {}", authenticatedUsername, ownerId);
+            throw new SecurityException("No tienes permiso para ver los restaurantes de este dueño.");
+        }
         List<RestaurantResponseDto> dtos = restaurantRepository.findRestaurantsByOwnerId(ownerId);
+        if(dtos.isEmpty()) {
+            log.info("No se encontraron restaurantes para el dueño con ID {}", ownerId);
+            return Collections.emptyList();
+        }
 
         log.info("Se encontraron {} DTOs de restaurantes para el propietario {}", dtos.size(), ownerId);
         return dtos;
@@ -239,33 +262,29 @@ public class RestaurantServiceImpl implements IRestaurantService {
 
     @Transactional(readOnly = true)
     @Override
-    public Set<CategoryResponseDto> getOfferedCategories(Long restaurantId) {
-        log.info("Obteniedo las categorias de producto del restaurantes on id {}", restaurantId);
-        Optional<Restaurant> restaurantOpt = restaurantRepository.findById(restaurantId);
+    public Set<CategoryResponseDto> findByIdFetchingCategories(Long restaurantId) {
+        log.info("Obteniendo las categorias de producto del restaurantes on id {}", restaurantId);
+        Restaurant restaurant = restaurantRepository.findByIdFetchingCategories(restaurantId).orElseThrow(() ->
+                new RestaurantNotFoundException(
+                        "Restaurante no encontrado con ID: " + restaurantId
+                ));
+        log.info("Restaurante '{}' encontrado. Accediendo a sus categorías cargadas.", restaurant.getName());
 
-        if (restaurantOpt.isPresent()) {
-            Restaurant restaurant = restaurantOpt.get();
-            // *** ¡Magia aquí! ***
-            // Al llamar a .size() (o simplemente devolver la colección) Hibernate ve que la colección LAZY
-            // no está inicializada y ejecuta la consulta necesaria para cargarla DENTRO de la transacción.
-            Set<Category> categories = restaurant.getOfferedCategories();
-            categories.size(); // Acceso simple para forzar la inicialización
-            log.info("Se encontraron {} categorias de restaurantes con el ID {}", categories.size(), restaurantId);
-
-            Set<CategoryResponseDto> categoryDtos = categories.stream()
-                    .map(category -> new CategoryResponseDto(
-                            category.getId(),
-                            category.getName(),
-                            category.getDescription()
-                    ))
-                    .collect(Collectors.toSet());
-            return categoryDtos;
-            // O simplemente: return restaurant.getOfferedCategories();
-            // Spring/Hibernate a menudo gestionan la inicialización al devolverla desde un método transaccional.
-        } else {
-            // Manejar caso restaurante no encontrado, quizás lanzar excepción o devolver vacío
+        // Se accede directamente a la colección. Ya está cargada gracias al JOIN FETCH/EntityGraph.
+        Set<Category> categories = restaurant.getOfferedCategories();
+        log.info("Se encontraron {} categorias para el restaurante con ID {}", categories.size(), restaurantId);
+        if (categories.isEmpty()) {
+            log.info("No se encontraron categorías para el restaurante con ID {}", restaurantId);
             return Collections.emptySet();
         }
+
+        return categories.stream()
+                .map(category -> new CategoryResponseDto(
+                        category.getId(),
+                        category.getName(),
+                        category.getDescription()
+                ))
+                .collect(Collectors.toSet());
     }
 
     @Transactional
@@ -274,7 +293,7 @@ public class RestaurantServiceImpl implements IRestaurantService {
         log.info("Intentando asociar la categoría '{}' al restaurante con ID {}", categoryInput.name(), restaurantId);
         Category categoryToAdd = categoryService.findOrCreateCategory(categoryInput);
 
-        Restaurant restaurant = restaurantRepository.findById(restaurantId)
+        Restaurant restaurant = restaurantRepository.findByIdFetchingCategories(restaurantId)
                 .orElseThrow(() -> {
                     log.error("Restaurante con ID {} no encontrado al intentar añadir categoría.", restaurantId);
                     return new EntityNotFoundException("Restaurante no encontrado con ID: " + restaurantId);

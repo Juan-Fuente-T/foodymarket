@@ -18,23 +18,23 @@ public class UserEntity {
     @Column(name = "usr_id")
     private Long id;
 
-    @Column(name = "usr_nombre")
-    private String name;
-
     @Column(name = "usr_email", unique = true)
     private String email;
 
-    @Column(name = "usr_contrasena")
-    private String password;
+    @Column(name = "usr_nombre")
+    private String name;
 
     @Column(name = "usr_tipo")
-    private String role = "cliente";
+    private String role;
 
     @Column(name="usr_telefono")
     private String phone;
 
     @Column(name="usr_direccion")
     private String address;
+
+    @Column(name = "usr_contrasena")
+    private String password;
 
     @Column(name = "usr_fecha_registro", nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     @CreationTimestamp

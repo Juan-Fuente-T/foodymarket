@@ -1,8 +1,8 @@
 package com.c24_39_t_webapp.restaurants.controllers;
 
-import com.c24_39_t_webapp.restaurants.dtos.request.LoginRequest;
-import com.c24_39_t_webapp.restaurants.dtos.request.RegisterRequest;
-import com.c24_39_t_webapp.restaurants.dtos.response.AuthResponse;
+import com.c24_39_t_webapp.restaurants.dtos.request.LoginRequestDto;
+import com.c24_39_t_webapp.restaurants.dtos.request.UserRequestDto;
+import com.c24_39_t_webapp.restaurants.dtos.response.AuthResponseDto;
 import com.c24_39_t_webapp.restaurants.services.AuthService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,14 +19,14 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@RequestBody final RegisterRequest request){
-        final AuthResponse response = authService.register(request);
+    public ResponseEntity<AuthResponseDto> register(@RequestBody final UserRequestDto registerDto){
+        final AuthResponseDto response = authService.register(registerDto);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> authenticate(@RequestBody final LoginRequest request){
-        final AuthResponse response = authService.login(request);
+    public ResponseEntity<AuthResponseDto> authenticate(@RequestBody final LoginRequestDto request){
+        final AuthResponseDto response = authService.login(request);
         return ResponseEntity.ok(response);
     }
 

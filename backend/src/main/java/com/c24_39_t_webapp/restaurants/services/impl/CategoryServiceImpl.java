@@ -12,22 +12,24 @@ import com.c24_39_t_webapp.restaurants.services.ICategoryService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @AllArgsConstructor
-@Transactional
 public class CategoryServiceImpl implements ICategoryService {
 
     private final CategoryRepository categoryRepository;
     private final ProductRepository productRepository;
     private final RestaurantRepository restaurantRepository;
 
+    //SE CREAN ASOCIADAS A UN RESTAURANTE
 //    @Override
 //    public CategoryResponseDto addCategory(Category category) {
 //        log.info("Agregando una nueva categoria: {}", category.getName());
@@ -52,10 +54,10 @@ public class CategoryServiceImpl implements ICategoryService {
 //        return categoryResponseDto;
 //    }
     @Override
-    // @Transactional // Ya está a nivel de clase, pero ponerlo aquí no hace daño
+     @Transactional
     public Category findOrCreateCategory(CategoryRequestDto categoryInput) {
         log.info("Buscando o creando categoría global con nombre: {}", categoryInput.name());
-        // Usamos orElseGet para buscar y si no, ejecutar la lambda para crear
+        // Usa orElseGet para buscar y si no, ejecutar la lambda para crear
         return categoryRepository.findByName(categoryInput.name())
                 .orElseGet(() -> {
                     log.info("Categoría '{}' no encontrada globalmente, creando nueva...", categoryInput.name());
@@ -69,14 +71,12 @@ public class CategoryServiceImpl implements ICategoryService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<CategoryResponseDto> findAllCategories() {
-
 
         List<Category> categories = categoryRepository.findAll();
 
-        if (categories.isEmpty()) {
-            throw new CategoryNotFoundException("No se encontraron categorias.");
-        }
+        if (categories.isEmpty()) return Collections.emptyList();
 
         return categories.stream()
                 .map(category -> new CategoryResponseDto(
@@ -88,6 +88,7 @@ public class CategoryServiceImpl implements ICategoryService {
     }
 
     @Override
+@Transactional(readOnly = true)
     public CategoryResponseDto findCategoryById(Long ctg_id) {
         log.info("Buscando categoria con ID: {}", ctg_id);
 //        Restaurant restaurant = restaurantRepository.findById(id)
@@ -121,10 +122,18 @@ public class CategoryServiceImpl implements ICategoryService {
 //    }
 
     @Override
+    @Transactional
     public void deleteCategory(Long restaurantId, Long categoryId) {
         log.info("Intentando eliminar categoría global con ID: {}", categoryId);
+
         Restaurant restaurant = restaurantRepository.findById(restaurantId)
                 .orElseThrow(() -> new EntityNotFoundException("Restaurante no encontrado con ID: " + restaurantId));
+
+        String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        log.info("Usuario autenticado con email: {}", userEmail);
+        if (!restaurant.getUserEntity().getEmail().equals(userEmail)) {
+            throw new SecurityException("No tienes permiso para añadir productos a este restaurante");
+        }
 
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new CategoryNotFoundException("Categoría no encontrada con ID: " + categoryId));

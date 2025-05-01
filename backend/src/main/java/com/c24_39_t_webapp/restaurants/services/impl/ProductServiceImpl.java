@@ -16,14 +16,14 @@ import com.c24_39_t_webapp.restaurants.repository.CategoryRepository;
 import com.c24_39_t_webapp.restaurants.repository.ProductRepository;
 import com.c24_39_t_webapp.restaurants.repository.RestaurantRepository;
 import com.c24_39_t_webapp.restaurants.services.IProductService;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -36,22 +36,24 @@ public class ProductServiceImpl implements IProductService {
     private final ProductRepository productRepository;
     private final RestaurantRepository restaurantRepository;
     private final CategoryRepository categoryRepository;
-    @PersistenceContext
-    private EntityManager entityManager;
-
 
     @Override
-    public ProductResponseDto addProduct(ProductRequestDto productRequestDto){
+    @Transactional
+    public ProductResponseDto addProduct(ProductRequestDto productRequestDto) {
         log.info("Intentando crear un producto para el restaurante con ID: {}", productRequestDto.restaurantId());
 //        if (restaurantId == null || restaurantId <= 0) {
 //            throw new IllegalArgumentException("El ID del restaurante no es válido");
 //        }
         Restaurant restaurant = restaurantRepository.findById(productRequestDto.restaurantId())
-                .orElseThrow(() -> new RestaurantNotFoundException("No se ha encontrado el restaurante"));
-        log.warn("Restaurante no encontrado con ID: {}", productRequestDto.restaurantId());
+                .orElseThrow(() -> {
+                    log.warn("Restaurante no encontrado con ID: {}", productRequestDto.restaurantId());
+                    return new RestaurantNotFoundException("No se ha encontrado el restaurante con ID: " + productRequestDto.restaurantId());
+                });
         Category category = categoryRepository.findById(productRequestDto.categoryId())
-                .orElseThrow(() -> new CategoryNotFoundException("No se ha encontrado la categoria"));
-        log.warn("Categoría no encontrada con ID: {}", productRequestDto.categoryId());
+                .orElseThrow(() -> {
+                    log.warn("Categoría no encontrada con ID: {}", productRequestDto.categoryId());
+                    return new CategoryNotFoundException("No se ha encontrado la categoria con ID: " + productRequestDto.restaurantId());
+                });
         String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
         log.info("Recuperando el email del usuario de la autenticacion: {}", userEmail);
         log.info("Recuperando el email del usuario del restaurante: {}", restaurant.getUserEntity().getEmail());
@@ -90,13 +92,16 @@ public class ProductServiceImpl implements IProductService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ProductResponseDto> findAllProducts() {
         log.info("Recuperando todos los productos.");
         List<Product> products = productRepository.findAll();
 
-        if (products.isEmpty()) {
-            throw new ProductNotFoundException("No se encontraron productos.");
-        }
+//        if (products.isEmpty()) {
+//            throw new ProductNotFoundException("No se encontraron productos.");
+//        }
+        if (products.isEmpty())  return Collections.emptyList();
+
         return products.stream()
                 .map(product -> new ProductResponseDto(
                         product.getPrd_id(),
@@ -110,12 +115,13 @@ public class ProductServiceImpl implements IProductService {
                         product.getQuantity(),
                         product.getCategory().getName(),
                         product.getRestaurant().getName(
-                ))
+                        ))
                 )
                 .collect(Collectors.toList());
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ProductResponseDto findProductById(Long prd_id) {
         log.info("Buscando el product con ID: {}", prd_id);
         if (prd_id == null || prd_id <= 0) {
@@ -161,7 +167,8 @@ public class ProductServiceImpl implements IProductService {
         if (updateDto.description() != null) product.setDescription(updateDto.description());
         if (updateDto.price() != null) product.setPrice(updateDto.price());
         if (updateDto.image() != null) product.setImage(updateDto.image());
-        if (updateDto.isActive() != null) product.setIsActive(updateDto.isActive()); // Asume tipo boolean/Boolean y que no viola NOT NULL
+        if (updateDto.isActive() != null)
+            product.setIsActive(updateDto.isActive()); // Asume tipo boolean/Boolean y que no viola NOT NULL
         if (updateDto.quantity() != null) product.setQuantity(updateDto.quantity()); // Asume tipo Integer/Long
 
         Category category = categoryRepository.findById(updateDto.categoryId())
@@ -196,26 +203,27 @@ public class ProductServiceImpl implements IProductService {
     @Override
     @Transactional
     public void deleteProduct(Long prd_id) {
-        if (!productRepository.existsById(prd_id)) {
-            throw new ProductNotFoundException("Product no encontrado con id: " + prd_id);
+        log.info("Solicitud recibida para eliminar el producto con ID: {}", prd_id);
+        Product product = productRepository.findById(prd_id)
+                .orElseThrow(() -> {
+                    log.warn("Intento de eliminar producto no existente con ID: {}", prd_id);
+                    return new ProductNotFoundException("Producto no encontrado con id: " + prd_id);
+                });
+        String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (product.getRestaurant() == null || product.getRestaurant().getUserEntity() == null || !product.getRestaurant().getUserEntity().getEmail().equals(userEmail)) {
+            log.warn("Permiso denegado: Usuario {} intentando eliminar producto {} del restaurante {}", userEmail, prd_id, product.getRestaurant() != null ? product.getRestaurant().getId() : "DESCONOCIDO");
+            throw new SecurityException("No tienes permiso para eliminar este producto");
         }
         productRepository.deleteById(prd_id);
     }
 
     @Override
-//    public List<ProductSummaryResponseDto> findProductsByCategory(Long ctg_Id) {
-//        log.info("Recuperando los producto de la categoria con ID {}", ctg_Id);
-//        List<Product> products = productRepository.findProductsByCategory(ctg_Id);
-//
-//        if (products.isEmpty()) {
-//            throw new ProductNotFoundException("No se encontraron productos para la categoría con id: " + ctg_Id);
-    public List<ProductSummaryResponseDto> findProductsByCategory(Category category) {
-        log.info("Recuperando los producto de la categoria con ID {}", category);
-        List<Product> products = productRepository.findProductsByCategory(category);
+    @Transactional(readOnly = true)
+    public List<ProductSummaryResponseDto> findProductsByCategoryId(Long categoryId) {
+        log.info("Recuperando los producto de la categoria con ID {}", categoryId);
+        List<Product> products = productRepository.findProductsByCategoryId(categoryId);
 
-        if (products.isEmpty()) {
-            throw new ProductNotFoundException("No se encontraron productos para la categoría con id: " + category);
-        }
+        if (products.isEmpty())  return Collections.emptyList();
 
         return products.stream()
                 .map(product -> new ProductSummaryResponseDto(
@@ -230,6 +238,7 @@ public class ProductServiceImpl implements IProductService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ProductSummaryResponseDto> findProductsByName(String name) {
         log.info("Buscando el product con ID: {}", name);
         if (name == null || name.trim().isEmpty()) {
@@ -255,15 +264,13 @@ public class ProductServiceImpl implements IProductService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ProductResponseDto> findProductsByRestaurantId(Long restaurantId) {
         log.info("Buscando productos del restaurante con ID: {}", restaurantId);
-//        if (newRestaurant == null || newRestaurant <= 0) {
-//            log.warn("El ID del restaurante proporcionado es invalido: {}", restaurantId);
-//            throw new ProductNotFoundException("El ID del restaurante no es válido " + restaurantId);
-//        }
-//        Restaurant newRestaurant = restaurantRepository.findById(restaurant.rst_id());
 
         List<Product> products = productRepository.findProductsByRestaurantId(restaurantId);
+        if (products.isEmpty())  return Collections.emptyList();
+
         return products.stream()
                 .map(product -> new ProductResponseDto(
                         product.getPrd_id(),
@@ -277,67 +284,20 @@ public class ProductServiceImpl implements IProductService {
                         product.getQuantity(),
                         product.getCategory().getName(),
                         product.getRestaurant().getName(
-                ))
+                        ))
                 )
                 .collect(Collectors.toList());
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<GroupedProductsResponseDto> findProductsByRestaurantIdAndCategory(Long restaurantId) {
-       log.info("Buscando productos del restaurante con ID: {}", restaurantId);
-//
-//            // Obtener los productos del repositorio
-//            List<Product> products = productRepository.findProductsByRestaurantIdAndCategory(restaurantId);
-//
-//            // Agrupar los productos por categoría y restaurante
-//            Map<String, Map<Long, List<ProductResponseDto>>> groupedProducts = products.stream()
-//                    .collect(Collectors.groupingBy(
-//                            product -> product.getCategory().getName(), // Agrupar por nombre de categoría
-//                            TreeMap::new, // Ordenar por nombre de categoría
-//                            Collectors.groupingBy(
-//                                    product -> product.getRestaurant().getId(), // Agrupar por ID del restaurante
-//                                    TreeMap::new, // Ordenar por ID del restaurante
-//                                    Collectors.mapping(
-//                                            product -> new ProductResponseDto(
-//                                                    product.getPrd_id(),
-//                                                    product.getRestaurant().getId(),
-//                                                    product.getCategory().getId(),
-//                                                    product.getName(),
-//                                                    product.getDescription(),
-//                                                    product.getPrice(),
-//                                                    product.getImage(),
-//                                                    product.getIsActive(),
-//                                                    product.getQuantity()
-//                                            ),
-//                                            Collectors.toList()
-//                                    )
-//                            )
-//                    ));
-//
-//            // Convertir el mapa a una lista de GroupedProductsResponseDto
-//            return groupedProducts.entrySet().stream()
-//                    .flatMap(categoryEntry -> categoryEntry.getValue().entrySet().stream()
-//                            .map(restaurantEntry -> new GroupedProductsResponseDto(
-//                                    categoryEntry.getKey(), // Nombre de la categoría
-//                                    products.stream() // Obtener el ID de la categoría
-//                                            .filter(p -> p.getCategory().getName().equals(categoryEntry.getKey()))
-//                                            .findFirst()
-//                                            .map(p -> p.getCategory().getId())
-//                                            .orElse(null),
-//                                    products.stream() // Obtener el nombre del restaurante
-//                                            .filter(p -> p.getRestaurant().getId().equals(restaurantEntry.getKey()))
-//                                            .findFirst()
-//                                            .map(p -> p.getRestaurant().getName())
-//                                            .orElse(null),
-//                                    restaurantEntry.getKey(), // ID del restaurante
-//                                    restaurantEntry.getValue() // Lista de productos
-//                            ))
-//                    )
-//                    .collect(Collectors.toList());
+        log.info("Buscando productos del restaurante con ID: {}", restaurantId);
 
         List<ProductResponseDto> productDtos = productRepository.findProductsByRestaurantIdAndCategory(restaurantId);
+        if(productDtos.isEmpty())  return Collections.emptyList();
 
-        // Agrupa los DTOs en memoria por categoryId (si GroupedProductsResponseDto lo necesita)
+        // Agrupa los DTOs en memoria por categoryId
         Map<Long, List<ProductResponseDto>> groupedByCategoryId = productDtos.stream()
                 .collect(Collectors.groupingBy(
                         ProductResponseDto::categoryId, // Agrupa por ID de categoría
@@ -360,5 +320,5 @@ public class ProductServiceImpl implements IProductService {
                 .collect(Collectors.toList());
         log.info("Se agruparon productos de {} categorías para el restaurante {}", finalResponse.size(), restaurantId);
         return finalResponse;
-        }
+    }
 }

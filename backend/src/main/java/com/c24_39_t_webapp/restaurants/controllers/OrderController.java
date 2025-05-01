@@ -4,7 +4,6 @@ import com.c24_39_t_webapp.restaurants.dtos.request.OrderRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.request.OrderUpdateRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.OrderResponseDto;
 import com.c24_39_t_webapp.restaurants.models.OrderStatus;
-import com.c24_39_t_webapp.restaurants.repository.OrderRepository;
 import com.c24_39_t_webapp.restaurants.services.IOrderService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +14,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 @Slf4j
 @RestController
 @RequestMapping("api/order")
@@ -23,7 +23,6 @@ import java.util.List;
 public class OrderController {
 
     private IOrderService orderService;
-    private OrderRepository orderRepository;
 
     /**
      * Endpoint to add a new {@link ResponseEntity} Order object to the system.
@@ -148,11 +147,30 @@ public class OrderController {
      */
     @GetMapping(value = "/byOwnerId/{ownerId}")
     @PreAuthorize("hasRole('RESTAURANTE')")
-    public List<OrderResponseDto> getOrdersByRestaurantId(@PathVariable Long ownerId) {
+    public List<OrderResponseDto> findAllOrdersByOwnerId(@PathVariable Long ownerId) {
         log.info("Solicitud recibida para obtener todos los pedidos realizados por el cliente con id: {}", ownerId);
         List<OrderResponseDto> restaurantOrders = orderService.findAllOrdersByOwnerId(ownerId);
         log.info("Se recuperaron {} pedidos exitosamente para el cliente {}.", restaurantOrders.size(), ownerId);
         return restaurantOrders;
+    }
+    /**
+     * Endpoint to retrieve all {@link ResponseEntity} Order objects from the system by restaurant ID with pagination.
+     * Delegates the retrieval logic to {@link IOrderService#findOrdersByOwnerIdPaged(Long, Pageable)}.
+     *
+     * @param ownerId The ID of the restaurant to retrieve orders for.
+     * @param pageable The pagination information.
+     * @return A paginated list of {@code OrderResponseDto} objects representing all orders for the specified restaurant.
+     */
+    @GetMapping("/byOwner/{ownerId}/paged")
+    @PreAuthorize("#ownerId == authentication.principal.id or hasRole('ADMIN')")
+    public ResponseEntity<Page<OrderResponseDto>> findAllOrdersByOwnerIdPaged(
+            @PathVariable Long ownerId,
+            Pageable pageable) { // Spring inyecta esto desde parámetros como ?page=0&size=20&sort=orderDate,desc
+
+        log.info("Solicitud paginada recibida para pedidos del dueño {} - Página: {}, Tamaño: {}",
+                ownerId, pageable.getPageNumber(), pageable.getPageSize());
+        Page<OrderResponseDto> orderPage = orderService.findOrdersByOwnerIdPaged(ownerId, pageable);
+        return ResponseEntity.ok(orderPage);
     }
 
     /**
@@ -192,4 +210,5 @@ public class OrderController {
         log.info("Se recuperaron {} pedidos exitosamente.", byRestaurantStateOrders.size());
         return byRestaurantStateOrders;
     }
+
 }

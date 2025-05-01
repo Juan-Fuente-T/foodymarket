@@ -5,25 +5,18 @@ import com.c24_39_t_webapp.restaurants.dtos.request.CategoryRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.request.RestaurantRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.RestaurantResponseDto;
 import com.c24_39_t_webapp.restaurants.models.Category;
-import com.c24_39_t_webapp.restaurants.models.Restaurant;
-import com.c24_39_t_webapp.restaurants.models.RestaurantCuisine;
-import com.c24_39_t_webapp.restaurants.repository.RestaurantCuisineRepository;
 import com.c24_39_t_webapp.restaurants.services.IRestaurantService;
 import com.c24_39_t_webapp.restaurants.services.impl.UserDetailsImpl;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.server.ResponseStatusException;
 
-//import java.net.URI;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 @Slf4j
@@ -149,7 +142,7 @@ public class RestaurantController {
 
     /**
      * Endpoint to retrieve the categories offered by a specific restaurant.
-     * Delegates the retrieval logic to {@link IRestaurantService#getOfferedCategories(Long)}.
+     * Delegates the retrieval logic to {@link IRestaurantService#findByIdFetchingCategories(Long)}.
      *
      * @param restaurantId The ID of the restaurant for which to retrieve the offered categories.
      * @return A set of {@link Category} objects representing the categories offered by the restaurant.
@@ -158,7 +151,7 @@ public class RestaurantController {
     @PreAuthorize("hasRole('RESTAURANTE')")
     public ResponseEntity<Set<CategoryResponseDto>> getOfferedCategories(@PathVariable Long restaurantId) {
         log.info("Solicitud recibida para obtener las categorias ofrecidas por el restaurante {}", restaurantId);
-        Set<CategoryResponseDto> categories = restaurantService.getOfferedCategories(restaurantId);
+        Set<CategoryResponseDto> categories = restaurantService.findByIdFetchingCategories(restaurantId);
 
         log.info("Se recuperaron {} categorias exitosamente para el restaurante {}.", categories.size(), restaurantId);
         return ResponseEntity.ok(categories);

@@ -1,6 +1,6 @@
 package com.c24_39_t_webapp.restaurants.dtos.request;
 
-public record LoginRequest(
+public record LoginRequestDto(
         String email,
         String password
 ) {

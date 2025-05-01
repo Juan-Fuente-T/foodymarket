@@ -34,11 +34,11 @@ public class ReviewServiceImpl implements IReviewService {
 
     @PreAuthorize("hasRole('CLIENTE')")
     @Override
-    public ReviewResponseDto addReview(AddReviewDto reviewDto, UserDetailsImpl userDetails) {
+    public ReviewResponseDto addReview(AddReviewDto reviewDto, Long userId) {
 
         log.info("verificando permisos para agregar una reseña");
         UserEntity user =
-                userRepository.findById(userDetails.getId()).orElseThrow(() -> new ResourceNotFoundException(
+                userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException(
                         "No se encontró el usuario buscado"));
 
         Restaurant restaurant = restaurantRepository.findById(reviewDto.restaurantId()).orElseThrow(() -> new ResourceNotFoundException(
@@ -87,9 +87,9 @@ public class ReviewServiceImpl implements IReviewService {
     }
 
     @Override
-    public ReviewResponseDto getReviewById(Long id) {
-        log.info("Buscando la reseña con ID {}", id);
-        Review review = reviewRepository.findById(id).orElseThrow(() ->
+    public ReviewResponseDto getReviewById(Long reviewId) {
+        log.info("Buscando la reseña con ID {}", reviewId);
+        Review review = reviewRepository.findById(reviewId).orElseThrow(() ->
                 new ResourceNotFoundException("Reseña no " +
                         "encontrada!"));
         Restaurant restaurant = review.getRestaurant();
@@ -107,16 +107,18 @@ public class ReviewServiceImpl implements IReviewService {
 
     @PreAuthorize("hasRole('CLIENTE')")
     @Override
-    public ReviewResponseDto updateReview(UpdateReviewDto updateReviewDto, UserDetailsImpl userDetails) {
+    public ReviewResponseDto updateReview(UpdateReviewDto updateReviewDto, Long reviewId) {
         log.info("Buscando recursos para actualizar la reseña");
         Review review =
                 reviewRepository.findById(updateReviewDto.reviewToUpdateId()).orElseThrow(() -> new ResourceNotFoundException(
                         "Reseña no encontrada"));
 
         log.info("validando que el usuario que esta intentando actualizar la reseña tenga los permisos necesarios id:" +
-                        " {}",
-                userDetails.getId());
-        validateUserPermissions(userDetails, review.getUser().getId());
+                        " {}", reviewId);
+        validateUserPermissions(review, reviewId);
+//        if (!review.getId().equals(userId)) {
+//            throw new UnauthorizedAccessException("El usuario no tiene permisos para el cambio");
+//        }
 
         log.info("Actualizando datos");
         Optional.ofNullable(updateReviewDto.comments())
@@ -141,24 +143,22 @@ public class ReviewServiceImpl implements IReviewService {
 
     @PreAuthorize("hasRole('CLIENTE')")
     @Override
-    public void deleteReview(Long id, UserDetailsImpl userDetails) {
+    public void deleteReview(Long reviewId) {
         log.info("Obteniendo recursos de la db");
-        Review review = reviewRepository.findById(id).orElseThrow(() ->
+        Review review = reviewRepository.findById(reviewId).orElseThrow(() ->
                 new ResourceNotFoundException("No se encontro la reseña"));
 
         log.info("Validando que el usuario tenga permisos para eliminar la reseña");
-        validateUserPermissions(userDetails, review.getUser().getId());
+        validateUserPermissions(review, reviewId);
 
         log.warn("Eliminando la reseña");
-        reviewRepository.deleteById(id);
+        reviewRepository.deleteById(reviewId);
 
         log.info("Reseña eliminada");
     }
 
-    // Methods from a private usage
-
-    private static void validateUserPermissions(UserDetailsImpl user, Long reviewId) {
-        if (!reviewId.equals(user.getId())) {
+    private static void validateUserPermissions(Review review, Long reviewId) {
+        if (!review.getId().equals(reviewId)) {
             throw new UnauthorizedAccessException("El usuario no tiene permisos para el cambio");
         }
     }

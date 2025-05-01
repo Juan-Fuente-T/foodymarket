@@ -6,10 +6,6 @@ import com.c24_39_t_webapp.restaurants.dtos.request.ProductUpdateDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.GroupedProductsResponseDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.ProductResponseDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.ProductSummaryResponseDto;
-import com.c24_39_t_webapp.restaurants.exception.CategoryNotFoundException;
-import com.c24_39_t_webapp.restaurants.exception.ProductNotFoundException;
-import com.c24_39_t_webapp.restaurants.models.Product;
-import com.c24_39_t_webapp.restaurants.models.Category;
 import com.c24_39_t_webapp.restaurants.repository.CategoryRepository;
 import com.c24_39_t_webapp.restaurants.repository.ProductRepository;
 import com.c24_39_t_webapp.restaurants.services.IProductService;
@@ -127,23 +123,16 @@ public class ProductController {
     }
     /**
         * Endpoint to retrieve a list of all {@link ProductSummaryResponseDto} objects stored in the system.
-        * Delegates the retrieval logic to {@link IProductService#findProductsByCategory(Category category)}.
+        * Delegates the retrieval logic to {@link IProductService#findProductsByCategoryId(Long)}.
         *
-        * @param category The category to retrieve products for.
+        * @param categoryId The category to retrieve products for.
         * @return A list of {@code ProductSummaryResponseDto} objects representing all products in the specified category.
         */
-//    @GetMapping(value = "/byCategory/{categoryId}")
-//    public ResponseEntity<List<ProductSummaryResponseDto>> findProductsByCategory(@PathVariable Long categoryId) {
-//        log.info("Solicitud recibida para obtener productos por categoria con ID: {}", categoryId);
-//        List<ProductSummaryResponseDto> products = productService.findProductsByCategory(categoryId);
-//        log.info("Se recuperaron {} productos por categoria con ID: {} exitosamente.", products.size(), categoryId);
-//        return ResponseEntity.ok(products);
-//    }
     @GetMapping(value = "/byCategory/{category}")
-    public ResponseEntity<List<ProductSummaryResponseDto>> findProductsByCategory(@PathVariable Category category) {
-        log.info("Solicitud recibida para obtener productos por categoria con ID: {}", category);
-        List<ProductSummaryResponseDto> products = productService.findProductsByCategory(category);
-        log.info("Se recuperaron {} productos por categoria con ID: {} exitosamente.", products.size(), category);
+    public ResponseEntity<List<ProductSummaryResponseDto>> findProductsByCategoryId(@PathVariable Long categoryId) {
+        log.info("Solicitud recibida para obtener productos por categoria con ID: {}", categoryId);
+        List<ProductSummaryResponseDto> products = productService.findProductsByCategoryId(categoryId);
+        log.info("Se recuperaron {} productos por categoria con ID: {} exitosamente.", products.size(), categoryId);
         return ResponseEntity.ok(products);
     }
     /**

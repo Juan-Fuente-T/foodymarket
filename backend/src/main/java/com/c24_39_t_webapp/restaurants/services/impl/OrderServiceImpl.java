@@ -12,6 +12,8 @@ import com.c24_39_t_webapp.restaurants.services.IOrderService;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -88,7 +90,10 @@ public class OrderServiceImpl implements IOrderService {
                 order.getStatus(),
                 order.getTotal(),
                 order.getComments(),
-                detailsResponse);
+                detailsResponse,
+                order.getCreatedAt().toString(),
+                order.getUpdatedAt().toString()
+        );
     }
 
     private void validateOrderRequest(OrderRequestDto dto) {
@@ -123,6 +128,8 @@ public class OrderServiceImpl implements IOrderService {
         // Filtrar pedidos por restaurante
         List<Order> orders = orderRepository.findByRestaurantId(restaurant);
 
+        if (orders.isEmpty()) return Collections.emptyList();
+
         log.info("Devolviendo {} órdenes para restaurantId: {}", orders.size(), restaurantId);
         return orders.stream().map(order -> new OrderResponseDto(
                 order.getOrd_id(),
@@ -138,7 +145,11 @@ public class OrderServiceImpl implements IOrderService {
                                 detail.getProduct().getName(),
                                 detail.getQuantity(),
                                 detail.getProduct().getPrice(),
-                                detail.getSubtotal())).collect(Collectors.toList()))).collect(Collectors.toList(
+                                detail.getSubtotal())).collect(Collectors.toList()),
+                order.getCreatedAt().toString(),
+                order.getUpdatedAt().toString()
+                )
+        ).collect(Collectors.toList(
 
         ));
     }
@@ -184,8 +195,9 @@ public class OrderServiceImpl implements IOrderService {
                                 detail.getProduct().getName(),
                                 detail.getQuantity(),
                                 detail.getProduct().getPrice(),
-                                detail.getSubtotal())).collect(Collectors.toList()
-                )
+                                detail.getSubtotal())).collect(Collectors.toList()),
+                order.getCreatedAt().toString(),
+                order.getUpdatedAt().toString()
         );
     }
 
@@ -238,8 +250,9 @@ public class OrderServiceImpl implements IOrderService {
                                 detail.getProduct().getName(),
                                 detail.getQuantity(),
                                 detail.getProduct().getPrice(),
-                                detail.getSubtotal())).collect(Collectors.toList()
-                )
+                                detail.getSubtotal())).collect(Collectors.toList()),
+                        order.getCreatedAt().toString(),
+                        order.getUpdatedAt().toString()
         );
     }
 
@@ -266,12 +279,14 @@ public class OrderServiceImpl implements IOrderService {
             throw new SecurityException("No tienes permiso para eliminar este pedido");
         }
         // Validar el estado del pedido
-        if (order.getStatus() != OrderStatus.pendiente && order.getStatus() != OrderStatus.cancelado) {
-            log.warn("No se puede eliminar el pedido {} porque está en estado: {}", ord_id, order.getStatus());
+        if (order.getStatus() != OrderStatus.pendiente) {
+            log.warn("No se puede cancelar el pedido {} porque está en estado: {}", ord_id, order.getStatus());
             throw new IllegalStateException("Solo se pueden eliminar pedidos en estado pendiente o cancelado");
         }
-        orderRepository.delete(order); // Hibernate eliminará los OrderDetails automáticamente en cascada
-        log.info("Pedido con ID {} eliminado con éxito", ord_id);
+//        orderRepository.delete(order); // Hibernate eliminará los OrderDetails automáticamente en cascada
+        order.setStatus(OrderStatus.cancelado);
+        orderRepository.save(order);
+        log.info("Pedido con ID {} eliminado (cancelado) con éxito", ord_id);
     }
 
     @Override
@@ -287,9 +302,8 @@ public class OrderServiceImpl implements IOrderService {
         log.info("Restaurante encontrado con éxito: {}", restaurant);
 
         List<Order> orders = orderRepository.findByRestaurantIdAndCreatedAtBetween(restaurant, start, end);
-        if (orders.isEmpty()) {
-            throw new OrderNotFoundException("No se encontraron pedidos entre " + start + " y " + end);
-        }
+        if (orders.isEmpty()) return Collections.emptyList();
+
         return orders.stream().map(
                 order -> new OrderResponseDto(
                         order.getOrd_id(),
@@ -307,7 +321,9 @@ public class OrderServiceImpl implements IOrderService {
                                         detail.getQuantity(),
                                         detail.getProduct().getPrice(),
                                         detail.getSubtotal())).collect(Collectors.toList()
-                        )
+                        ),
+                        order.getCreatedAt().toString(),
+                        order.getUpdatedAt().toString()
                 )
         ).collect(Collectors.toList());
     }
@@ -335,9 +351,8 @@ public class OrderServiceImpl implements IOrderService {
             throw new SecurityException("No tienes permiso para acceder a los pedidos de este cliente");
         }
         List<Order> orders = orderRepository.findByClientId_Id(cln_id);
-        if (orders.isEmpty()) {
-            throw new OrderNotFoundException("No se encontraron pedidos para el cliente con ID: " + cln_id);
-        }
+        if (orders.isEmpty()) return Collections.emptyList();
+
         return orders.stream().map(
                 order -> new OrderResponseDto(
                 order.getOrd_id(),
@@ -355,7 +370,9 @@ public class OrderServiceImpl implements IOrderService {
                                         detail.getQuantity(),
                                         detail.getProduct().getPrice(),
                                         detail.getSubtotal())).collect(Collectors.toList()
-                        )
+                        ),
+                        order.getCreatedAt().toString(),
+                        order.getUpdatedAt().toString()
                 )
         ).collect(Collectors.toList());
     }
@@ -390,9 +407,12 @@ public class OrderServiceImpl implements IOrderService {
         List<Order> allOrders = orderRepository.findByRestaurantId_IdInWithDetails(restaurantIds);
         log.info("Devolviendo {} órdenes para restaurantId: {}", allOrders.size(), ownerId);
 
-        if (allOrders.isEmpty()) {
-            throw new OrderNotFoundException("No se encontraron pedidos para el cliente con ID: " + ownerId);
-        }
+        if (allOrders.isEmpty()) return Collections.emptyList();
+
+        log.info("Número de pedidos encontrados para mapear: {}", allOrders.size());
+        long totalDetails = allOrders.stream().mapToLong(o -> o.getDetails() != null ? o.getDetails().size() : 0).sum();
+        log.info("Número total de detalles encontrados para mapear: {}", totalDetails);
+
         return allOrders.stream().map(
                 order -> new OrderResponseDto(
                         order.getOrd_id(),
@@ -408,10 +428,54 @@ public class OrderServiceImpl implements IOrderService {
                                         detail.getProduct().getName(),
                                         detail.getQuantity(),
                                         detail.getProduct().getPrice(),
-                                        detail.getSubtotal())).collect(Collectors.toList()))).collect(Collectors.toList()
-        );
+                                        detail.getSubtotal())).collect(Collectors.toList()),
+                        order.getCreatedAt().toString(),
+                        order.getUpdatedAt().toString()
+                )).collect(Collectors.toList());
+
     }
 
+    @Transactional(readOnly = true)
+    public Page<OrderResponseDto> findOrdersByOwnerIdPaged(Long ownerId, Pageable pageable) {
+        log.info("Recuperando página {} (tamaño {}) de pedidos para dueño con Id{}",
+                pageable.getPageNumber(), pageable.getPageSize(), ownerId);
+
+        UserEntity owner = userRepository.findById(ownerId)
+                .orElseThrow(() -> new UserNotFoundException("User no encontrado con ID: " + ownerId));
+        String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (!owner.getEmail().equals(userEmail)) {
+            throw new SecurityException("No tienes permiso para acceder a los pedidos de este dueño");
+        }
+        log.info("Usuario autenticado: {}, su email es {}.", userEmail, owner.getEmail());
+        List<Long> restaurantIds = restaurantRepository.findRestaurantIdsByOwnerId(ownerId);
+        if (restaurantIds.isEmpty()) {
+            log.warn("El dueño {} no tiene restaurantes asociados.", ownerId);
+            return Page.empty(pageable);
+        }
+            // Llamar al repositorio con paginación
+//            Page<Order> orderPage = orderRepository.findOrdersByRestaurantIdsPagedWithDetails(restaurantIds, pageable);
+            Page<Order> orderPage = orderRepository.findByRestaurantId_IdIn(restaurantIds, pageable);
+
+            return orderPage.map(order -> new OrderResponseDto(
+                    order.getOrd_id(),
+                    order.getClientId().getId(),
+                    order.getRestaurantId().getId(),
+                    order.getRestaurantId().getName(),
+                    order.getStatus(), order.getTotal(),
+                    order.getComments(),
+                    order.getDetails().stream().map(
+                            detail -> new OrderDetailsResponseDto(
+                                    detail.getOdt_id(),
+                                    detail.getProduct().getPrd_id(),
+                                    detail.getProduct().getName(),
+                                    detail.getQuantity(),
+                                    detail.getProduct().getPrice(),
+                                    detail.getSubtotal())
+                    ).collect(Collectors.toList()),
+                    order.getCreatedAt().toString(),
+                    order.getUpdatedAt().toString()
+            ));
+        }
 
     @Override
     @Transactional(readOnly = true)
@@ -438,9 +502,9 @@ public class OrderServiceImpl implements IOrderService {
         }
 
         List<Order> orders = orderRepository.findByClientId_IdAndCreatedAtBetween(cln_id, start, end);
-        if (orders.isEmpty()) {
-            throw new OrderNotFoundException("No se encontraron pedidos entre " + start + " y " + end);
-        }
+
+        if (orders.isEmpty()) return Collections.emptyList();
+
         return orders.stream().map(order ->
                 new OrderResponseDto(
                         order.getOrd_id(),
@@ -458,7 +522,11 @@ public class OrderServiceImpl implements IOrderService {
                                         detail.getQuantity(),
                                         detail.getProduct().getPrice(),
                                         detail.getSubtotal())).collect(
-                                Collectors.toList()))).collect(Collectors.toList());
+                                Collectors.toList()),
+                        order.getCreatedAt().toString(),
+                        order.getUpdatedAt().toString()
+                )).collect(Collectors.toList());
+
     }
 
     //   LISTO
@@ -477,9 +545,8 @@ public class OrderServiceImpl implements IOrderService {
         log.info("Restaurante encontrado con éxito: {}", restaurant);
 
         List<Order> orders = orderRepository.findByStatusAndRestaurantId_Id(status, restaurantId);
-        if (orders.isEmpty()) {
-            throw new OrderNotFoundException("No se encontraron pedidos en estado: " + status + " para el restaurante con ID: " + restaurantId);
-        }
+        if (orders.isEmpty()) return Collections.emptyList();
+
         return orders.stream()
                 .map(order -> new OrderResponseDto(
                         order.getOrd_id(),
@@ -498,7 +565,9 @@ public class OrderServiceImpl implements IOrderService {
                                         detail.getProduct().getPrice(),
                                         detail.getSubtotal()
                                 ))
-                                .collect(Collectors.toList())
+                                .collect(Collectors.toList()),
+                        order.getCreatedAt().toString(),
+                        order.getUpdatedAt().toString()
                 ))
                 .collect(Collectors.toList());
     }

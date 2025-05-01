@@ -22,9 +22,6 @@ public class UserDetailsImpl implements UserDetails {
         }
         SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role.toUpperCase());
         return Collections.singletonList(authority);
-//        return Collections.singletonList(
-//                new SimpleGrantedAuthority("ROLE_"+ userEntity.getRole().toUpperCase())
-//        );
     }
 
     @Override
@@ -57,12 +54,4 @@ public class UserDetailsImpl implements UserDetails {
         return userEntity.getPassword();
 
     }
-
-    public String getRole(){
-        return userEntity.getRole();
-    }
-    public Long getId() {return userEntity.getId();}
-    public String getName(){return userEntity.getName();}
-    public String getPhone(){return userEntity.getPhone();}
-    public String getAddress(){return userEntity.getAddress();}
 }

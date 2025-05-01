@@ -1,7 +1,6 @@
 package com.c24_39_t_webapp.restaurants.models;
 
 import jakarta.persistence.*;
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

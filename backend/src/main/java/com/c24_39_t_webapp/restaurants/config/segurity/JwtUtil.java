@@ -2,7 +2,6 @@ package com.c24_39_t_webapp.restaurants.config.segurity;
 
 import com.c24_39_t_webapp.restaurants.models.UserEntity;
 import io.jsonwebtoken.*;
-import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.Jwts;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -11,7 +10,6 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
-import java.util.Map;
 
 
 @Component
