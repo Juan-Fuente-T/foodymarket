@@ -16,14 +16,15 @@ import {
   Users, DollarSign, ShoppingBag, User, Settings,
   Edit, Trash2, Package, Star, Building
 } from "lucide-react";
-import { Product, Restaurant, GroupedProduct } from "@/types/models";
+import { Product, Restaurant, GroupedProduct, Order, OrderStatus } from "@/types/models";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { ProductEditModal } from "@/components/product/ProductEditModal";
 import { CategoryManagement } from "@/components/category/CategoryManagement";
 import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { supabase } from "@/lib/supabaseClient";
+import OrderDetailsModal from "@/components/order/OrderDetailsModal";
+import { set } from "date-fns";
 
 const Dashboard = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -58,13 +59,18 @@ const Dashboard = () => {
 
 const CustomerDashboard = () => {
   const { user } = useAuth();
+  const [isOrderDetailsOpen, setIsOrderDetailsOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order>(null);
 
   const { data: orders = [], isLoading: isLoadingOrders } = useQuery({
     queryKey: ["customerOrders", user?.id],
     queryFn: () => orderAPI.getByClient(user?.id as string),
     enabled: !!user?.id,
   });
-
+  const handleCloseModal = () => {
+    setIsOrderDetailsOpen(false);
+    setSelectedOrder(null);
+  };
   return (
     <Layout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -144,6 +150,7 @@ const CustomerDashboard = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Order ID</TableHead>
+                    <TableHead>Restaurant</TableHead>
                     <TableHead>Date</TableHead>
                     <TableHead>Restaurant</TableHead>
                     <TableHead>Status</TableHead>
@@ -155,24 +162,36 @@ const CustomerDashboard = () => {
                   {orders.slice(0, 5).map((order) => (
                     <TableRow key={order?.id}>
                       <TableCell className="font-medium">{order.id.slice(0, 8)}</TableCell>
+                      <TableCell className="font-medium">{order.restaurantName.slice(0, 30)}</TableCell>
                       <TableCell>
-                        {new Date(order.createdAt).toLocaleDateString()}
+                        {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/D'}
                       </TableCell>
-                      <TableCell>{order.restaurantId}</TableCell>
                       <TableCell>
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${order?.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                          order?.status === 'preparing' ? 'bg-blue-100 text-blue-800' :
-                            order?.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-gray-100 text-gray-800'
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${order?.status === 'pendiente' ? 'bg-green-100 text-green-800' :
+                          order?.status === 'pagado' ? 'bg-blue-100 text-blue-800' :
+                            order?.status === 'entregado' ? 'bg-yellow-100 text-yellow-800' :
+                              order?.status === 'cancelado' ? 'bg-red-100 text-red-800' :
+                                'bg-gray-100 text-gray-800'
                           }`}>
                           {order?.status.charAt(0).toUpperCase() + order?.status.slice(1)}
                         </span>
                       </TableCell>
                       <TableCell className="text-right">${order?.total.toFixed(2)}</TableCell>
                       <TableCell>
-                        <Button variant="ghost" size="sm">
+                        <Button variant="outline" size="sm"
+                          onClick={() => {
+                            setSelectedOrder(order);
+                            setIsOrderDetailsOpen(true);
+                          }}>
                           View
                         </Button>
+                        {isOrderDetailsOpen && selectedOrder && (
+                          <OrderDetailsModal
+                            isOpen={isOrderDetailsOpen}
+                            order={selectedOrder}
+                            onClose={handleCloseModal}
+                          />
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -203,6 +222,15 @@ const RestaurantDashboard = () => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isOrderDetailsOpen, setIsOrderDetailsOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order>(null);
+
+  const possibleStatus: OrderStatus[] = [
+    'pendiente',
+    'pagado',
+    'entregado',
+    'cancelado'
+  ];
 
   const { data: ownedRestaurants = [], isLoading: isLoadingRestaurants, error: errorRestaurants } =
     useQuery<Restaurant[], Error>({
@@ -326,14 +354,52 @@ const RestaurantDashboard = () => {
     }
   });
 
+  const { mutate: deleteProduct } = useMutation({
+    mutationFn: (productId: string) => {
+      console.log("Deleting product with ID:", productId);
+      if (!productId || productId === "undefined" || productId === "") {
+        throw new Error("Invalid product ID for deletion");
+      }
+      return productAPI.delete(productId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["groupedProducts", selectedRestaurant?.id] });
+      toast.success("Producto eliminado con éxito");
+    },
+    onError: (error) => {
+      console.error("Error deleting product:", error);
+      toast.error("Error al eliminar el producto");
+    }
+  });
+
+  const createCategoryMutation = useMutation({
+    mutationFn: (vars: { restaurantId: string; categoryData: { name: string; description?: string } }) => {
+      console.log(`Attempting POST /api/restaurants/${vars.restaurantId}/categories`);
+      if (!vars.restaurantId) throw new Error("Restaurant ID es necesario");
+      if (!vars.categoryData || !vars.categoryData.name) throw new Error("Nombre de categoría es necesario");
+
+      // Asume que tienes esta función en tu API client que hace el POST correcto
+      return restaurantAPI.addProductCategory(vars.restaurantId, vars.categoryData);
+    },
+    onSuccess: (returnedCategory, vars) => { // data es la CategoryResponseDto devuelta por el POST
+      toast.success(`Categoría '${returnedCategory.name}' creada con éxito.`);
+      queryClient.invalidateQueries({ queryKey: ['restaurantProductCategories', vars.restaurantId] });
+      queryClient.invalidateQueries({ queryKey: ['groupedProducts', vars.restaurantId] });
+
+      console.log(`Queries invalidadas después de añadir/asociar categoría a restaurante ${vars.restaurantId}`);
+      // setIsAddCategoryModalOpen(false);
+    },
+    onError: (error: Error) => {
+      console.error("Error creating category:", error);
+      toast.error(`Error al añadir categoría: ${error.message}`);
+    }
+  });
+
   const { mutate: deleteCategory } = useMutation({
     mutationFn: (vars: { categoryId: string; restaurantId: string }) => {
       console.log("Deleting category with ID:", vars.categoryId);
       if (!vars.categoryId || vars.categoryId === "undefined" || vars.categoryId === "") {
         throw new Error("Invalid categoryId ID for category deletion");
-      }
-      if (!vars.restaurantId || vars.restaurantId  === "undefined" || vars.restaurantId  === "") {
-        throw new Error("Invalid restaurantId ID for category deletion");
       }
       return categoryAPI.delete(vars.categoryId, vars.restaurantId);
     },
@@ -348,30 +414,35 @@ const RestaurantDashboard = () => {
     }
   });
 
-  const createCategoryMutation = useMutation({
-    mutationFn: (vars: { restaurantId: string; categoryData: { name: string; description?: string } }) => {
-      console.log(`Attempting POST /api/restaurants/${vars.restaurantId}/categories`);
-      if (!vars.restaurantId) throw new Error("Restaurant ID es necesario");
-      if (!vars.categoryData || !vars.categoryData.name) throw new Error("Nombre de categoría es necesario");
+  const { mutate: updateOrderStatus, isPending: isUpdatingStatus } = useMutation({
+    mutationFn: ({ orderId, status }: { orderId: string; status: OrderStatus }) =>
+      orderAPI.updateStatus(orderId, status),
 
-      return restaurantAPI.addProductCategory(vars.restaurantId, vars.categoryData);
+    onSuccess: (updatedOrderData) => {
+      toast.success(`Order #${updatedOrderData.id} status updated to ${updatedOrderData.status}!`);
+      // Invalida la query de pedidos para refrescar la lista automáticamente
+      queryClient.invalidateQueries({ queryKey: ['restaurantOrders', selectedRestaurant?.id] });
+      // queryClient.invalidateQueries({ queryKey: ['¿?'] });
     },
-    onSuccess: (returnedCategory, vars) => {
-      toast.success(`Categoría '${returnedCategory.name}' creada con éxito.`);
-      queryClient.invalidateQueries({ queryKey: ['restaurantProductCategories', vars.restaurantId] });
-      queryClient.invalidateQueries({ queryKey: ['groupedProducts', vars.restaurantId] });
-
-      console.log(`Queries invalidadas después de añadir/asociar categoría a restaurante ${vars.restaurantId}`);
+    onError: (error) => {
+      toast.error(`Failed to update order status: ${error.message}`);
     },
-    onError: (error: Error) => {
-      console.error("Error creating category:", error);
-      toast.error(`Error al añadir categoría: ${error.message}`);
-    }
   });
 
-  const pendingOrders = useMemo(() => orders.filter((o: any) => o.status === 'pending' || o.status === 'preparing'), [orders]);
-  const completedOrders = useMemo(() => orders.filter((o: any) => o.status === 'delivered' || o.status === 'completed'), [orders]);
-  const totalRevenue = useMemo(() => completedOrders.reduce((sum: number, o: any) => sum + (o.total || 0), 0), [completedOrders]);
+
+  const pendingOrders = useMemo(() => orders.filter((o: any) => o.status === 'pendiente' || o.status === 'cancelado'), [orders]);
+  const completedOrders = useMemo(() => orders.filter((o: any) => o.status === 'entregado' || o.status === 'pagado'), [orders]);
+  const totalRevenue = useMemo(() => {
+    return completedOrders.reduce((sum: number, order: Order) => {
+      let orderTotal = 0;
+      if (typeof order.total === 'number') {
+        orderTotal = order.total;
+      } else if (typeof order.total === 'object' && order.total !== null && typeof order.total === 'number') {
+        orderTotal = order.total; // O order.total/ 100;
+      }
+      return sum + orderTotal;
+    }, 0);
+  }, [completedOrders]);
 
   const handleRestaurantChange = (restaurantId: string) => {
     const restaurant = ownedRestaurants.find(r => String(r.id) === restaurantId) || null;
@@ -485,30 +556,45 @@ const RestaurantDashboard = () => {
       restaurantId: selectedRestaurant!.id.toString(),
       categoryData: { name: formData.name, description: formData.description }
     });
-  };
 
   const orderStatusData = useMemo(() => {
     const statusCounts: { [key: string]: number } = {
-      pending: 0,
-      preparing: 0,
-      delivered: 0,
-      completed: 0,
-      cancelled: 0
+      pendiente: 0,
+      pagado: 0,
+      entregado: 0,
+      cancelado: 0,
+      // completed: 0
     };
 
-    orders.forEach((order: any) => {
+    orders.forEach((order: Order) => {
       if (order?.status in statusCounts) {
         statusCounts[order?.status]++;
       }
+      // Opcional: Contar estados no definidos inicialmente
+      // else {
+      //    console.warn(`Estado no esperado encontrado: ${status}`);
+      //    // Podrías añadirlo al objeto si quieres contarlos también:
+      //    // if (!statusCounts[status]) statusCounts[status] = 0;
+      //    // statusCounts[status]++;
+      // }
     });
 
-    return Object.entries(statusCounts).map(([status, count]) => ({
-      name: status.charAt(0).toUpperCase() + status.slice(1),
-      value: count
-    }));
+    return Object.entries(statusCounts)
+      // Opcional: filtrar estados con conteo 0 si no se desea mostrarlos en el gráfico
+      .filter(([name, value]) => value > 0)
+      .map(([name, count]) => ({
+        name: name.charAt(0).toUpperCase() + name.slice(1),
+        value: count
+      }));
   }, [orders]);
 
+  const handleCloseModal = () => {
+    setIsOrderDetailsOpen(false);
+    setSelectedOrder(null);
+  };
+
   const revenueData = useMemo(() => {
+    // --- Generación de Fechas ---
     const last7Days = Array.from({ length: 7 }, (_, i) => {
       const date = new Date();
       date.setDate(date.getDate() - i);
@@ -520,17 +606,35 @@ const RestaurantDashboard = () => {
       dailyRevenue[day] = 0;
     });
 
-    completedOrders.forEach((order: any) => {
-      const orderDate = new Date(order?.createdAt).toISOString().split('T')[0];
-      if (orderDate in dailyRevenue) {
-        dailyRevenue[orderDate] += order?.total || 0;
+    completedOrders.forEach((order: Order) => {
+      try {
+        const orderDate = new Date(order.createdAt).toISOString().split('T')[0];
+
+        let orderTotalValue = 0;
+        const total = order.total;
+        if (typeof total === 'number') {
+          orderTotalValue = total;
+        } else if (typeof total === 'object' && total !== null && typeof total === 'number') {
+          orderTotalValue = total; // Ajusta /100 si aplica
+        }
+        if (orderDate in dailyRevenue) {
+          dailyRevenue[orderDate] += orderTotalValue;
+        }
+      } catch (e) {
+        console.error(`Error procesando fecha para pedido ID ${order.id}`, e); // <-- LOG 7 (Error de fecha?)
       }
     });
 
-    return Object.entries(dailyRevenue).map(([date, amount]) => ({
-      date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      amount
-    }));
+    // --- Transformación Final ---
+    const finalData = Object.entries(dailyRevenue).map(([date, amount]) => {
+      const formattedDate = new Date(date).toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
+      return {
+        date: formattedDate,
+        amount
+      };
+    });
+    return finalData;
+
   }, [completedOrders]);
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];

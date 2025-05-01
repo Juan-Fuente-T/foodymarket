@@ -6,7 +6,8 @@ import {
   Product,
   Order,
   Review,
-  OrderStatus
+  OrderStatus,
+  OrderRequestDto
 } from "@/types/models";
 import { adaptRestaurant } from '../services/api/adapters/restaurant.adapter';
 import { adaptProduct } from '../services/api/adapters/product.adapter';
@@ -407,7 +408,7 @@ export const productAPI = {
 
 // Órdenes (Order)
 export const orderAPI = {
-  create: async (data: Omit<Order, 'id' | 'createdAt' | 'updatedAt'>, email: string) => {
+  create: async (data: OrderRequestDto, email: string) => {
     const response = await fetchWithError(`/order?email=${encodeURIComponent(email)}`, {
       method: "POST",
       body: JSON.stringify(data),
@@ -433,7 +434,10 @@ export const orderAPI = {
   updateStatus: async (ord_id: string, status: OrderStatus) => {
     const response = await fetchWithError(`/order/${ord_id}`, {
       method: "PATCH",
-      body: JSON.stringify(status),
+      body: JSON.stringify({ status: status}),
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
     return adaptOrder(response);
   },
@@ -444,6 +448,11 @@ export const orderAPI = {
 
   getByClient: async (cln_id: string) => {
     const data = await fetchWithError(`/order/byClientId/${cln_id}`);
+    return data.map(adaptOrder);
+  },
+  getAllByRestaurant: async (ownerId: string) => {
+    const data = await fetchWithError(`/order/byOwnerId/${ownerId}`);
+    console.log("DATA ORDERS en api for all by restaurant: ", data);
     return data.map(adaptOrder);
   },
 

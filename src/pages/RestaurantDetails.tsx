@@ -121,12 +121,12 @@ const RestaurantDetails = () => {
             <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-6">
               <p className="text-gray-600 max-w-3xl">{restaurant.description}</p>
               <div className="flex gap-2">
-                <Button variant="outline" asChild>
+                {/* <Button variant="outline" asChild>
                   <a href={`tel:${restaurant.phone}`}>
                     <Phone className="h-4 w-4 mr-2" />
                     Call
                   </a>
-                </Button>
+                </Button> */}
                 <Button asChild className="bg-food-600 hover:bg-food-700">
                   <Link to="/cart">View Cart</Link>
                 </Button>

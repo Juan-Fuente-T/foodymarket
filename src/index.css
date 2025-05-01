@@ -195,3 +195,24 @@
   transform: scaleX(1);
   transform-origin: bottom left;
 }
+/* Custom shape divider for the bottom of the hero section */
+.custom-shape-divider-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  overflow: hidden;
+  line-height: 0;
+  transform: rotate(180deg);
+}
+
+.custom-shape-divider-bottom svg {
+  position: relative;
+  display: block;
+  width: calc(100% + 1.3px);
+  height: 148px;
+}
+
+.custom-shape-divider-bottom .shape-fill {
+  fill: #FAD7A0;
+}
