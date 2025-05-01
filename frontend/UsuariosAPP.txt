@@ -1,0 +1,23 @@
+test000@test.com   
+test   $2a$10$EUq4Y7BMFp2Www68KL5SGueZ1JcGxlKn2LIiYt8vdnmGgb1bAxQZy
+usuario1@example.com
+password1   $2a$10$e6a9MUoZSYcJbBCZUdb.juGJamJE2rzLe4B1vXnhEBgq7urOECZXq
+usuario2@example.com
+password2   $2a$10$HE3wtLEOolsbqnKbgFJz8eNj2aysnxK.wEub.1ciZ.Wq7HUL1It1S
+
+dueno1@example.com
+password3   $2a$12$iv5FoOHHe5dB5PhLI8fyY.bMxa8i1Sz2XwL8UXTr3RhObG344zeia
+dueno2@example.com
+password4   $2a$12$b5NHNSknZAd9MmcosOPdW.KCzJF55vfzFJelqtOM2tUkZX1GVey62
+dueno3@example.com 
+password3   $2a$10$2e2JCsqn4/DCDdfLTkKFDupITafarr.GRruXnbeDeozbB.blwC2g2
+
+usuario3@example.com
+password3   $2a$12$iv5FoOHHe5dB5PhLI8fyY.bMxa8i1Sz2XwL8UXTr3RhObG344zeia
+usuario4@example.com
+password4   $2a$12$ae9QwXkXaiSUNUx7c6F.oOpiBJyQ.4wBQuc96T0ZpjB2uXqxWyeM2
+usuario5@example.com
+password5   $2a$12$P1R/8/L2sSLrGiTBr.M/c.BSwvx9a7J9wfNw4QOfL5eg6rVS1qrTS
+
+TOKEN VALIDO SUPABASE
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml4Ym5ucmxuZ2FjaXJqdXh6dHhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU1MzQ0MTgsImV4cCI6MjA2MTExMDQxOH0.E-ERVWUDXzIO2sw0J94iElI02uNmurtLJuZ9m84Zfms

@@ -1,0 +1,218 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 22 10% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 22 10% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 22 10% 10%;
+
+    --primary: 24 94% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 30 100% 97%;
+    --secondary-foreground: 24 10% 10%;
+
+    --muted: 30 10% 96%;
+    --muted-foreground: 22 5% 40%;
+
+    --accent: 30 100% 97%;
+    --accent-foreground: 24 10% 10%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 20 5% 90%;
+    --input: 20 5% 90%;
+    --ring: 24 94% 50%;
+
+    --radius: 0.75rem;
+  }
+
+  * {
+    @apply border-border box-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased overflow-x-hidden;
+    font-feature-settings: "ss01", "ss02", "cv01", "cv02";
+  }
+
+  .glass-card {
+    @apply bg-white/85 backdrop-blur-md border border-white/20 shadow-lg;
+  }
+
+  .glass-dark {
+    @apply bg-black/10 backdrop-blur-md border border-white/10 shadow-lg;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@layer components {
+  .hero-section {
+    @apply relative overflow-hidden;
+    background: linear-gradient(135deg, rgba(252, 176, 69, 0.1) 0%, rgba(253, 29, 29, 0.05) 50%, rgba(252, 176, 69, 0.1) 100%);
+  }
+
+  .food-card {
+    @apply rounded-xl overflow-hidden transition-all duration-300 hover:shadow-lg;
+  }
+
+  .food-card:hover {
+    transform: translateY(-4px);
+  }
+
+  .food-card img {
+    @apply transition-transform duration-300;
+  }
+
+  .food-card:hover img {
+    transform: scale(1.05);
+  }
+
+  .page-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12;
+  }
+
+  .button-hover {
+    @apply transition-all duration-300 hover:shadow-md;
+  }
+
+  .button-hover:hover {
+    transform: translateY(-1px);
+  }
+
+  .input-field {
+    @apply transition-all duration-200 focus:border-food-500 focus:ring-1 focus:ring-food-400;
+  }
+
+  .modal-content {
+    @apply fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[10000] bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto;
+  }
+
+  .modal-content {
+    @apply fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[10000] bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto;
+  }
+
+  /* Reset para contenedores padres */
+  .main-content>div {
+    @apply !static transform-none !important;
+  }
+}
+
+/* Custom animations */
+.animate-enter {
+  animation: fadeSlideIn 0.5s ease forwards;
+}
+
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Restaurant card hover effect */
+.restaurant-card {
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease;
+}
+
+.restaurant-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+}
+
+.restaurant-image-container {
+  overflow: hidden;
+}
+
+.restaurant-image {
+  transition: transform 0.8s ease;
+}
+
+.restaurant-card:hover .restaurant-image {
+  transform: scale(1.08);
+}
+
+/* Smooth page transitions */
+.page-transition-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.page-transition-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 400ms, transform 400ms;
+}
+
+.page-transition-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.page-transition-exit-active {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 300ms, transform 300ms;
+}
+
+/* Navbar item hover effect */
+.nav-item {
+  position: relative;
+  transition: color 0.3s ease;
+}
+
+.nav-item::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  bottom: -4px;
+  left: 0;
+  background-color: currentColor;
+  transform: scaleX(0);
+  transform-origin: bottom right;
+  transition: transform 0.3s ease;
+}
+
+.nav-item:hover::after,
+.nav-item.active::after {
+  transform: scaleX(1);
+  transform-origin: bottom left;
+}
+/* Custom shape divider for the bottom of the hero section */
+.custom-shape-divider-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  overflow: hidden;
+  line-height: 0;
+  transform: rotate(180deg);
+}
+
+.custom-shape-divider-bottom svg {
+  position: relative;
+  display: block;
+  width: calc(100% + 1.3px);
+  height: 148px;
+}
+
+.custom-shape-divider-bottom .shape-fill {
+  fill: #FAD7A0;
+}
