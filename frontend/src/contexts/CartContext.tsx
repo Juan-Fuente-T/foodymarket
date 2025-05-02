@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import { Product, OrderItem, Restaurant } from "@/types/models";
 import { toast } from "sonner";
+import Decimal from 'decimal.js'
 
 interface CartContextType {
   items: OrderItem[];
@@ -12,7 +13,7 @@ interface CartContextType {
   clearCart: () => void;
   isProductInCart: (productId: string) => boolean;
   totalItems: number;
-  totalPrice: number;
+  totalPrice: string;
   setRestaurant: (restaurant: Restaurant) => void;
   canAddProduct: (product: Product) => boolean;
   getItemQuantity: (productId: string) => number;
@@ -47,10 +48,25 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const initialState = getInitialCart();
   const [items, setItems] = useState<OrderItem[]>(initialState.items || []);
   const [restaurant, setRestaurant] = useState<Restaurant | null>(initialState.restaurant || null);
-  
+
   // Calcular totales (memoizar si se vuelve complejo)
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
-  const totalPrice = items.reduce((sum, item) => sum + item.subtotal, 0);
+  // const totalPrice = items.reduce((sum, item) => (sum + parseFloat(item.subtotal), 0)).toString();
+  const totalPriceDecimal = items.reduce((sum, item) => {
+    if (item.subtotal && typeof item.subtotal === 'string') {
+      try {
+        // Convierte el string del subtotal actual a un objeto Decimal
+        const subtotalDecimal = new Decimal(item.subtotal);
+        // Suma el subtotal actual al acumulador usando el método .plus() de la librería
+        return sum.plus(subtotalDecimal);
+      } catch (error) {
+        console.error(`Subtotal inválido encontrado: ${item.subtotal}, omitiendo.`);
+        return sum; // Devuelve la suma sin cambios
+      }
+    }
+    return sum; // Si no hay subtotal o no es string, devuelve la suma sin cambios
+  }, new Decimal(0));
+  const totalPrice = totalPriceDecimal.toFixed(2);
 
   useEffect(() => {
     const savedCart = localStorage.getItem(CART_STORAGE_KEY);
@@ -78,7 +94,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const addItem = (product: Product, quantity: number, notes?: string) => {
     if (quantity <= 0) return;
-    
+
     // Make sure we set the restaurant when adding the first item
     if (items.length === 0 && !restaurant) {
       // Ensure we have restaurant data when adding the first product
@@ -117,53 +133,73 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const existingItem = items.find((item) => item.productId === product.id);
-    
+
     if (existingItem) {
       setItems(
         items.map((item) =>
           item.productId === product.id
-            ? { 
-                ...item, 
-                quantity: item.quantity + quantity, 
-                subtotal: (item.quantity + quantity) * (product.price),
-                productName: product.name // Store product name for display
-              }
+            ? {
+              ...item,
+              quantity: item.quantity + quantity,
+              subtotal: new Decimal(product.price || 0) // Convierte precio (string) a Decimal (o 0 si falta)
+                .times(item.quantity + quantity)
+                .toFixed(2), // Convierte resultado a string con 2 decimales
+              productName: product.name
+            }
             : item
         )
       );
     } else {
-      const newItem: OrderItem = {
-        id: Date.now().toString(),
-        productId: product.id,
-        quantity,
-        subtotal: product.price * quantity,
-        productName: product.name // Store product name for display
-      };
+      let newSubtotalString = '0.00'; // Valor por defecto si algo falla
+
+  try {
+    // Convierte el precio (string) y la cantidad (number) a objetos Decimal
+    const priceDecimal = new Decimal(product.price || 0);
+    const quantityDecimal = new Decimal(quantity || 0); 
+    // Multiplica usando el método .times() de la librería para precisión exacta
+    const newSubtotalDecimal = priceDecimal.times(quantityDecimal);
+    // Convierte el resultado Decimal de nuevo a un string con 2 decimales
+    newSubtotalString = newSubtotalDecimal.toFixed(2);
+
+  } catch (error) {
+      console.error(`Error calculando subtotal para nuevo item (producto ${product.id}):`, error);
+      // Se podría no añadir el item o mostrar un error al usuario
+      // Por ahora mantiene el subtotal en '0.00'
+  }
+
+  const newItem: OrderItem = { 
+    id: Date.now().toString(),
+    productId: product.id,     
+    productName: product.name,     
+    quantity: quantity,          
+    productPrice: product.price,     
+    subtotal: newSubtotalString 
+  };
       setItems([...items, newItem]);
     }
 
     toast.success(`Added ${product.name} to cart`);
   };
 
-  const removeItem = useCallback((itemId: string) => { 
+  const removeItem = useCallback((itemId: string) => {
     console.log(`[Context] removeItem - itemId: ${itemId}`);
     setItems(prevItems => {
       const initialLength = prevItems.length;
       const updatedItems = prevItems.filter((item) => item.id !== itemId);
-      
+
       if (updatedItems.length === 0 && initialLength > 0) {
         setRestaurant(null);
       }
-      
+
       if (updatedItems.length !== initialLength) {
         toast.success("Item removed from cart");
       } else {
         console.warn(`[Context] removeItem: Item ID ${itemId} not found.`);
       }
-      
+
       return updatedItems;
     });
-  }, []); 
+  }, []);
 
   const updateItemQuantity = useCallback((itemId: string, quantity: number) => {
     console.log(`[Context] updateItemQuantity - itemId: ${itemId}, newQuantity: ${quantity}`);
@@ -176,21 +212,31 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       let itemFound = false;
       const updatedItems = prevItems.map((item) => {
         if (item.id === itemId) {
-          itemFound = true;
-          const pricePerUnit = item.subtotal / item.quantity;
-          return {
-            ...item,
-            quantity: quantity,
-            subtotal: pricePerUnit * quantity
-          };
+          try {
+            const currentSubtotal = new Decimal(item.subtotal || 0); // Subtotal actual a Decimal
+            const currentQuantity = new Decimal(item.quantity || 1); // Cantidad actual a Decimal (evitar dividir por 0)
+            // Calcula precio unitario con precisión decimal
+            const pricePerUnit = currentQuantity.isZero() ? new Decimal(0) : currentSubtotal.dividedBy(currentQuantity);
+            const newQuantity = new Decimal(quantity); // Nueva cantidad a Decimal
+
+            return {
+              ...item,
+              quantity: quantity,
+              // Calcula nuevo subtotal con precisión decimal y convierte a string
+              subtotal: pricePerUnit.times(newQuantity).toFixed(2)
+            };
+          } catch (error) {
+            console.error("Error actualizando subtotal para item:", item.id, error);
+            return item; // Devuelve el item sin cambios si hay error
+          }
         }
         return item;
       });
-      
+
       if (!itemFound) console.warn(`[Context] updateItemQuantity: Item ID ${itemId} not found.`);
       return updatedItems;
     });
-  }, [removeItem]); 
+  }, [removeItem]);
 
   const clearCart = () => {
     setItems([]);

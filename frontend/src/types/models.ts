@@ -51,7 +51,7 @@ export interface Product {
   id: string;
   name: string;
   description: string;
-  price: number;
+  price: string;
   image: string;
   isActive: boolean;
   available: boolean; // Always set to same value as isActive
@@ -79,7 +79,7 @@ export interface Order {
   restaurantId: string;
   restaurantName: string;
   status: OrderStatus;
-  total: number;
+  total: string;
   comments?: string;
   createdAt: string;
   updatedAt: string;
@@ -89,7 +89,7 @@ export interface OrderRequestDto {
   clientId: string; 
   restaurantId: string; 
   status: OrderStatus;
-  total: number;
+  total: string;
   comments: string; 
   details: OrderItemRequestDto[];
 }
@@ -99,14 +99,14 @@ export interface OrderItem {
   productId: string;
   productName: string;
   quantity: number;
-  productPrice: number;
-  subtotal: number;
+  productPrice: string;
+  subtotal: string;
 }
 
 export interface OrderItemRequestDto {
   productId: string; 
   quantity: number;
-  subtotal: number; 
+  subtotal: string; 
 }
 
 export interface Review {

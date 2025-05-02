@@ -14,7 +14,7 @@ interface CheckoutModalProps {
         deliveryFee?: number;
     };
     totalItems: number;
-    totalPrice: number;
+    totalPrice: string;
     isProcessing: boolean;
     cardDetails: CardDetails;
     cardErrors: CardErrors;
@@ -171,7 +171,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                         <h4 className="font-medium mb-2">Order Summary</h4>
                         <div className="flex justify-between mb-1">
                             <span>Items ({totalItems}):</span>
-                            <span>${totalPrice.toFixed(2)}</span>
+                            <span>${parseFloat(totalPrice).toFixed(2)}</span>
                         </div>
                         {restaurant && (
                             <div className="flex justify-between mb-1">
@@ -188,7 +188,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                         <div className="flex justify-between font-bold text-lg mt-2 pt-2 border-t">
                             <span>Total:</span>
                             <span>${(
-                                totalPrice + (deliveryMethod === "Entrega a domicilio" ? (restaurant?.deliveryFee || 2) : 0)
+                                parseFloat(totalPrice) + (deliveryMethod === "Entrega a domicilio" ? (restaurant?.deliveryFee || 2) : 0)
                             ).toFixed(2)}</span>
                         </div>
                     </div>

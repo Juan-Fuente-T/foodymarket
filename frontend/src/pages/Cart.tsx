@@ -256,7 +256,7 @@ const Cart = () => {
                   {items.map((item) => (
                     <TableRow key={item.id}>
                       <TableCell className="font-medium">{item.productName || item.productId}</TableCell>
-                      <TableCell>${(item.subtotal/item.quantity).toFixed(2)}</TableCell>
+                      <TableCell>${(item.productPrice || '0.00')}</TableCell>
                       <TableCell>
                         <div className="flex items-center">
                           <Button
@@ -276,7 +276,7 @@ const Cart = () => {
                           </Button>
                         </div>
                       </TableCell>
-                      <TableCell>${(item.subtotal.toFixed(2))}</TableCell>
+                      <TableCell>${(item.subtotal || '0.00')}</TableCell>
                       <TableCell className="text-right">
                         <Button
                           variant="outline"
@@ -298,7 +298,7 @@ const Cart = () => {
               <div className="p-4">
             <CardFooter className="flex justify-between items-center">
               <div className="font-semibold">Total Items: {totalItems}</div>
-              <div className="text-2xl font-bold">Total Price: ${totalPrice.toFixed(2)}</div>
+              <div className="text-2xl font-bold">Total Price: ${parseFloat(totalPrice).toFixed(2)}</div>
             </CardFooter>
               <Textarea 
               id="orderComments"
