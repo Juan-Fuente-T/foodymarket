@@ -47,7 +47,7 @@ export function Footer() {
           <div className="space-y-4">
             <Link to="/" className="flex items-center text-food-600 font-bold text-xl">
               <ChefHat className="h-6 w-6 mr-2" />
-              FoodDelivery
+              Foody Markeplace
             </Link>
             <p className="text-gray-500 max-w-xs">
               Delicious food delivered to your doorstep from your favorite local restaurants.
@@ -186,7 +186,7 @@ export function Footer() {
 
         <div className="border-t border-gray-200 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-500 text-sm">
-            &copy; {new Date().getFullYear()} FoodDelivery. All rights reserved.
+            &copy; {new Date().getFullYear()} Foody Marketplace. All rights reserved.
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <Link

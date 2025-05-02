@@ -63,7 +63,7 @@ export function Navbar() {
           >
             <span className="flex items-center">
               <ChefHat className="h-6 w-6 mr-2" />
-              FoodDelivery
+              Foody Markeplace
             </span>
           </Link>
 

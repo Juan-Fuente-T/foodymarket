@@ -17,7 +17,9 @@ import { adaptUser } from '../services/api/adapters/user.adapter';
 import { adaptCategory } from "./api/adapters/category.adapter";
 
 // Base URL for API requests - Using localhost for development
-const API_BASE_URL = "http://localhost:8080/api";
+// const API_BASE_URL = "http://localhost:8080/api";
+console.log("XXXX API_BASE_URL XXXXXXXXXXXX: ", import.meta.env.VITE_API_BASE_URL);
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // Comment out the deployed backend URL for now
 // const API_BASE_URL = "https://foodymarket-backend.onrender.com/api";

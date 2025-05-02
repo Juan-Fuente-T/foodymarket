@@ -42,9 +42,12 @@ export default function Home() {
           <div className="pt-16 pb-56 sm:pb-64 lg:pb-72">
             <main className="mt-8 sm:mt-16 md:mt-24 lg:mt-32">
               <div className="text-center">
-                <h1 className="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
+                <h1 className="text-4xl mb-8 tracking-tight font-extrabold text-food-600 sm:text-5xl md:text-6xl">
+                  Foody Marketplace
+                </h1>
+                <h1 className="text-3xl tracking-tight font-extrabold sm:text-4xl md:text-5xl">
                   <span className="block xl:inline text-food-200">Delicious food, delivered to </span>
-                  <span className="block text-food-600 xl:inline">your door</span>
+                  <span className="block text-food-500 xl:inline">your door</span>
                 </h1>
                 <p className="mt-3 max-w-md mx-auto text-base text-food-100 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
                   Order from the best restaurants in town and get your food delivered quickly and easily.
@@ -201,7 +204,7 @@ export default function Home() {
           <div className="text-center max-w-3xl mx-auto mb-12">
             <h2 className="text-3xl font-extrabold text-gray-900 mb-4">What Our Customers Say</h2>
             <p className="text-lg text-gray-600">
-              Read what our customers have to say about their experience with FoodDelivery.
+              Read what our customers have to say about their experience with Foody Marketplace.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -218,7 +221,7 @@ export default function Home() {
                 </div>
               </div>
               <p className="text-gray-700">
-                "I love FoodDelivery! It's so easy to order from my favorite restaurants and the delivery is always fast."
+                "I love Foody! It's so easy to order from my favorite restaurants and the delivery is always fast."
               </p>
             </div>
             <div className="bg-white rounded-lg shadow-md p-6">
@@ -234,7 +237,7 @@ export default function Home() {
                 </div>
               </div>
               <p className="text-gray-700">
-                "FoodDelivery has made my life so much easier. I can order food from anywhere and have it delivered right to my door."
+                "Foody has made my life so much easier. I can order food from anywhere and have it delivered right to my door."
               </p>
             </div>
           </div>
