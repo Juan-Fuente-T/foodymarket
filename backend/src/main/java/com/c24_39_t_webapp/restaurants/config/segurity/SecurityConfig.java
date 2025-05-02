@@ -94,7 +94,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(
-                "https://studious-disco-v4x4pw67g9g2pxvp-8080.app.github.dev", // URL de Codespaces
+                "https://foodymarket.vercel.app/", // URL del front en Vercel
                 "http://localhost:8081", "http://localhost:8080"
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
