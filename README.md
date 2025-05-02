@@ -1,4 +1,4 @@
-# 🍽️ Foody Marketplace de Restaurantes: Del Restaurante a tu Mesa 🍕
+# 🍽️ Foody Marketplace: Del Restaurante a tu Mesa 🍕
 
 ![alt text](frontend/public/FoodyMarketplace.webp)
 
