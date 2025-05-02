@@ -18,10 +18,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -103,13 +105,26 @@ public class OrderServiceImpl implements IOrderService {
         if (dto.clientId() == null || dto.clientId() <= 0) {
             throw new IllegalArgumentException("El ID del cliente no es válido");
         }
-        if (dto.details() == null || dto.details().isEmpty()) {
+        List<OrderDetailsRequestDto> details = dto.details();
+        if (details == null || details.isEmpty()) {
             throw new IllegalArgumentException("El pedido debe contener al menos un detalle de pedido");
         }
         // Validación adicional: verificar que el total coincida con la suma de subtotales
-        double calculatedTotal = dto.details().stream().mapToDouble(OrderDetailsRequestDto::subtotal).sum();
-        if (!dto.total().equals(calculatedTotal)) {
-            throw new IllegalArgumentException("El total del pedido no coincide con la suma de los subtotales");
+        BigDecimal calculatedTotal = details.stream()
+                .map(OrderDetailsRequestDto::subtotal) // Obtiene el BigDecimal de cada detalle
+                .filter(Objects::nonNull)              // Evita NullPointerException si algún subtotal fuera null
+                .reduce(BigDecimal.ZERO, BigDecimal::add); // Suma usando BigDecimal.add (Empieza en CERO)
+
+        // Obtiene el total proporcionado (BigDecimal)
+        BigDecimal providedTotal = dto.total();
+
+        //  Compara usando compareTo (más seguro para BigDecimal)
+        //  compareTo devuelve 0 si los valores numéricos son iguales.
+        //  También comprueba que el total proporcionado no sea null.
+        if (providedTotal == null || calculatedTotal.compareTo(providedTotal) != 0) {
+            log.warn("Validación fallida: Total calculado {} != Total proporcionado {}", calculatedTotal, providedTotal);
+            throw new IllegalArgumentException("El total del pedido (" + providedTotal +
+                    ") no coincide con la suma de los subtotales (" + calculatedTotal + ")");
         }
     }
 

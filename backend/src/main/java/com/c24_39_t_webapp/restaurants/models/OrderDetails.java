@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Entity
 @Data
 @NoArgsConstructor
@@ -26,5 +28,5 @@ public class OrderDetails {
     private Integer quantity;
 
     @Column(name = "dtp_subtotal", nullable = false)
-    private Double subtotal;
+    private BigDecimal subtotal;
 }

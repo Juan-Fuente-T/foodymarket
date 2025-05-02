@@ -4,6 +4,7 @@ import com.c24_39_t_webapp.restaurants.models.OrderStatus;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public record OrderRequestDto(
@@ -19,7 +20,7 @@ public record OrderRequestDto(
     OrderStatus status,
 
     @NotNull(message = "El total del pedido  no puede ser nulo.")
-    Double total,
+    BigDecimal total,
 
     @Size(max = 500, message = "El tamaño de la categoria no puede exceder de 500 caracteres.")
     String comments,

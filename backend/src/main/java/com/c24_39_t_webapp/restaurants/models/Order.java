@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -31,21 +32,21 @@ public class Order {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "pdd_estado", nullable = false)
-     OrderStatus status;
+    OrderStatus status;
 
     @Column(name = "pdd_total", nullable = false)
-     Double total;
+    BigDecimal total;
 
     @Column(name = "pdd_comentario")
-     String comments;
+    String comments;
 
     @Column(name = "pdd_fecha", nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     @CreationTimestamp
-     LocalDateTime createdAt;
+    LocalDateTime createdAt;
 
     @Column(name = "pdd_fecha_actualizacion", nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     @UpdateTimestamp
-     LocalDateTime updatedAt;
+    LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "order", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderDetails> details;

@@ -8,5 +8,5 @@ public record OrderDetailsResponseDto(
         String productName,
         Integer quantity,
         BigDecimal productPrice,
-        Double subtotal
+        BigDecimal subtotal
     ) {}

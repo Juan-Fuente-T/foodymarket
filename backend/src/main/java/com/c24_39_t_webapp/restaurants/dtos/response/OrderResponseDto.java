@@ -2,6 +2,7 @@ package com.c24_39_t_webapp.restaurants.dtos.response;
 
 import com.c24_39_t_webapp.restaurants.models.OrderStatus;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public record OrderResponseDto(
@@ -10,7 +11,7 @@ public record OrderResponseDto(
     Long restaurantId,
     String restaurantName,
     OrderStatus status,
-    Double total,
+    BigDecimal total,
     String comments,
     List<OrderDetailsResponseDto> details,
     String createdAt,
