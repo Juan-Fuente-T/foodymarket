@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Plus, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
-import { toast } from 'sonner';
 import { ProductDetailModal } from './ProductDetailModal';
 
 interface ProductCardProps {
@@ -15,7 +14,6 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, onOpenModal }: ProductCardProps) {
-  const navigate = useNavigate();
   const { addItem, isProductInCart, canAddProduct } = useCart();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -66,7 +64,7 @@ export function ProductCard({ product, onOpenModal }: ProductCardProps) {
             {product.name}
           </h3>
           <span className="text-food-600 font-semibold">
-            ${product.price.toFixed(2)}
+            ${product.price}
           </span>
         </div>
         <p className="text-sm text-gray-500 line-clamp-2 mb-4 flex-grow">
