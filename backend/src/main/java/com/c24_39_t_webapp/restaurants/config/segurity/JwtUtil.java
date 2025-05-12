@@ -20,22 +20,17 @@ public class JwtUtil {
     @Value("${jwt.expiration}")
     private long expiration;
 
-    public String generateToken(String email, String role, Long id){
+    public String generateToken(String email, String userRole, Long userId){
         SecretKey key = getSigningKey(); // Obtenemos la clave para HS256
         return Jwts.builder()
-                // Cabecera mínima (solo alg:HS256, sin typ)
                 .setHeaderParam("alg", SignatureAlgorithm.HS256.getValue())
-                .subject(email) // 'sub': Va email porque NO tenemos UUID de SupabaseAuth en este flujo. Si lo hubiera iría aquí.
-                .audience().add("authenticated").and() // 'aud': Estándar para Supabase RLS
-                // --> ¡Quitamos temporalmente los claims personalizados! <--
-                // .claims(Map.of("email", email, "role", role, "id", id))
-                // .claim("app_metadata", Map.of("id", id, "userrole", role))
-                // --> ¡Añadimos el rol estándar! <--
-                .claim("role", "authenticated") // <-- Claim 'role' estándar que usa Supabase RLS
+                .subject(email) // 'sub': Va email porque NO hay UUID de SupabaseAuth en este flujo. Si lo hubiera iría aquí.
+                // .claim("app_metadata", Map.of("id", userId, "role", userRole))
+                 .claim("role", userRole)
+                 .claim("id", userId)
                 // Claims de tiempo estándar
                 .issuedAt(new Date(System.currentTimeMillis())) // 'iat'
                 .expiration(new Date(System.currentTimeMillis() + expiration)) // 'exp'
-                // Firma con la clave correcta y HS256
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -49,7 +44,7 @@ public class JwtUtil {
         return getClaims(token).getSubject();
     }
     public String extractRole(String token) { return getClaims(token).get("role", String.class);}
-
+    public String extractId(String token) {return String.valueOf(getClaims(token).get("id", Long.class));}
     public boolean validateToken(String token){
         try{
             getClaims(token);
@@ -97,15 +92,15 @@ public class JwtUtil {
                     .verifyWith(key) // Usa la misma clave para verificar
                     .build();
 
-            Jws<Claims> claimsJws = parser.parseSignedClaims(testToken); // Esto lanzará excepción si falla
+            Jws<Claims> claimsJws = parser.parseSignedClaims(testToken); // Lanza excepción si falla
 
-            // Si llegamos aquí, la verificación fue exitosa
+            // Si llega aquí, la verificación fue exitosa
             System.out.println("Self-Test - ¡¡VERIFICACIÓN EXITOSA!! Subject: " + claimsJws.getPayload().getSubject());
 
         } catch (Exception e) {
             // Si la verificación falla, se captura aquí
             System.err.println("Self-Test - ¡¡VERIFICACIÓN FALLIDA!! Error: " + e.getMessage());
-            e.printStackTrace(); // Imprime detalles del error
+            e.printStackTrace(); // Imprime error
         }
         System.out.println("--- Fin Auto-Verificación JWT ---");
     }

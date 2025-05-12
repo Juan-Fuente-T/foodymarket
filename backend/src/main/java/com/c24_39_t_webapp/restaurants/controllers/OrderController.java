@@ -161,7 +161,7 @@ public class OrderController {
      * @param pageable The pagination information.
      * @return A paginated list of {@code OrderResponseDto} objects representing all orders for the specified restaurant.
      */
-    @GetMapping("/byOwner/{ownerId}/paged")
+    @GetMapping("/byOwnerId/{ownerId}/paged")
     @PreAuthorize("#ownerId == authentication.principal.id or hasRole('ADMIN')")
     public ResponseEntity<Page<OrderResponseDto>> findAllOrdersByOwnerIdPaged(
             @PathVariable Long ownerId,
