@@ -23,7 +23,7 @@ export function CategoryManagement({ categories, onAdd, onDelete }: CategoryMana
   const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
 
   const handleAddCategory = () => {
-    console.log("START ADDING", newCategoryName);
+    // console.log("START ADDING", newCategoryName);
     const trimmedName = newCategoryName.trim();
     const trimmedDescription = newCategoryDescription.trim()
     if (!trimmedName) {
@@ -32,9 +32,9 @@ export function CategoryManagement({ categories, onAdd, onDelete }: CategoryMana
       ;
       return;
   }
-  console.log("DATA ADD CATEGORY EN CATEGORY MAnagement: ", trimmedName, trimmedDescription);
+  // console.log("DATA ADD CATEGORY EN CATEGORY MAnagement: ", trimmedName, trimmedDescription);
   const categoryData = { name: trimmedName, description: trimmedDescription };
-  console.log("DATA ADD CATEGORY EN CATEGORY MAnagement (sending object): ", categoryData);
+  // console.log("DATA ADD CATEGORY EN CATEGORY MAnagement (sending object): ", categoryData);
     onAdd(categoryData);
     setNewCategoryName("");
     setNewCategoryDescription("");
@@ -54,14 +54,11 @@ export function CategoryManagement({ categories, onAdd, onDelete }: CategoryMana
   // };
   
   const handleConfirmDelete = () => {
-    console.log('Dentro de handleConfirmDelete. ID guardado:', categoryToDelete);
-    console.log("DELETING", categoryToDelete);
     if (categoryToDelete) {
-      console.log('Llamando a onDelete prop con ID:', categoryToDelete);
       onDelete(categoryToDelete);
       setCategoryToDelete(null);
     } else {
-      console.log('Error: categoryToDelete es null o undefined.');
+      console.error('Error: categoryToDelete is null or undefined.');
     }
   };
 
@@ -107,8 +104,7 @@ export function CategoryManagement({ categories, onAdd, onDelete }: CategoryMana
                 </TableRow>
               ) : (
                 categories.map((category) => {
-                  console.log('Mapeando categoría:', JSON.stringify(category, null, 2)); 
-                  return(
+                   return(
                   <TableRow key={category.id}>
                     <TableCell>{category.name}</TableCell>
                     <TableCell className="text-right">
@@ -148,10 +144,8 @@ export function CategoryManagement({ categories, onAdd, onDelete }: CategoryMana
                                   size="sm"
                                   className="text-red-500 hover:text-red-700"
                                   onClick={() => {
-                                    console.log('Intentando borrar:', JSON.stringify(category)); 
                                     if (category && category.id !== undefined && category.id !== null) {
                                       const categoryIdStr = category.id.toString();
-                                      console.log('ID válido encontrado, llamando a setCategoryToDelete:', categoryIdStr);
                                       setCategoryToDelete(categoryIdStr);
                                     } else {
                                       console.error('ERROR al intentar borrar: category o category.id es inválido.', category);
@@ -176,7 +170,6 @@ export function CategoryManagement({ categories, onAdd, onDelete }: CategoryMana
                                 </AlertDialogFooter>
                               </AlertDialogContent>
                             </AlertDialog>
-                            {/* --- Fin Botón de Borrar --- */}
                           </div>
                       </TableCell>
                     </TableRow>

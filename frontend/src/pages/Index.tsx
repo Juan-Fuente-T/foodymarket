@@ -212,7 +212,7 @@ export default function Home() {
               <div className="flex items-center mb-4">
                 <img
                   className="w-20 h-20 rounded-full mr-4 object-cover"
-                  src="public/JaneDoe_Photo.webp"
+                  src="/JaneDoe_Photo.webp"
                   alt="Customer avatar"
                 />
                 <div>
@@ -228,7 +228,7 @@ export default function Home() {
               <div className="flex items-center mb-4">
                 <img
                   className="w-20 h-20 rounded-full mr-4 object-cover"
-                  src="public/JohnSmith_Photo.webp"
+                  src="/JohnSmith_Photo.webp"
                   alt="Customer avatar"
                 />
                 <div>

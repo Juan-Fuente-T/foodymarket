@@ -32,7 +32,7 @@ const Login = () => {
   const onSubmit = async (data: LoginFormValues) => {
     setAuthError(null);
     try {
-      console.log("Login page: Attempting login with:", data.email);
+      // console.log("Login page: Attempting login with:", data.email);
       await login(data.email, data.password);
       toast.success("Login successful!");
       navigate("/dashboard");

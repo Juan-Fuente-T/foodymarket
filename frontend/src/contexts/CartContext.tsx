@@ -98,8 +98,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     // Make sure we set the restaurant when adding the first item
     if (items.length === 0 && !restaurant) {
       // Ensure we have restaurant data when adding the first product
-      console.log("Restaurant not set, setting from product:", product.restaurantId);
-      // We need to fetch restaurant info from somewhere or create a placeholder
       // For now, we'll create a minimal restaurant object to ensure checkout works
       const productRestaurant: Restaurant = {
         id: Number(product.restaurantId),
@@ -182,7 +180,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const removeItem = useCallback((itemId: string) => {
-    console.log(`[Context] removeItem - itemId: ${itemId}`);
     setItems(prevItems => {
       const initialLength = prevItems.length;
       const updatedItems = prevItems.filter((item) => item.id !== itemId);
@@ -202,7 +199,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const updateItemQuantity = useCallback((itemId: string, quantity: number) => {
-    console.log(`[Context] updateItemQuantity - itemId: ${itemId}, newQuantity: ${quantity}`);
     if (quantity <= 0) {
       removeItem(itemId);
       return;

@@ -15,6 +15,6 @@ if (import.meta.env.PROD && (supabaseUrl === defaultSupabaseUrl || supabaseAnonK
   console.error("Production environment detected but using default Supabase credentials. Please set proper environment variables.");
 }
 
-console.log("Initializing Supabase with URL:", supabaseUrl);
+// console.log("Initializing Supabase with URL:", supabaseUrl);
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);

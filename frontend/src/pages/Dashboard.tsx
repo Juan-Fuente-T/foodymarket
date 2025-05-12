@@ -238,8 +238,7 @@ const RestaurantDashboard = () => {
       queryFn: async (): Promise<Restaurant[]> => {
         if (!user?.id) return [];
         try {
-          const allRestaurants = await restaurantAPI.getAll();
-          console.log("Data received from API getAll:", allRestaurants);
+          const allRestaurants = await restaurantAPI.getByOwnerId(user.id);
           if (!Array.isArray(allRestaurants)) {
             console.error("API did not return an array for getAll:", allRestaurants);
             return [];
@@ -259,7 +258,6 @@ const RestaurantDashboard = () => {
     if (selectedRestaurant || isLoadingRestaurants || errorRestaurants) return;
 
     if (ownedRestaurants.length >= 1) {
-      console.log("Auto-selecting restaurant:", ownedRestaurants[0]);
       setSelectedRestaurant(ownedRestaurants[0]);
     } else {
       setSelectedRestaurant(null);
@@ -284,7 +282,6 @@ const RestaurantDashboard = () => {
       return [];
     }
     const flattenedProducts: Product[] = [];
-    console.log("FLATTENED: ", flattenedProducts);
     // Itera sobre la estructura agrupada que devuelve getByRestaurantAndCategory
     groupedProductsData.forEach((categoryGroup: any) => {
       const currentGroupId = categoryGroup.categoryId ?? null;
@@ -300,7 +297,7 @@ const RestaurantDashboard = () => {
           id: String(backendProduct.prd_id ?? ''),
           name: backendProduct.name || '',
           description: backendProduct.description || '',
-          price: Number(backendProduct.price ?? 0),
+          price: backendProduct.price || '0',
           image: backendProduct.image || '',
           categoryId: String(backendProduct.categoryId ?? currentGroupId ?? ''),
           isActive: backendProduct.isActive === true,
@@ -313,7 +310,6 @@ const RestaurantDashboard = () => {
         flattenedProducts.push(frontendProduct as Product);
       });
     });
-    console.log("--- Fin cálculo allProducts. Resultado:", flattenedProducts);
     return flattenedProducts;
   }, [groupedProductsData]);
 
@@ -322,8 +318,6 @@ const RestaurantDashboard = () => {
     queryFn: () => restaurantAPI.getProductCategories(selectedRestaurant!.id.toString()),
     enabled: !!selectedRestaurant?.id,
   });
-  console.log("restaurantProductCategories:", offeredCategories ? offeredCategories : 'NADA');
-
   const categoriesDataForModal = useMemo(() => {
     if (!Array.isArray(offeredCategories)) return [];
     return offeredCategories.map(category => ({
@@ -331,7 +325,6 @@ const RestaurantDashboard = () => {
       name: category.name
     }));
   }, [offeredCategories]);
-  console.log("CATEGORIAS UNICAS", categoriesDataForModal);
 
   const createProductMutation = useMutation({
     mutationFn: (createData: any) => productAPI.create(createData),
@@ -361,7 +354,6 @@ const RestaurantDashboard = () => {
 
   const { mutate: deleteProduct } = useMutation({
     mutationFn: (productId: string) => {
-      console.log("Deleting product with ID:", productId);
       if (!productId || productId === "undefined" || productId === "") {
         throw new Error("Invalid product ID for deletion");
       }
@@ -379,7 +371,7 @@ const RestaurantDashboard = () => {
 
   const createCategoryMutation = useMutation({
     mutationFn: (vars: { restaurantId: string; categoryData: { name: string; description?: string } }) => {
-      console.log(`Attempting POST /api/restaurants/${vars.restaurantId}/categories`);
+      // console.log(`Attempting POST /api/restaurants/${vars.restaurantId}/categories`);
       if (!vars.restaurantId) throw new Error("Restaurant ID es necesario");
       if (!vars.categoryData || !vars.categoryData.name) throw new Error("Nombre de categoría es necesario");
 
@@ -391,7 +383,6 @@ const RestaurantDashboard = () => {
       queryClient.invalidateQueries({ queryKey: ['restaurantProductCategories', vars.restaurantId] });
       queryClient.invalidateQueries({ queryKey: ['groupedProducts', vars.restaurantId] });
 
-      console.log(`Queries invalidadas después de añadir/asociar categoría a restaurante ${vars.restaurantId}`);
       // setIsAddCategoryModalOpen(false);
     },
     onError: (error: Error) => {
@@ -402,7 +393,7 @@ const RestaurantDashboard = () => {
 
   const { mutate: deleteCategory } = useMutation({
     mutationFn: (vars: { categoryId: string; restaurantId: string }) => {
-      console.log("Deleting category with ID:", vars.categoryId);
+      // console.log("Deleting category with ID:", vars.categoryId);
       if (!vars.categoryId || vars.categoryId === "undefined" || vars.categoryId === "") {
         throw new Error("Invalid categoryId ID for category deletion");
       }
@@ -455,7 +446,6 @@ const RestaurantDashboard = () => {
 
   const handleRestaurantChange = (restaurantId: string) => {
     const restaurant = ownedRestaurants.find(r => String(r.id) === restaurantId) || null;
-    console.log("User selected restaurant:", restaurant);
     setSelectedRestaurant(restaurant);
   };
 
@@ -465,23 +455,16 @@ const RestaurantDashboard = () => {
   };
 
   const handleEditProduct = (product: Product) => {
-    // <<< --- AÑADE ESTE LOG AQUÍ --- >>>
-    console.log('PRODUCTO QUE LLEGA A handleEditProduct:', JSON.stringify(product, null, 2));
-    // <<< --- FIN DEL LOG AÑADIDO --- >>>
-    console.log('PASO 1 - handleEditProductClick - Recibido productToEdit:', product);
-    // Make sure we have a valid product with all required fields
     if (!product.id) {
       console.error("Product missing ID:", product);
       toast.error("Error: ID de producto no encontrado");
       return;
     }
     setSelectedProduct(product);
-    console.log('PASO 2 - handleEditProductClick - Después de setSelectedProduct, abriendo modal...');
     setIsProductModalOpen(true);
   };
 
   const handleDeleteProduct = (product: Product) => {
-    console.log("Product to delete:", product);
     if (!product.id) {
       console.error("Cannot delete product without ID:", product);
       toast.error("Error: ID de producto no encontrado");
@@ -493,7 +476,7 @@ const RestaurantDashboard = () => {
 
   const confirmDeleteProduct = () => {
     if (productToDelete && productToDelete.id) {
-      console.log("Confirming delete for product:", productToDelete.id);
+      // console.log("Confirming delete for product:", productToDelete.id);
       deleteProduct(productToDelete.id);
     } else {
       console.error("Attempted to delete product without ID");
@@ -503,8 +486,6 @@ const RestaurantDashboard = () => {
   };
 
   const handleSaveProduct = (productData: any, isNew: boolean) => {
-    console.log("handleSaveProduct received:", productData)
-    console.log("isNew???:", isNew);
     // --- Validación y parseo de tipos ANTES de enviar ---
     let categoryIdNum: number | null = null;
     if (productData.categoryId != null && productData.categoryId !== '') {
@@ -535,7 +516,6 @@ const RestaurantDashboard = () => {
     } else {
       quantityNum = 1; // Default 1 si no viene? O error?
     }
-    console.log("PRODUCTDATA:", productData);
     const finalData: any = {
       name: productData.name,
       description: productData.description,
@@ -551,7 +531,6 @@ const RestaurantDashboard = () => {
     }
 
     if (isNew) {
-      console.log("Calling CREATE mutation with:", finalData);
       createProductMutation.mutate(finalData);
     } else {
       if (!productData.id) {
@@ -566,7 +545,6 @@ const RestaurantDashboard = () => {
 
   // const handleAddCategory = (categoryName: string) => {
   const handleAddCategory = (formData: { name: string; description: string }) => {
-    console.log("DATA addCategory: ", formData, formData.name, formData.description);
     createCategoryMutation.mutate({
       restaurantId: selectedRestaurant!.id.toString(),
       categoryData: { name: formData.name, description: formData.description }
@@ -929,7 +907,7 @@ const RestaurantDashboard = () => {
                                   {order?.status.charAt(0).toUpperCase() + order?.status.slice(1)}
                                 </span>
                               </TableCell>
-                              <TableCell className="text-left">${order.total.toFixed(2)}</TableCell>
+                              <TableCell className="text-left">${order.total}</TableCell>
                               <TableCell>
                                 <Select
                                   value={order.status}
@@ -1013,7 +991,7 @@ const RestaurantDashboard = () => {
                                   {order?.status.charAt(0).toUpperCase() + order?.status.slice(1)}
                                 </span>
                               </TableCell>
-                              <TableCell>${order.total.toFixed(2)}</TableCell>
+                              <TableCell>${order.total}</TableCell>
                               <TableCell>
                                 <Select
                                   value={order.status}
@@ -1163,7 +1141,7 @@ const RestaurantDashboard = () => {
                                                   id: String(product.prd_id || product.id),
                                                   name: product.name,
                                                   description: product.description,
-                                                  price: Number(product.price),
+                                                  price: product.price,
                                                   image: product.image,
                                                   isActive: product.isActive === true,
                                                   available: product.isActive === true,
@@ -1176,7 +1154,6 @@ const RestaurantDashboard = () => {
                                                   createdAt: product.createdAt || '',
                                                   updatedAt: product.updatedAt || ''
                                                 };
-                                                console.log("Edit product:", productToEdit);
                                                 handleEditProduct(productToEdit);
                                               }}
                                             >
@@ -1192,7 +1169,7 @@ const RestaurantDashboard = () => {
                                                   id: String(product.prd_id || product.id),
                                                   name: product.name,
                                                   description: product.description,
-                                                  price: Number(product.price),
+                                                  price: product.price,
                                                   image: product.image,
                                                   isActive: product.isActive === true,
                                                   available: product.isActive === true,
@@ -1203,7 +1180,6 @@ const RestaurantDashboard = () => {
                                                   updatedAt: product.updatedAt || '',
                                                   categoryName: product.categoryName
                                                 };
-                                                console.log("Delete product:", productToDelete);
                                                 handleDeleteProduct(productToDelete);
                                               }}
                                             >

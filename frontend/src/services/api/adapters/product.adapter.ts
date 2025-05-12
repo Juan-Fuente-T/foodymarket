@@ -5,7 +5,7 @@ export const adaptProduct = (data: any): Product => ({
   id: data.prd_id.toString() || "",
   name: data.name || "",
   description: data.description || "",
-  price: parseFloat(data.price) || 0,
+  price: data.price || '0',
   image: data.image || "",
   isActive: data.isActive === undefined ? true : Boolean(data.isActive),
   available: data.available === undefined ? true : Boolean(data.available),

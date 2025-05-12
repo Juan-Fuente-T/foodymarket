@@ -60,7 +60,6 @@ export function ProductDetailModal({
         const stock = product.quantity;
         if (quantity < stock) {
           const newQuantity = quantity + 1;
-          console.log(`Modal: Calling updateItemQuantity with ITEM ID: ${cartItem.id}, new quantity: ${newQuantity}`);
           updateItemQuantity(cartItem.id, newQuantity);
         } else {
             toast.warning("No hay más stock disponible.");
@@ -71,7 +70,6 @@ export function ProductDetailModal({
         if (!cartItem) return;
         const newQuantity = quantity - 1;
         if (newQuantity >= 1) {
-           console.log(`Modal: Calling updateItemQuantity with ITEM ID: ${cartItem.id}, new quantity: ${newQuantity}`);
           updateItemQuantity(cartItem.id, newQuantity);
         } else {
           toast.info("La cantidad mínima es 1. Para eliminar, usa el botón Eliminar.");
@@ -80,7 +78,6 @@ export function ProductDetailModal({
 
     const handleRemoveItem = () => {
         if (!cartItem) return;
-        console.log(`Modal: Calling removeItem with ITEM ID: ${cartItem.id}`);
         removeItem(cartItem.id);
     }
 
@@ -91,7 +88,7 @@ export function ProductDetailModal({
             data-testid="product-modal-backdrop"
         >
             <div
-                className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+                className="bg-white rounded-lg max-w-5xl w-full max-h-[90vh] overflow-y-auto"
                 onClick={(e) => e.stopPropagation()}
                 onMouseDown={(e) => e.stopPropagation()}
             >
@@ -103,27 +100,26 @@ export function ProductDetailModal({
                         <X className="h-5 w-5" />
                     </button>
 
-                    <div className="grid md:grid-cols-2 gap-6">
-                        <div className="aspect-square overflow-hidden rounded-lg">
+                    <div className="grid md:grid-cols-2 gap-6 items-end">   
+                        <div className="flex items-center aspect-square overflow-hidden rounded-lg">
                             <img
                                 src={product.image || '/placeholder-product.jpg'}
                                 alt={product.name}
-                                className="w-full h-full object-cover"
+                                className="max-w-full max-h-full object-contain"
                             />
                         </div>
 
                         <div className="space-y-4">
                             <div>
-                                <h2 className="text-2xl font-bold">{product.name}</h2>
-                                <p className="text-gray-500">{product.categoryName}</p>
+                                <h2 className="text-3xl font-bold">{product.name}</h2>
+                                <p className="text-xl text-gray-500">{product.categoryName}</p>
                             </div>
 
                             <p className="text-3xl font-semibold">
-                                ${product.price.toFixed(2)}
+                                ${product.price}
                             </p>
 
                             <p className="text-gray-700">{product.description}</p>
-
                             <div className="flex flex-col gap-2">
                                 {/* Estado del producto */}
                                 {product.quantity <= 0 ? (

@@ -70,7 +70,7 @@ const EditRestaurant = () => {
       navigate('/dashboard');
     },
     onError: (error) => {
-      toast.error('Error al actualizar el restaurante');
+      toast.error('Error updating restaurant');
       console.error('Error updating restaurant:', error);
     }
   });
@@ -123,7 +123,6 @@ const EditRestaurant = () => {
       return null;
   }
   const url = `${supabaseUrl}/storage/v1/object/${bucket}/${filePath}`;
-  console.log(`Intentando subir a ${url} vía fetch...`);
 
     const headers = {
         'Authorization': `Bearer ${token}`,
@@ -141,18 +140,17 @@ const EditRestaurant = () => {
       }
 
       const responseData = await response.json();
-      console.log("Fetch upload successful:", responseData);
 
       // Si la subida fue bien, obtenemos la URL pública
       const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(filePath);
       if (!urlData?.publicUrl) {
-          throw new Error("Subida OK, pero falló al obtener URL pública."); // Error si no podemos obtener la URL
+          throw new Error("Upload successful but failed to get public URL");
       }
       return { url: urlData.publicUrl, path: filePath };
 
   } catch (error: any) {
       console.error('Error en uploadWithFetch:', error);
-      toast.error(`Fallo al subir archivo vía fetch: ${error.message}`);
+      toast.error(`File upload failed: ${error.message || 'Unknown error'}`);
       return null;
   }
   }
@@ -183,11 +181,11 @@ const EditRestaurant = () => {
     const apiKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
     if (!token || !apiKey) {
-         toast.error("Falta información de autenticación o configuración.");
+         toast.error("Information missing. Please log in again.");
          return;
     }
 
-    const submittingToast = toast.loading("Actualizando restaurante...");
+    const submittingToast = toast.loading("Updating restaurant...");
     let logoUploadResult: { url: string; path: string } | null = null;
     let coverImageUploadResult: { url: string; path: string } | null = null;
     let uploadError = false;
@@ -202,7 +200,7 @@ const EditRestaurant = () => {
           logoUploadResult = await uploadWithFetch(logoFile, logoFilePath, BUCKET_NAME, token, apiKey);
           if (!logoUploadResult) {
               uploadError = true;
-              throw new Error("Fallo al subir el logo.");
+              throw new Error("Upload logo failed.");
           }
             // const uploadResultObj = await uploadFileToSupabase(logoFile, 'imagenes-logos', user.id); // Asume una versión que usa supabase.storage...
             // if (!uploadResultObj) uploadError = true; else logoUploadResult = uploadResultObj;
@@ -217,37 +215,33 @@ const EditRestaurant = () => {
       // coverImageUploadResult = await uploadFileToSupabase(coverImageFile, "restaurants-coverImages", user.id);
        if (!coverImageUploadResult) {
           uploadError = true;
-           throw new Error("Fallo al subir la imagen de portada.");
+           throw new Error("Cover image upload failed. Please upload a cover image.");
       }
   }
       const payload: EditRestaurantApiPayload = {
-        ...data, // Incluye TODO: name, desc, fees, cuisineId, cuisineName, etc.
+        ...data, // Incluye todo: name, desc, fees, cuisineId, cuisineName, etc.
         // NOTA para el futuro: minOrderAmount y deliveryFee YA son números aquí
         id: parseInt(id),
         logo: logoUploadResult ? logoUploadResult.url : data.logo,
         coverImage: coverImageUploadResult ? coverImageUploadResult.url : data.coverImage,
       };
 
-      console.log("Enviando actualización al backend:", JSON.stringify(payload, null, 2));
-
-
         await updateRestaurant(payload, {
           onError: (error: any) => {
-              toast.error(`Error al guardar en BBDD: ${error.message || 'Error desconocido'}`, { id: submittingToast });
-              console.error("Error al guardar en BBDD, intentando rollback de Storage...");
-              const filesToDelete = [];
+             const filesToDelete = [];
               // Usamos los paths que guardamos antes de llamar a uploadWithFetch
               if (logoFilePath && logoUploadResult) filesToDelete.push(logoFilePath); // Solo si se intentó y tuvo éxito la subida
               if (coverImageFilePath && coverImageUploadResult) filesToDelete.push(coverImageFilePath); // Solo si se intentó y tuvo éxito la subida
-
+              
               if (filesToDelete.length > 0) {
-                  supabase.storage.from(BUCKET_NAME).remove(filesToDelete)
-                      .then(/* ... manejo de éxito/error del borrado ... */)
-                      .catch(e => console.error("Error en llamada remove de Supabase", e));
+                supabase.storage.from(BUCKET_NAME).remove(filesToDelete)
+                .then(/* ... manejo de éxito/error del borrado ... */)
+                .catch(e => console.error("Error en llamada remove de Supabase", e));
               }
+              throw new error("Error storing in DB:", error);
           },
           onSuccess: () => {
-               toast.success('Restaurante actualizado!', { id: submittingToast });
+               toast.success('Restaurant updated successfully!', { id: submittingToast });
                setLogoFile(null);
                setCoverImageFile(null);
                // Navegación y queries ya se invalidan en la definición de useMutation
@@ -256,7 +250,7 @@ const EditRestaurant = () => {
       //
     } catch (error: any) {
       console.error("Error en onSubmit:", error);
-      toast.error(error.message || "Ocurrió un error al procesar la actualización.", { id: submittingToast });
+      toast.error(error.message || "Error updating restaurant", { id: submittingToast });
     }
   };
 

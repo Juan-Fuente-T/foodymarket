@@ -18,11 +18,7 @@ import { adaptCategory } from "./api/adapters/category.adapter";
 
 // Base URL for API requests - Using localhost for development
 // const API_BASE_URL = "http://localhost:8080/api";
-console.log("XXXX API_BASE_URL XXXXXXXXXXXX: ", import.meta.env.VITE_API_BASE_URL);
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
-// Comment out the deployed backend URL for now
-// const API_BASE_URL = "https://foodymarket-backend.onrender.com/api";
 
 // Token storage key - IMPORTANT: must match the one in AuthContext.tsx
 const TOKEN_STORAGE_KEY = "food_delivery_token";
@@ -92,23 +88,19 @@ const fetchWithError = async (
       headers['Content-Type'] = 'application/json';
     }
 
-    console.log(`Making API request to: ${url}`);
-    console.log('Headers:', headers);
-    if (options.body) {
-      console.log('Request body:', options.body);
-    }
+    // if (options.body) {
+    //   console.log('Request body:', options.body);
+    // }
 
-    // Try to fetch from API
     const response = await fetch(url, {
       ...options,
       headers,
     });
 
-    console.log(`Response status: ${response.status}`);
-    console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-    
+    // console.log(`Response status: ${response.status}`);
+
     const data = await handleResponse(response);
-    console.log('Response data:', data);
+    // console.log('Response data:', data);
     return data;
   } catch (error) {
     console.error(`API request failed: ${error}`);
@@ -165,13 +157,9 @@ export const userAPI = {
 export const authAPI = {
   login: async (email: string, password: string) => {
     try {
-      console.log("API: Login attempt with:", { email });
       const data = await userAPI.login(email, password);
-      console.log("Login response:", data);
-      
       // Store token in localStorage
       if (data.access_token) {
-        console.log("data.message", data.message);
         localStorage.setItem(TOKEN_STORAGE_KEY, data.access_token);
       }
       return data;
@@ -183,9 +171,7 @@ export const authAPI = {
   
   register: async (userData: Partial<User>) => {
     try {
-      console.log("API: Register attempt with:", userData);
       const data = await userAPI.register(userData);
-      console.log("Register response:", data);
       
       // Store token in localStorage
       if (data.token) {
@@ -212,7 +198,6 @@ export const authAPI = {
     
     try {
       const userData = await userAPI.getProfile();
-      console.log("Current user data:", userData);
       return userData;
     } catch (error) {
       console.error("Get current user error:", error);
@@ -229,33 +214,25 @@ export const authAPI = {
 export const restaurantAPI = {
   getAll: async (): Promise<Restaurant[]> => {
     const data = await fetchWithError("/restaurant/all");
-    console.log("Data received from API GetAll:", data);
     return data.map(adaptRestaurant);
   },
 
   getById: async (id: string) => {
     const data = await fetchWithError(`/restaurant/${id}`);
-    console.log("DATA in API getById: ", data);
     return adaptRestaurant(data);
   },
   getByOwnerId: async (ownerId: string): Promise<Restaurant[]>  => {
-    // const data = await fetchWithError(`/restaurant/byOwnerId/${ownerId}`);
-    const endpoint = `/restaurant/byOwnerId/${ownerId}`;
-    const data = await fetchWithError(endpoint, {}, false); // <-- Añade false
-    console.log("Data received from API getByOwnerId:", data);
+    const data = await fetchWithError(`/restaurant/byOwnerId/${ownerId}`);
     return data.map(adaptRestaurant);
   },
-  getProductCategories: async (restaurantId: string): Promise<Category[]> => { // Asegura que devuelve Category[]
-    console.log(`Workspaceing product categories for restaurant ${restaurantId}`);
-    const rawData = await fetchWithError(`/restaurant/${restaurantId}/categories`); // O la URL correcta
-    console.log("Raw product categories received:", rawData);
+  getProductCategories: async (restaurantId: string): Promise<Category[]> => { 
+    const rawData = await fetchWithError(`/restaurant/${restaurantId}/categories`); 
 
     if (!Array.isArray(rawData)) {
          console.error("getProductCategories did not return an array:", rawData);
          return [];
     }
     const adaptedData = rawData.map(adaptCategory);
-    console.log("Adapted product categories (from API function):", adaptedData);
     return adaptedData; 
 },
 
@@ -265,7 +242,6 @@ export const restaurantAPI = {
   // },
 
   create: async (data: Omit<Restaurant, 'id' | 'createdAt' | 'updatedAt'>) => {
-    console.log("Data received on API create:", data);
     const response = await fetchWithError("/restaurant", {
       method: "POST",
       body: JSON.stringify({
@@ -287,7 +263,6 @@ export const restaurantAPI = {
       method: "POST",
       body: JSON.stringify(categoryData),
     });
-    console.log(`Response API addProductCategory: ${response}`)
     return response;
   },
 
@@ -300,7 +275,6 @@ export const restaurantAPI = {
 export const restaurantCuisinesAPI = {
   getAll: async () => {
     const data = await fetchWithError("/cuisines");
-    console.log("Data received from API Cuisines GetAll:", data);
     return data;
   },
 
@@ -356,7 +330,6 @@ export const productAPI = {
   getByRestaurantAndCategory: async (restaurantId: string) => {
     const resp = await fetchWithError(`/product/byRestaurantAndCategory/${restaurantId}`);
     // Verifica si la respuesta es un array de categorías con productos
-    console.log("PRODUCTS: ", resp);
     if (!Array.isArray(resp)) {
       throw new Error("Formato de respuesta inválido");
     }
@@ -375,10 +348,8 @@ export const productAPI = {
         isActive: product.isActive,
         quantity: product.quantity,
         restaurantId: product.restaurantId
-        // Opcional: agregar más campos si los necesitas en Product
       })),
     }));
-    console.log("PRODUCTS 2: ", response);
     return response;
   },
 
@@ -391,12 +362,10 @@ export const productAPI = {
   },
 
   update: async (id: string, data: Omit<Product, 'id' | 'restaurantId' | 'createdAt' | 'updatedAt'>) => {
-    console.log("Data update: ", data);
     const response = await fetchWithError(`/product/${id}`, {
       method: "PATCH",
       body: JSON.stringify(data),
     });
-    console.log("Data update response: ", response);
     return adaptProduct(response);
   },
 
@@ -419,13 +388,8 @@ export const orderAPI = {
   },
   
   getByRestaurant: async (restaurantId: string) => {
-    console.log("RestaurantID en Order: ", restaurantId);
     const data = await fetchWithError(`/order?restaurantId=${restaurantId}`);
-    console.log("DATA ORDERS: ", data);
-    const orders = data.map(adaptOrder);
-    console.log("ORDERS: ", orders);
-    // return data.map(adaptOrder);
-    return orders;
+    return data.map(adaptOrder);
   },
 
   getById: async (ord_id: string) => {
@@ -453,8 +417,8 @@ export const orderAPI = {
     return data.map(adaptOrder);
   },
   getAllByRestaurant: async (ownerId: string) => {
-    const data = await fetchWithError(`/order/byOwnerId/${ownerId}`);
-    console.log("DATA ORDERS en api for all by restaurant: ", data);
+    // const data = await fetchWithError(`/order/byOwnerId/${ownerId}`);
+    const data = await fetchWithError(`/order/byOwnerId/${ownerId}/paged`);
     return data.map(adaptOrder);
   },
 

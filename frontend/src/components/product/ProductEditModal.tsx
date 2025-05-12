@@ -61,13 +61,10 @@ export const ProductEditModal = ({
   const { user } = useAuth();
 
   useEffect(() => {
-    console.log("Categories in modal:", categories);
-    console.log("OBJETO PRODUCT COMPLETO AL RENDERIZAR:", product);
-    
     if (product) {
       setValue('name', product.name || '');
       setValue('description', product.description || '');
-      setValue('price', product.price || 0);
+      setValue('price', product.price || '0');
       setValue('image', product.image || '');
       setValue('quantity', product.quantity || 1);
       setIsActive(product.isActive !== false);
@@ -76,13 +73,13 @@ export const ProductEditModal = ({
       
       // Convert the categoryId to string to match the select component expectations
       const initialCategoryId = product.categoryId ? String(product.categoryId) : '';
-      console.log("Setting categoryId for existing product:", initialCategoryId);
+      // console.log("Setting categoryId for existing product:", initialCategoryId);
       setSelectedCategoryId(initialCategoryId);
     } else {
       reset({
         name: '',
         description: '',
-        price: 0,
+        price: '0',
         image: '',
       });
       setIsActive(true);
@@ -91,7 +88,7 @@ export const ProductEditModal = ({
       
       // Set default category if available
       const defaultCategoryId = categories.length > 0 ? String(categories[0].id) : '';
-      console.log("Setting default categoryId for new product:", defaultCategoryId);
+      // console.log("Setting default categoryId for new product:", defaultCategoryId);
       setSelectedCategoryId(defaultCategoryId);
     }
   }, [product, categories, setValue, reset]);
@@ -124,13 +121,13 @@ export const ProductEditModal = ({
         // --- Subida de Imagen (SOLO si se seleccionó una NUEVA) ---
         if (productImage) { // <-- Comprueba si hay un archivo nuevo en el estado
             uploadAttempted = true;
-            console.log("Intentando subir nueva imagen de producto...");
+            // console.log("Intentando subir nueva imagen de producto...");
             uploadResult = await uploadFileToSupabase(productImage, 'fotos-productos', user.id);
             if (!uploadResult) {
-                // El error ya se muestra en uploadFileToSupabase, lanzamos para ir al catch
+                // El error ya se muestra en uploadFileToSupabase, lanza para ir al catch
                  throw new Error("Fallo al subir la imagen del producto.");
             }
-             // TODO Opcional: Borrar imagen antigua si la subida fue exitosa y estamos editando
+             // TODO Opcional: Borrar imagen antigua si la subida fue exitosa y se esta editando
              // if (uploadResult && !isNewProduct && product?.image) { /* Lógica borrar */ }
         }
     
@@ -150,7 +147,7 @@ export const ProductEditModal = ({
       ? productData 
       : { ...productData, id: product!.id };
       
-    console.log("Sending product data to save:", finalProductData);
+    // console.log("Sending product data to save:", finalProductData);
     onSave(finalProductData, isNewProduct);
     toast.success(isNewProduct ? 'Producto Creado' : 'Producto Actualizado', { id: submittingToast });
     onClose();

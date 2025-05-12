@@ -12,7 +12,6 @@ export const uploadFileToSupabase = async (file: File, folder: string, userId: s
   const sanitizedName = baseName.replace(/[^a-zA-Z0-9_.-]/g, '_').replace(/_+/g, '_');
   const uniqueFileName = `${Date.now()}_${sanitizedName}.${fileExt}`;  
   const filePath = `${folder}/${userId}/${uniqueFileName}`;
-  console.log(`Subiendo ${file.name} a ${BUCKET_NAME}/${filePath}...`);
 
   try {
     const { data, error: uploadError } = await supabase.storage
@@ -28,8 +27,6 @@ export const uploadFileToSupabase = async (file: File, folder: string, userId: s
       return null;
     }
 
-    console.log('Subida exitosa:', data);
-
     // Obtener la URL pública
     const { data: urlData } = supabase.storage
       .from(BUCKET_NAME)
@@ -42,8 +39,6 @@ export const uploadFileToSupabase = async (file: File, folder: string, userId: s
       // await supabase.storage.from(BUCKET_NAME).remove([filePath]);
       return null;
     }
-
-    console.log('URL Pública:', urlData.publicUrl);
     return { url: urlData.publicUrl, path: filePath }; // Devolver la URL publica en lugar de urlData.publicUrl;
 
   } catch (error) {

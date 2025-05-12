@@ -136,18 +136,27 @@ const Cart = () => {
         })),
       };
       
-      console.log("Submitting order:", orderData);
+      // console.log("Submitting order:", orderData);
       const response = await orderAPI.create(orderData, currentUser.email);
-      console.log("Order created response:", response);
+      // console.log("Order created response:", response);
       
       // Close checkout modal and open confirmation
       setIsCheckoutModalOpen(false);
       setIsConfirmationModalOpen(true);
       
-      // Simulate payment processing
+      //FOR ME IN THE FUTURE:
+      // Simulate a successful payment process
+      // In a real-world scenario, you would integrate with a payment gateway here
+      // For example, using Stripe or PayPal SDKs to handle the payment
+      // After successful payment, must be updated the order status in the backend
+      // For now, we'll just simulate a successful payment
+      // and set a timeout to close the modaland clear the cart after a few seconds
       setTimeout(() => {
         setIsProcessing(false);
-      }, 1500);
+        setIsConfirmationModalOpen(false);
+        clearCart();
+        navigate('/orders');
+      }, 5000);
     } catch (error) {
       console.error("Error placing order:", error);
       toast.error("Failed to place order. Please try again.");

@@ -49,14 +49,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         const token = getToken();
         if (token) {
-          console.log("Found stored token, trying to fetch current user");
+          // console.log("Found stored token, trying to fetch current user");
           const userData = await authAPI.getCurrentUser();
           if (userData) {
-            console.log("Successfully retrieved user data:", userData);
+            // console.log("Successfully retrieved user data:", userData);
             setUser(userData);
             localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userData));
           } else {
-            console.log("No user data returned despite having token, clearing auth state");
+            // console.log("No user data returned despite having token, clearing auth state");
             removeToken();
             setUser(null);
           }
@@ -76,18 +76,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      console.log("AuthContext: Attempting login with email:", email);
+      // console.log("AuthContext: Attempting login with email:", email);
       const response = await authAPI.login(email, password);
-      console.log("Login response received in AuthContext:", response);
+      // console.log("Login response received in AuthContext:", response);
 
       if (response) {
         if (response.access_token) {
-          console.log("Access Token received, storing token:", response.access_token.substring(0, 10) + "...");
+          // console.log("Access Token received, storing token:", response.access_token.substring(0, 10) + "...");
           storeToken(response.access_token);
 
           const userData = response.user;
           if (userData) {
-              console.log("User data received:", userData);
+              // console.log("User data received:", userData);
               setUser(userData);
               localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userData));
           } else {
@@ -125,15 +125,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(true);
     try {
       const response = await authAPI.register(userData);
-      console.log("Registration response received in AuthContext:", response);
+      // console.log("Registration response received in AuthContext:", response);
 
       if (response && response.access_token) {
-        console.log("Access Token received from registration, storing token");
+        // console.log("Access Token received from registration, storing token");
         storeToken(response.access_token);
 
         const userObj = response.user;
         if (userObj) {
-            console.log("User data received from registration:", userObj);
+            // console.log("User data received from registration:", userObj);
             setUser(userObj);
             localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userObj));
             return userObj;
@@ -159,9 +159,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       await authAPI.logout();
       removeToken();
       setUser(null);
-      console.log("Local state cleared.");
     } catch (error) {
-      console.error("Logout failed:", error);
       removeToken();
       setUser(null);
     } finally {
@@ -171,17 +169,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateUser = async (userData: Partial<User>) => {
+    if (!user) { 
+      toast.error("No hay usuario para actualizar.");
+      throw new Error("User not available for update.");
+  }
+  setIsLoading(true);
     try {
-      setIsLoading(true);
-      if (user && userData.role && userData.role !== user.role) {
-        console.log("Updating user role from", user.role, "to", userData.role);
-      }
+      const response = await userAPI.updateProfile(userData);
 
-      const updatedUser = { ...user, ...userData } as User;
-      setUser(updatedUser);
-      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(updatedUser));
-      console.log("User updated successfully:", updatedUser);
-      return updatedUser;
+      if (response && response.user) {
+        const backendUser = response.user as User;
+        setUser(backendUser); 
+        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(backendUser)); 
+        toast.success("User profile updated successfully");
+        return backendUser;
+      }else {
+        console.error("No user data returned after update");
+        toast.error("No se pudo actualizar el perfil de usuario");
+        throw new Error("Failed to update user profile");
+      }
     } catch (error) {
       console.error("Failed to update user:", error);
       toast.error("Failed to update user profile");

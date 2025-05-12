@@ -176,7 +176,7 @@ const RestaurantDetails = () => {
                             id: product.prd_id?.toString() || product.id?.toString() || '',
                             name: product.name || '',
                             description: product.description || '',
-                            price: Number(product.price) || 0,
+                            price: product.price || '0',
                             image: product.image || '',
                             isActive: product.isActive === true,
                             available: product.isActive === true,
