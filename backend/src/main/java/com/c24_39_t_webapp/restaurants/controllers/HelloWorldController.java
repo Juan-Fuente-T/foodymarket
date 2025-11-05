@@ -18,21 +18,21 @@ public class HelloWorldController {
     @GetMapping("/api/public/hello")
     @PreAuthorize("permitAll()")
     public ResponseEntity<?> helloPublic(){
-        return ResponseEntity.ok("<h2>Funciona</h2>");
+        return ResponseEntity.ok("Funciona");
     }
 
     // RUTA PROTEGIDA, SOLO PARA ROLE_RESTAURANTE
 //    @GetMapping("/api/restaurant")
 //    @PreAuthorize("hasRole(ROLE_RESTAURANT)")
 //    public ResponseEntity<?> helloRestaurant(){
-//        return ResponseEntity.ok("<h2>Helo Role Resstaurante</h2>");
+//        return ResponseEntity.ok("Hello Role Resstaurante");
 //    }
 
     // RUTA PROTEGIDA SOLO PARA ROLE_USUARIO
     //@GetMapping("/api/user")
     //@PreAuthorize("hasRole(ROLE_USER)")
     //public ResponseEntity<?> helloUser(){
-    //    return ResponseEntity.ok("<h2>Hello Role User</h2>");
+    //    return ResponseEntity.ok("Hello Role User");
     //}
 
 }
