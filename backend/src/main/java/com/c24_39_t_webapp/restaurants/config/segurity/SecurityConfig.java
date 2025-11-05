@@ -94,8 +94,8 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(
-                "https://foodymarket.vercel.app/", // URL del front en Vercel
-                "http://localhost:8081", "http://localhost:8080"
+                "https://foodymarket.vercel.app", // URL del front en Vercel
+                "http://localhost:5173"
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Cache-Control", "X-Requested-With")); // Cabeceras comunes

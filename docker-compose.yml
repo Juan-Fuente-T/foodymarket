@@ -1,0 +1,54 @@
+services:
+  # Servicio de Base de Datos PostgreSQL
+  db:
+    image: postgres:15-alpine
+    container_name: foodymarket
+    environment:
+      POSTGRES_DB: foodymarket_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d foodymarket_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Servicio del Backend (Spring Boot)
+  backend:
+    build: 
+      context: ./backend # # Ruta a la carpeta del backend
+    container_name: foodymarket-backend
+    depends_on:
+      db:
+        condition: service_healthy # No arranca hasta que la BD esté lista
+    environment:
+      # Pasa las variables de entorno para que application-prod.properties las lea
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/foodymarket_db
+      POSTGRES_DB: foodymarket_db
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: password
+      #JWT_SECRET: ${JWT_SECRET}
+      JWT_SECRET: dev-local-secret
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create-drop
+    ports:
+      - "8080:8080"
+
+  # Servicio del Frontend
+  frontend:
+    build:
+      context: ./frontend # Ruta a la carpeta del frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: http://localhost:8080/api
+    container_name: foodymarket-frontend
+    depends_on:
+      - backend
+    ports:
+      - "5173:80" # El puerto 80 es el de Nginx dentro del contenedor
+volumes:
+  postgres_data:
