@@ -56,8 +56,7 @@ public class RestaurantController {
      * Responds with the status for the new restaurant request.
      *
      * @param restaurantRequestDto get the necessary information to create the request.
-     * @param userDetails          Request to the token the user details, avoiding to the user enter again their information.
-     *                             (did not allow to the user enter any other wrong information)
+     * @param authentication      the authentication object containing user details.
      * @return a response entity with the new restaurant uri
      */
 
@@ -65,9 +64,9 @@ public class RestaurantController {
     @PostMapping()
     @PreAuthorize("hasRole('RESTAURANTE')")
     public ResponseEntity<?> registerRestaurant(@RequestBody @Valid final RestaurantRequestDto restaurantRequestDto,
-                                                @AuthenticationPrincipal final UserDetailsImpl userDetails) {
-        log.info("Solicitud recibida para registrar un restaurante para el usuario con email: {}", userDetails.getUsername());
-        RestaurantResponseDto outputResponseDto= restaurantService.registerRestaurant(restaurantRequestDto, userDetails.getUsername());
+                                                Authentication authentication)  {
+        log.info("Solicitud recibida para registrar un restaurante para el usuario con email: {}", authentication.getName());
+        RestaurantResponseDto outputResponseDto= restaurantService.registerRestaurant(restaurantRequestDto, authentication.getName());
 
         log.info("Se creo el restaurante con ID {}exitosamente.", outputResponseDto.rst_id());
         return ResponseEntity.status(HttpStatus.CREATED).body(outputResponseDto);
@@ -124,8 +123,8 @@ public class RestaurantController {
 
         RestaurantResponseDto outputUpdatedDto = restaurantService.updateRestaurant(restaurantRequestDto, rst_id);
         log.info("Restaurante con ID: {} actualizado exitosamente", rst_id);
-        return ResponseEntity.status(HttpStatus.CREATED).body(outputUpdatedDto);
-//        return ResponseEntity.ok(updatedRestaurant);
+//        return ResponseEntity.status(HttpStatus.CREATED).body(outputUpdatedDto);
+        return ResponseEntity.ok(outputUpdatedDto);
     }
 
     @GetMapping("/byOwnerId/{ownerId}")

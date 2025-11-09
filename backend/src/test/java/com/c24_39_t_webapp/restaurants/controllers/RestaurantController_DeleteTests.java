@@ -73,29 +73,6 @@ public class RestaurantController_DeleteTests {
     private static final String VALID_EMAIL = "test@example.com";
     private static final long RESTAURANT_ID = 1L;  // El ID a actualizar/borrar
 
-    private RestaurantRequestDto validRestaurantDto;
-
-    /**
-     * Configuración común para los test de creación de restaurantes
-     * Crea un RestaurantRequestDto válido y un UserDetailsImpl válido antes de cada test
-     */
-    @BeforeEach
-    void setUp() {
-        // Arrange común para todos los tests de borrado
-        validRestaurantDto = new RestaurantRequestDto(
-                RESTAURANT_ID,
-                "Atlántico",
-                "Deliciosas recetas marineras",
-                1L,
-                "555 666 777",
-                VALID_EMAIL,
-                "Calle Arriba 11",
-                "10-15 h y 20-24 h",
-                "https://example.com/logo.png",
-                "https://example.com/cover.jpg"
-        );
-    }
-
     /**
      * Test que verifica que al borrar un restaurante con un ID válido, se retorna el código 204 No Content
      * Arrange: Configura el mock del servicio para que no haga nada al borrar
@@ -112,12 +89,9 @@ public class RestaurantController_DeleteTests {
 
         // Act & Assert
         mockMvc.perform(delete(RESTAURANT_ENDPOINT + "/" + RESTAURANT_ID)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(validRestaurantDto))
                         .with(user(VALID_EMAIL).roles("RESTAURANTE"))
                         .with(csrf()))
-                .andExpect(status().isNoContent())
-                .andExpect(content().string(""));
+                .andExpect(status().isNoContent());
         // Verify
         verify(restaurantService, times(1)).deleteById(RESTAURANT_ID);
     }

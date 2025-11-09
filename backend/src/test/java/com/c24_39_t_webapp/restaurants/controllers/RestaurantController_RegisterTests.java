@@ -33,6 +33,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                 classes = JwtTokenFilter.class
         )
 )
+/**
+ * Test para el endpoint de registro de restaurante
+ * Verifica que tras registrar un restaurante con datos válidos,
+ * se retorna el código 201 Created con los datos del restaurante creado
+ * También verifica el caso de error:
+ * - Excepción genérica lanzada por el servicio: retorna 500 Internal Server Error
+ * Patrón AAA: Arrange, Act, Assert
+ */
 @DisplayName("RestaurantController - POST /api/restaurant (Register)")
 class RestaurantController_RegisterTests {
 
@@ -64,6 +72,10 @@ class RestaurantController_RegisterTests {
 
     private RestaurantResponseDto expectedRestaurantResponse;
 
+    /**
+     * Configuración común para los test de creación de restaurantes
+     * Crea un RestaurantRequestDto válido y un UserDetailsImpl válido antes de cada test
+     */
     @BeforeEach
     void setUp() {
         // Arrange común para todos los tests de registro
@@ -96,6 +108,15 @@ class RestaurantController_RegisterTests {
         );
     }
 
+    /**
+     * Test que verifica que al intentar registrar un restaurante con datos válidos
+     * se retorna el código 201 con los datos del restaurante creado.
+     * Arrange: Configura el mock del servicio para que retorne el RestauranteResponseDto esperado
+     * Act & Assert: Realiza la petición POST y verifica el status 201 y el contenido de la respuesta
+     * Verify: Verifica que el servicio se llamó una vez con los parámetros correctos
+     *
+     * @throws Exception
+     */
     @Test
     @DisplayName("POST /api/restaurant - Retorna 200 al crear un restaurante")
     void whenRegisterRestaurantWithValidData_thenReturnsCreatedWithRestaurantData() throws Exception {
@@ -119,8 +140,17 @@ class RestaurantController_RegisterTests {
         verify(restaurantService, times(1)).registerRestaurant(eq(validRestaurantDto), eq(VALID_EMAIL));
     }
 
+    /**
+     * Test que verifica que al intentar registrar un restaurante, si el servicio lanza una excepción genérica,
+     * se retorna el código 500 Internal Server Error.
+     * Arrange: Configura el mock del servicio para que lance RuntimeException
+     * Act & Assert: Realiza la petición POST y verifica el status 500
+     * Verify: Verifica que el servicio se llamó una vez con los parámetros correctos
+     *
+     * @throws Exception
+     */
     @Test
-    @DisplayName("Retorna 500 si el servicio lanza excepción")
+    @DisplayName("Fail POST /api/restaurant - Retorna 500 si el servicio lanza excepción")
     void whenServiceThrowsException_thenReturnsInternalError() throws Exception {
         // Arrange
         when(restaurantService.registerRestaurant(eq(validRestaurantDto), eq(VALID_EMAIL)))
