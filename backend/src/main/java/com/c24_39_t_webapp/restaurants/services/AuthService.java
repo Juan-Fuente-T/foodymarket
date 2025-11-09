@@ -44,8 +44,6 @@ public class AuthService {
         );
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-
         UserResponseDto userResponse = userService.getUserProfile(request.email());
 
         String token = jwtUtil.generateToken(

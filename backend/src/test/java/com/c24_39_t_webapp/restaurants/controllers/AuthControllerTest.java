@@ -28,7 +28,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * Tests unitarios para {@link AuthController}.
- *
  * Patrones aplicados:
  * - @WebMvcTest: Solo carga el controlador específico (slice testing). Excluye seguridad y filtros innecesarios.
  * - @MockitoBean: Mockea las dependencias (AuthService).

@@ -71,7 +71,7 @@ public class RestaurantController_DeleteTests {
      */
     private static final String RESTAURANT_ENDPOINT = "/api/restaurant";
     private static final String VALID_EMAIL = "test@example.com";
-    private static long RESTAURANT_ID = 1L;  // El ID a actualizar/borrar
+    private static final long RESTAURANT_ID = 1L;  // El ID a actualizar/borrar
 
     private RestaurantRequestDto validRestaurantDto;
 
@@ -101,6 +101,7 @@ public class RestaurantController_DeleteTests {
      * Arrange: Configura el mock del servicio para que no haga nada al borrar
      * Act & Assert: Realiza la petición DELETE y verifica el status 204
      * Verify: Verifica que el servicio se llamó una vez con el ID correcto
+     *
      * @throws Exception
      */
     @Test
@@ -126,6 +127,7 @@ public class RestaurantController_DeleteTests {
      * Arrange: Configura el mock del servicio para que lance RestaurantNotFoundException
      * Act & Assert: Realiza la petición DELETE y verifica el status 404 y el mensaje de error
      * Verify: Verifica que el servicio se llamó una vez con el ID correcto
+     *
      * @throws Exception
      */
     @Test
@@ -152,6 +154,7 @@ public class RestaurantController_DeleteTests {
      * Arrange: Configura el mock del servicio para que lance UnauthorizedAccessException
      * Act & Assert: Realiza la petición DELETE y verifica el status 403
      * Verify: Verifica que el servicio se llamó una vez con el ID correcto
+     *
      * @throws Exception
      */
     @Test
@@ -175,6 +178,7 @@ public class RestaurantController_DeleteTests {
      * Test que verifica que al intentar borrar un restaurante sin autenticación, se retorna 401 Unauthorized
      * Act & Assert: Realiza la petición DELETE sin usuario y verifica el status 401
      * Verify: Verifica que el servicio NUNCA se llamó
+     *
      * @throws Exception
      */
     @Test

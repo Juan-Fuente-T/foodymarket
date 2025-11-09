@@ -311,9 +311,10 @@ public class ProductServiceImpl implements IProductService {
                     Long categoryId = entry.getKey();
                     List<ProductResponseDto> productsInCategory = entry.getValue();
                     // Hacer una consulta a CategoryRepository o tener un Map<Long, String>
-                    String categoryName = productsInCategory.isEmpty() ? "Unknown Category" : productsInCategory.get(0).categoryName();
-                    Long restId = productsInCategory.isEmpty() ? null : productsInCategory.get(0).restaurantId();
-                    String restName = productsInCategory.isEmpty() ? "Unknown Restaurant" : productsInCategory.get(0).restaurantName();
+//                    String categoryName = productsInCategory.isEmpty() ? "Unknown Category" : productsInCategory.get(0).categoryName();
+                    String categoryName = productsInCategory.isEmpty() ? "Unknown Category" : productsInCategory.getFirst().categoryName();
+                    Long restId = productsInCategory.isEmpty() ? null : productsInCategory.getFirst().restaurantId();
+                    String restName = productsInCategory.isEmpty() ? "Unknown Restaurant" : productsInCategory.getFirst().restaurantName();
 
                     return new GroupedProductsResponseDto(categoryName, categoryId, restName, restId, productsInCategory);
                 })
