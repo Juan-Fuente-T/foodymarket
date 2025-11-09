@@ -4,7 +4,7 @@ import com.c24_39_t_webapp.restaurants.dtos.request.AddReviewDto;
 import com.c24_39_t_webapp.restaurants.dtos.request.UpdateReviewDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.ReviewResponseDto;
 import com.c24_39_t_webapp.restaurants.exception.UnauthorizedAccessException;
-import com.c24_39_t_webapp.restaurants.exception.user_implementations.ResourceNotFoundException;
+import com.c24_39_t_webapp.restaurants.exception.ResourceNotFoundException;
 import com.c24_39_t_webapp.restaurants.models.Restaurant;
 import com.c24_39_t_webapp.restaurants.models.Review;
 import com.c24_39_t_webapp.restaurants.models.UserEntity;

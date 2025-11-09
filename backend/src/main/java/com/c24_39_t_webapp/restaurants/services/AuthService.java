@@ -4,7 +4,7 @@ import com.c24_39_t_webapp.restaurants.dtos.request.LoginRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.request.UserRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.AuthResponseDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.UserResponseDto;
-import com.c24_39_t_webapp.restaurants.config.segurity.JwtUtil;
+import com.c24_39_t_webapp.restaurants.config.security.JwtUtil;
 import com.c24_39_t_webapp.restaurants.services.impl.UserDetailsImpl;
 import com.c24_39_t_webapp.restaurants.repository.UserRepository;
 import lombok.AllArgsConstructor;

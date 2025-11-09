@@ -25,6 +25,8 @@ public class RestaurantsApplication {
 //        System.out.println("\n=== Variables del sistema ===");
 //        System.out.println("JWT_SECRET (System.getenv): " + System.getenv("JWT_SECRET"));
 //        System.out.println("SUPABASE_URL (System.getenv): " + System.getenv("SUPABASE_URL"));
+//        Usa @Value("${NOMBRE_VARIABLE}") en cualquier Spring Bean
+//        O System.getenv("NOMBRE_VARIABLE") en cualquier parte del código
 //
 //        // 3. Mostrar propiedades de Java (las que estableciste con System.setProperty)
 //        System.out.println("\n=== Propiedades de Java ===");

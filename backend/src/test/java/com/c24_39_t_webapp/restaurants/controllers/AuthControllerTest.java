@@ -1,6 +1,6 @@
 package com.c24_39_t_webapp.restaurants.controllers;
 
-import com.c24_39_t_webapp.restaurants.config.segurity.JwtTokenFilter;
+import com.c24_39_t_webapp.restaurants.config.security.JwtTokenFilter;
 import com.c24_39_t_webapp.restaurants.dtos.request.LoginRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.request.UserRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.AuthResponseDto;

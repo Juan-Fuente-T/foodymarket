@@ -1,8 +1,7 @@
 package com.c24_39_t_webapp.restaurants.controllers;
 
-import com.c24_39_t_webapp.restaurants.config.segurity.JwtTokenFilter;
+import com.c24_39_t_webapp.restaurants.config.security.JwtTokenFilter;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;

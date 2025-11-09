@@ -5,6 +5,7 @@ import com.c24_39_t_webapp.restaurants.dtos.request.RestaurantRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.CategoryResponseDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.RestaurantResponseDto;
 import com.c24_39_t_webapp.restaurants.exception.RestaurantNotFoundException;
+import com.c24_39_t_webapp.restaurants.exception.UnauthorizedAccessException;
 import com.c24_39_t_webapp.restaurants.exception.UserNotFoundException;
 import com.c24_39_t_webapp.restaurants.models.Category;
 import com.c24_39_t_webapp.restaurants.models.Restaurant;
@@ -228,7 +229,7 @@ public class RestaurantServiceImpl implements IRestaurantService {
                 .orElseThrow(() -> new UserNotFoundException("Dueño de restaurante no encontrado con ID: " + id));
         if (!owner.getEmail().equals(authenticatedUsername /* && !SecurityUtils.isAdmin() */ )) { // Añadir lógica si admin puede ver
             log.warn("Usuario {} intentando acceder a restaurantes del dueño {}", authenticatedUsername, id);
-            throw new SecurityException("No tienes permiso para ver los restaurantes de este dueño.");
+            throw new UnauthorizedAccessException("No tienes permiso para ver los restaurantes de este dueño.");
         }
         restaurantRepository.deleteById(id);
     }

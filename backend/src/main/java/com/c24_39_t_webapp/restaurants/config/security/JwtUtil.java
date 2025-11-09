@@ -1,4 +1,4 @@
-package com.c24_39_t_webapp.restaurants.config.segurity;
+package com.c24_39_t_webapp.restaurants.config.security;
 
 import com.c24_39_t_webapp.restaurants.models.UserEntity;
 import io.jsonwebtoken.*;

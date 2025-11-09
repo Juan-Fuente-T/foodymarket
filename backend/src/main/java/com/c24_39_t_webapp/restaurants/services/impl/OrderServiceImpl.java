@@ -191,7 +191,7 @@ public class OrderServiceImpl implements IOrderService {
         // Validar que el pedido pertenece al restaurante del usuario autenticado
         if (!order.getRestaurantId().getUserEntity().getEmail().equals(userEmail)) {
             log.warn("Intento de acceso no autorizado al pedido {} por el usuario {}", ord_id, userEmail);
-            throw new SecurityException("No tienes permiso para acceder a este pedido");
+            throw new UnauthorizedAccessException("No tienes permiso para acceder a este pedido");
         }
 
         log.info("Pedido con ID {} encontrado y autorizado para el restaurante", ord_id);
@@ -232,7 +232,7 @@ public class OrderServiceImpl implements IOrderService {
         log.info("Recuperando el email del usuario dueño del restaurante: {}", order.getRestaurantId().getUserEntity().getEmail());
 
         if (!order.getRestaurantId().getUserEntity().getEmail().equals(userEmail)) {
-            throw new SecurityException("No tienes permiso para editar pedidos de este restaurante");
+            throw new UnauthorizedAccessException("No tienes permiso para editar pedidos de este restaurante");
         }
         log.info("El email del dueño del restuarente es válido: {}", userEmail);
 
@@ -291,7 +291,7 @@ public class OrderServiceImpl implements IOrderService {
         // Validar que el pedido pertenece al restaurante del usuario autenticado
         if (!order.getRestaurantId().getUserEntity().getEmail().equals(userEmail)) {
             log.warn("Intento de acceso no autorizado al pedido {} por el usuario {}", ord_id, userEmail);
-            throw new SecurityException("No tienes permiso para eliminar este pedido");
+            throw new UnauthorizedAccessException("No tienes permiso para eliminar este pedido");
         }
         // Validar el estado del pedido
         if (order.getStatus() != OrderStatus.pendiente) {
@@ -363,7 +363,7 @@ public class OrderServiceImpl implements IOrderService {
         // Validar que el pedido pertenece al restaurante del usuario autenticado
         if (!client.getEmail().equals(userEmail)) {
             log.warn("Intento de acceso no autorizado al pedido del cliente {} por el usuario {}", cln_id, userEmail);
-            throw new SecurityException("No tienes permiso para acceder a los pedidos de este cliente");
+            throw new UnauthorizedAccessException("No tienes permiso para acceder a los pedidos de este cliente");
         }
         List<Order> orders = orderRepository.findByClientId_Id(cln_id);
         if (orders.isEmpty()) return Collections.emptyList();
@@ -409,7 +409,7 @@ public class OrderServiceImpl implements IOrderService {
         // Validar que el pedido pertenece al restaurante del usuario autenticado
         if (!owner.getEmail().equals(userEmail)) {
             log.warn("Intento de acceso no autorizado al pedido del restaurante {} por el usuario {}", ownerId, userEmail);
-            throw new SecurityException("No tienes permiso para acceder a los pedidos de este cliente");
+            throw new UnauthorizedAccessException("No tienes permiso para acceder a los pedidos de este cliente");
         }
         List<Long> restaurantIds = restaurantRepository.findRestaurantIdsByOwnerId(ownerId);
         // Validar que el dueño tiene restaurantes asociados
@@ -459,7 +459,7 @@ public class OrderServiceImpl implements IOrderService {
                 .orElseThrow(() -> new UserNotFoundException("User no encontrado con ID: " + ownerId));
         String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
         if (!owner.getEmail().equals(userEmail)) {
-            throw new SecurityException("No tienes permiso para acceder a los pedidos de este dueño");
+            throw new UnauthorizedAccessException("No tienes permiso para acceder a los pedidos de este dueño");
         }
         log.info("Usuario autenticado: {}, su email es {}.", userEmail, owner.getEmail());
         List<Long> restaurantIds = restaurantRepository.findRestaurantIdsByOwnerId(ownerId);
@@ -513,7 +513,7 @@ public class OrderServiceImpl implements IOrderService {
         // Validar que el pedido pertenece al usuario autenticado
         if (!client.getEmail().equals(userEmail)) {
             log.warn("Intento de acceso no autorizado al pedido del cliente {} por el usuario {}", cln_id, userEmail);
-            throw new SecurityException("No tienes permiso para acceder a los pedidos de este cliente");
+            throw new UnauthorizedAccessException("No tienes permiso para acceder a los pedidos de este cliente");
         }
 
         List<Order> orders = orderRepository.findByClientId_IdAndCreatedAtBetween(cln_id, start, end);

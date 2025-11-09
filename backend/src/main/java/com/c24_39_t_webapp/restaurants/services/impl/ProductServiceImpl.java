@@ -8,6 +8,7 @@ import com.c24_39_t_webapp.restaurants.dtos.response.ProductSummaryResponseDto;
 import com.c24_39_t_webapp.restaurants.exception.CategoryNotFoundException;
 import com.c24_39_t_webapp.restaurants.exception.ProductNotFoundException;
 import com.c24_39_t_webapp.restaurants.exception.RestaurantNotFoundException;
+import com.c24_39_t_webapp.restaurants.exception.UnauthorizedAccessException;
 import com.c24_39_t_webapp.restaurants.models.Category;
 import com.c24_39_t_webapp.restaurants.models.Product;
 import com.c24_39_t_webapp.restaurants.models.Restaurant;
@@ -58,7 +59,7 @@ public class ProductServiceImpl implements IProductService {
         log.info("Recuperando el email del usuario del restaurante: {}", restaurant.getUserEntity().getEmail());
         log.info("Usuario autenticado con email: {}", userEmail);
         if (!restaurant.getUserEntity().getEmail().equals(userEmail)) {
-            throw new SecurityException("No tienes permiso para añadir productos a este restaurante");
+            throw new UnauthorizedAccessException("No tienes permiso para añadir productos a este restaurante");
         }
 
         Product newProduct = new Product();
