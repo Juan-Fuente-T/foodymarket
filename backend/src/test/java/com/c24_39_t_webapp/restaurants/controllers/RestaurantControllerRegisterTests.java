@@ -42,7 +42,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Patrón AAA: Arrange, Act, Assert
  */
 @DisplayName("RestaurantController - POST /api/restaurant (Register)")
-class RestaurantController_RegisterTests {
+class RestaurantControllerRegisterTests {
 
     /**
      * Constantes para evitar el uso de "magic strings" hardcodeadas en los tests

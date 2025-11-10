@@ -1,23 +1,19 @@
 package com.c24_39_t_webapp.restaurants.controllers;
 
 import com.c24_39_t_webapp.restaurants.config.security.JwtTokenFilter;
-import com.c24_39_t_webapp.restaurants.dtos.request.RestaurantRequestDto;
 import com.c24_39_t_webapp.restaurants.exception.RestaurantNotFoundException;
 import com.c24_39_t_webapp.restaurants.exception.UnauthorizedAccessException;
 import com.c24_39_t_webapp.restaurants.services.IRestaurantService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-
 
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -27,16 +23,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(
-        controllers = RestaurantController.class,
-        excludeFilters = @ComponentScan.Filter(
-                type = FilterType.ASSIGNABLE_TYPE,
-                classes = JwtTokenFilter.class
-        )
-)
+//mvn clean test jacoco:report
+
 /**
  * Test para el endpoint de borrado de restaurante
- * Verfica que tras borrar un restaurante con un ID válido,
+ * Verifica que tras borrar un restaurante con un ID válido,
  * se retorna el código 204 No Content
  * También verifica los casos de error:
  * - RestaurantNotFoundException: cuando el restaurante no existe. Retorna 404 Not Found
@@ -44,9 +35,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * - Petición sin autenticación: retorna 401 Unauthorized
  * Patrón AAA: Arrange, Act, Assert
  */
+@WebMvcTest(
+        controllers = RestaurantController.class,
+        excludeFilters = @ComponentScan.Filter(
+                type = FilterType.ASSIGNABLE_TYPE,
+                classes = JwtTokenFilter.class
+        )
+)
 @Slf4j
 @DisplayName("RestaurantController - DELETE /api/restaurant{id} (Delete)")
-public class RestaurantController_DeleteTests {
+public class RestaurantControllerDeleteTests {
     /**
      * MockMvc para simular peticiones HTTP al controlador
      */
@@ -97,7 +95,8 @@ public class RestaurantController_DeleteTests {
     }
 
     /**
-     * Test que verifica que al intentar borrar un restaurante inexistente, se lanza RestaurantNotFoundException y se retorna 404 Not Found
+     * Test que verifica que al intentar borrar un restaurante inexistente,
+     * se lanza RestaurantNotFoundException y se retorna 404 Not Found
      * Arrange: Configura el mock del servicio para que lance RestaurantNotFoundException
      * Act & Assert: Realiza la petición DELETE y verifica el status 404 y el mensaje de error
      * Verify: Verifica que el servicio se llamó una vez con el ID correcto
@@ -124,7 +123,8 @@ public class RestaurantController_DeleteTests {
     }
 
     /**
-     * Test que verifica que al intentar borrar un restaurante sin ser el dueño, se lanza UnauthorizedAccessException y se retorna 403 Forbidden
+     * Test que verifica que al intentar borrar un restaurante sin ser el dueño,
+     * se lanza UnauthorizedAccessException y se retorna 403 Forbidden
      * Arrange: Configura el mock del servicio para que lance UnauthorizedAccessException
      * Act & Assert: Realiza la petición DELETE y verifica el status 403
      * Verify: Verifica que el servicio se llamó una vez con el ID correcto

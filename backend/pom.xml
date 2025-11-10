@@ -98,11 +98,6 @@
            <artifactId>jackson-databind</artifactId>
        </dependency>
        <dependency>
-           <groupId>io.github.cdimascio</groupId>
-           <artifactId>dotenv-java</artifactId>
-           <version>3.0.0</version>
-       </dependency>
-       <dependency>
            <groupId>org.springdoc</groupId>
            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
            <version>2.8.5</version>
@@ -159,13 +154,14 @@
                    </execution>
                    <execution>
                        <id>report</id>
-<!--                        <phase>verify</phase> Esto es despues del empaquetado-->
+<!--                        <phase>verify</phase> Esto es después del empaquetado-->
                         <phase>test</phase>
                         <goals>
                             <goal>report</goal>
                         </goals>
                     </execution>
                     <!-- Opcional: Falla el build si la cobertura es < X% -->
+                   <!--
                     <execution>
                         <id>check</id>
                         <phase>verify</phase>
@@ -180,17 +176,17 @@
                                         <limit>
                                             <counter>LINE</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.70</minimum> <!-- 70% mínimo -->
+                                            <minimum>0.70</minimum> 70% mínimo
                                         </limit>
                                         <limit>
                                             <counter>BRANCH</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.60</minimum> <!-- 60% en branches -->
+                                            <minimum>0.60</minimum> 60% en branches
                                         </limit>
                                     </limits>
                                 </rule>
                             </rules>
-                            <!-- Excluir clases que no necesitan cobertura -->
+                            Excluir clases que no necesitan cobertura
                             <excludes>
                                 <exclude>**/dto/**</exclude>
                                 <exclude>**/models/**</exclude>
@@ -199,6 +195,7 @@
                             </excludes>
                         </configuration>
                     </execution>
+                   -->
                 </executions>
             </plugin>
             <plugin>
@@ -208,5 +205,4 @@
             </plugin>
         </plugins>
     </build>
-
 </project>

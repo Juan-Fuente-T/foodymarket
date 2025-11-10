@@ -25,10 +25,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * (@WebMvcTest, @DataJpaTest, etc.) para mayor velocidad.
  */
 @SpringBootTest
-@ActiveProfiles("test")
+@ActiveProfiles("test") //Necesario para indicar a JUnit que use application-test.properties
 @DisplayName("Test de arranque de la aplicación")
 class RestaurantsApplicationTests {
-
+//mvn clean test jacoco:report
     /**
      * Smoke test: Verifica que el contexto de Spring Boot se carga sin errores.
      *
