@@ -35,13 +35,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * Test para el endpoint de obtener productos - Endpoint Get /api/product/
- * Verifica que tras obtener productos con un ID válido, se retorna el código 200 OK
- * <p>
- * También verifica los casos de error:
- * - RestaurantNotFoundException: cuando el producto no existe. Retorna 404 Not Found
- * - UnauthorizedAccessException: cuando el usuario no tiene permiso. Retorna 403 Forbidden
- * - Petición sin autenticación: retorna 401 Unauthorized
- * * Patrón AAA: Arrange, Act, Assert
+ * Arquitectura aplicada:
+ * - @WebMvcTest: Solo carga ProductController (slice testing)
+ * - @MockitoBean: Mockea IProductService
+ * - @Nested: Agrupa tests por tipo de endpoint GET
+ * - AAA Pattern: Arrange, Act, Assert en cada test
+ * - Patrón Given-When-Then implícito en los tests
+ * - Uso de constantes para evitar "magic strings"
  * Cobertura:
  * ✅ GET /api/product (todos los productos)
  * ✅ GET /api/product/{prd_id} (producto por ID)
@@ -264,14 +264,6 @@ public class ProductControllerGetTests {
                 );
             }
 
-            /**
-             * Test que verifica que al obtener un producto con un ID inválido retorna el codigo 404 Not Found
-             * Arrange: Configura el mock del servicio para lanzar ProductNotFoundException
-             * Act & Assert: Realiza la petición GET y verifica el status 404 y el mensaje de error
-             * Verify: Verifica que el servicio se llamó una sola vez
-             *
-             * @throws Exception
-             */
             /**
              * Test que verifica que al obtener todos los productos por categoría, retorna el codigo 200 Ok
              * con la lista de productos

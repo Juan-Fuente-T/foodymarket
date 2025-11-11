@@ -88,7 +88,7 @@ public class ProductControllerDeleteTests {
          * @throws Exception
          */
         @Test
-        @DisplayName("DELETE /api/product/{id - Retornar 204 No Content al eliminar un producto")
+        @DisplayName("DELETE /api/product/{id} - Retornar 204 No Content al eliminar un producto")
         void whenDeleteProductWithValidId_thenReturnsNoContent() throws Exception {
             // Arrange: No hace nada, solo configura que no lance excepción
             doNothing().when(productService).deleteProduct(PRODUCT_ID);
