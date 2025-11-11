@@ -3,6 +3,7 @@ package com.c24_39_t_webapp.restaurants.services.impl;
 import com.c24_39_t_webapp.restaurants.dtos.request.CategoryRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.CategoryResponseDto;
 import com.c24_39_t_webapp.restaurants.exception.CategoryNotFoundException;
+import com.c24_39_t_webapp.restaurants.exception.UnauthorizedAccessException;
 import com.c24_39_t_webapp.restaurants.models.Category;
 import com.c24_39_t_webapp.restaurants.models.Restaurant;
 import com.c24_39_t_webapp.restaurants.repository.CategoryRepository;
@@ -132,7 +133,7 @@ public class CategoryServiceImpl implements ICategoryService {
         String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
         log.info("Usuario autenticado con email: {}", userEmail);
         if (!restaurant.getUserEntity().getEmail().equals(userEmail)) {
-            throw new SecurityException("No tienes permiso para añadir productos a este restaurante");
+            throw new UnauthorizedAccessException("No tienes permiso para añadir productos a este restaurante");
         }
 
         Category category = categoryRepository.findById(categoryId)
