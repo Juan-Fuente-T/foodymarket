@@ -161,7 +161,7 @@ public class ProductServiceImpl implements IProductService {
         String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
         if (product.getRestaurant() == null || product.getRestaurant().getUserEntity() == null || !product.getRestaurant().getUserEntity().getEmail().equals(userEmail)) {
             log.warn("Permiso denegado: Usuario {} intentando actualizar producto {} del restaurante {}", userEmail, productId, product.getRestaurant() != null ? product.getRestaurant().getId() : "DESCONOCIDO");
-            throw new SecurityException("No tienes permiso para actualizar este producto"); // O lanzar AccessDeniedException mapeada a 403
+            throw new UnauthorizedAccessException("No tienes permiso para actualizar este producto"); // O lanzar AccessDeniedException mapeada a 403
         }
         if (updateDto.name() != null) product.setName(updateDto.name());
         if (updateDto.description() != null) product.setDescription(updateDto.description());
@@ -210,9 +210,10 @@ public class ProductServiceImpl implements IProductService {
                     return new ProductNotFoundException("Producto no encontrado con id: " + prd_id);
                 });
         String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
-        if (product.getRestaurant() == null || product.getRestaurant().getUserEntity() == null || !product.getRestaurant().getUserEntity().getEmail().equals(userEmail)) {
-            log.warn("Permiso denegado: Usuario {} intentando eliminar producto {} del restaurante {}", userEmail, prd_id, product.getRestaurant() != null ? product.getRestaurant().getId() : "DESCONOCIDO");
-            throw new SecurityException("No tienes permiso para eliminar este producto");
+        if (product.getRestaurant().getUserEntity() == null || !product.getRestaurant().getUserEntity().getEmail().equals(userEmail)) {
+            log.warn("Permiso denegado: Usuario {} intentando eliminar producto {} del restaurante {}",
+                    userEmail, prd_id, product.getRestaurant() != null ? product.getRestaurant().getId() : "DESCONOCIDO");
+            throw new UnauthorizedAccessException("No tienes permiso para eliminar este producto");
         }
         productRepository.deleteById(prd_id);
     }

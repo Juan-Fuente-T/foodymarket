@@ -26,18 +26,10 @@ public class ProductController {
 
     @Autowired
     private final IProductService productService;
-    private final CategoryRepository categoryRepository;
-    private final ProductRepository productRepository;
 
-    public ProductController(IProductService productService, CategoryRepository categoryRepository, ProductRepository productRepository) {
+    public ProductController(IProductService productService) {
         this.productService = productService;
-        this.categoryRepository = categoryRepository;
-        this.productRepository = productRepository;
     }
-
-//    public ProductController(IProductService productService) {
-//        this.productService = productService;
-//    }
     /**
      * Endpoint to add a new {@link ResponseEntity} object to the system.
      * Delegates the addition logic to {@link IProductService#addProduct(ProductRequestDto)}.

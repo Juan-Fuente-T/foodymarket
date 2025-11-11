@@ -186,7 +186,7 @@ public class RestaurantServiceImpl implements IRestaurantService {
         String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
         if (newRestaurant.getUserEntity() == null || !newRestaurant.getUserEntity().getEmail().equals(userEmail)) {
             log.warn("Permiso denegado: Usuario {} intentando actualizar restaurante {}", userEmail, rst_id);
-            throw new SecurityException("No tienes permiso para actualizar este restaurante");
+            throw new UnauthorizedAccessException("No tienes permiso para actualizar este restaurante");
         }
 
         newRestaurant.setName(restaurantRequestDto.name());
@@ -249,7 +249,7 @@ public class RestaurantServiceImpl implements IRestaurantService {
                 .orElseThrow(() -> new UserNotFoundException("Dueño no encontrado con ID: " + ownerId));
         if (!owner.getEmail().equals(authenticatedUsername)) {
             log.warn("Usuario {} intentando acceder a restaurantes del dueño {}", authenticatedUsername, ownerId);
-            throw new SecurityException("No tienes permiso para ver los restaurantes de este dueño.");
+            throw new UnauthorizedAccessException("No tienes permiso para ver los restaurantes de este dueño.");
         }
         List<RestaurantResponseDto> dtos = restaurantRepository.findRestaurantsByOwnerId(ownerId);
         if(dtos.isEmpty()) {
