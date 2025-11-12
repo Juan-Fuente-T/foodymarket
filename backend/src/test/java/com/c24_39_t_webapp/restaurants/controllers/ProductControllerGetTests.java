@@ -1,10 +1,12 @@
 package com.c24_39_t_webapp.restaurants.controllers;
 
 import com.c24_39_t_webapp.restaurants.config.security.JwtTokenFilter;
+import com.c24_39_t_webapp.restaurants.dtos.request.ProductRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.GroupedProductsResponseDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.ProductResponseDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.ProductSummaryResponseDto;
 import com.c24_39_t_webapp.restaurants.exception.ProductNotFoundException;
+import com.c24_39_t_webapp.restaurants.factories.ProductFactory;
 import com.c24_39_t_webapp.restaurants.services.IProductService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -97,22 +99,8 @@ public class ProductControllerGetTests {
 
         @BeforeEach
         void setUp() {
-            mockProductsList = List.of(
-                    new ProductResponseDto(
-                            1L, RESTAURANT_ID, CATEGORY_ID, "Pizza Margherita",
-                            "Clásica italiana", new BigDecimal("12.99"),
-                            "https://example.com/pizza1.jpg", true, 50,
-                            "Pizzas", "Atlántico"
-                    ),
-                    new ProductResponseDto(
-                            2L, RESTAURANT_ID, 2L, "Pasta Carbonara",
-                            "Receta romana", new BigDecimal("13.50"),
-                            "https://example.com/pasta.jpg", true, 40,
-                            "Pastas", "Atlántico"
-                    )
-            );
+            mockProductsList = ProductFactory.responseListDefault();
         }
-
         /**
          * Test que verifica que al obtener todos los productos, retorna el codigo 200 Ok con la lista de productos
          * Arrange: Configura el mock del servicio para retornar la lista de productos
@@ -136,7 +124,7 @@ public class ProductControllerGetTests {
                     .andExpect(jsonPath("$[0].prd_id").value(1L))
                     .andExpect(jsonPath("$[0].name").value("Pizza Margherita"))
                     .andExpect(jsonPath("$[1].prd_id").value(2L))
-                    .andExpect(jsonPath("$[1].name").value("Pasta Carbonara"));
+                    .andExpect(jsonPath("$[1].name").value("La Paella"));
 
             verify(productService, times(1)).findAllProducts();
         }
@@ -175,12 +163,8 @@ public class ProductControllerGetTests {
 
         @BeforeEach
         void setUp() {
-            expectedProduct = new ProductResponseDto(
-                    PRODUCT_ID, RESTAURANT_ID, CATEGORY_ID, "Pizza Margherita",
-                    "Clásica italiana", new BigDecimal("12.99"),
-                    "https://example.com/pizza.jpg", true, 50,
-                    "Pizzas", "Atlántico"
-            );
+            ProductRequestDto req = ProductFactory.defaultProductRequest(RESTAURANT_ID);
+            expectedProduct = ProductFactory.responseFromRequest(req, PRODUCT_ID);
         }
 
         @Nested
@@ -208,7 +192,7 @@ public class ProductControllerGetTests {
                         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                         .andExpect(jsonPath("$.prd_id").value(PRODUCT_ID))
                         .andExpect(jsonPath("$.name").value("Pizza Margherita"))
-                        .andExpect(jsonPath("$.price").value(12.99))
+                        .andExpect(jsonPath("$.price").value(14.99))
                         .andExpect(jsonPath("$.isActive").value(true));
 
                 verify(productService, times(1)).findProductById(PRODUCT_ID);
@@ -252,16 +236,7 @@ public class ProductControllerGetTests {
 
             @BeforeEach
             void setUp() {
-                mockProductsList = List.of(
-                        new ProductSummaryResponseDto(
-                                1L, RESTAURANT_ID, CATEGORY_ID, "Pizza Margherita",
-                                "Clásica italiana", "https://example.com/pizza1.jpg"
-                        ),
-                        new ProductSummaryResponseDto(
-                                2L, RESTAURANT_ID, CATEGORY_ID, "Pizza Quattro Formaggi",
-                                "Cuatro quesos", "https://example.com/pizza2.jpg"
-                        )
-                );
+                mockProductsList = ProductFactory.responseListSummary();
             }
 
             /**
@@ -286,7 +261,8 @@ public class ProductControllerGetTests {
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$", hasSize(2)))
                         .andExpect(jsonPath("$[0].name").value("Pizza Margherita"))
-                        .andExpect(jsonPath("$[1].name").value("Pizza Quattro Formaggi"));
+                        .andExpect(jsonPath("$[1].name").value("Pizza Carbonara"))
+                        .andExpect(jsonPath("$[1].description").value("Auténtica carbonara extra"));
 
                 verify(productService, times(1)).findProductsByCategoryId(CATEGORY_ID);
             }
@@ -327,12 +303,7 @@ public class ProductControllerGetTests {
 
             @BeforeEach
             void setUp() {
-                mockProductsList = List.of(
-                        new ProductSummaryResponseDto(
-                                1L, RESTAURANT_ID, CATEGORY_ID, "Pizza Margherita",
-                                "Clásica italiana", "https://example.com/pizza.jpg"
-                        )
-                );
+                mockProductsList = ProductFactory.responseListSummary();
             }
 
             /**
@@ -356,7 +327,7 @@ public class ProductControllerGetTests {
                                 .param("name", "Pizza")
                                 .with(user(CLIENTE_EMAIL).roles("CLIENTE")))
                         .andExpect(status().isOk())
-                        .andExpect(jsonPath("$", hasSize(1)))
+                        .andExpect(jsonPath("$", hasSize(2)))
                         .andExpect(jsonPath("$[0].name").value("Pizza Margherita"));
 
                 verify(productService, times(1)).findProductsByName("Pizza");
@@ -399,20 +370,7 @@ public class ProductControllerGetTests {
 
             @BeforeEach
             void setUp() {
-                mockProductsList = List.of(
-                        new ProductResponseDto(
-                                1L, RESTAURANT_ID, 1L, "Pizza Margherita",
-                                "Clásica italiana", new BigDecimal("12.99"),
-                                "https://example.com/pizza1.jpg", true, 50,
-                                "Pizzas", "Atlántico"
-                        ),
-                        new ProductResponseDto(
-                                2L, RESTAURANT_ID, 2L, "Pasta Carbonara",
-                                "Receta romana", new BigDecimal("13.50"),
-                                "https://example.com/pasta.jpg", true, 40,
-                                "Pastas", "Atlántico"
-                        )
-                );
+                mockProductsList = ProductFactory.responseListDefault();
             }
 
             /**
@@ -436,8 +394,8 @@ public class ProductControllerGetTests {
                                 .with(user(CLIENTE_EMAIL).roles("CLIENTE")))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$", hasSize(2)))
-                        .andExpect(jsonPath("$[0].restaurantName").value("Atlántico"))
-                        .andExpect(jsonPath("$[1].restaurantName").value("Atlántico"));
+                        .andExpect(jsonPath("$[0].restaurantName").value("Mediterráneo"))
+                        .andExpect(jsonPath("$[1].restaurantName").value("Mediterráneo"));
 
                 verify(productService, times(1)).findProductsByRestaurantId(RESTAURANT_ID);
             }
@@ -478,38 +436,7 @@ public class ProductControllerGetTests {
 
             @BeforeEach
             void setUp() {
-                List<ProductResponseDto> pizzasProducts = List.of(
-                        new ProductResponseDto(
-                                1L, RESTAURANT_ID, 1L, "Pizza Margherita",
-                                "Clásica italiana", new BigDecimal("12.99"),
-                                "https://example.com/pizza1.jpg", true, 50,
-                                "Pizzas", "Atlántico"
-                        ),
-                        new ProductResponseDto(
-                                2L, RESTAURANT_ID, 1L, "Pizza Quattro Formaggi",
-                                "Cuatro quesos", new BigDecimal("14.99"),
-                                "https://example.com/pizza2.jpg", true, 40,
-                                "Pizzas", "Atlántico"
-                        )
-                );
-
-                List<ProductResponseDto> pastasProducts = List.of(
-                        new ProductResponseDto(
-                                3L, RESTAURANT_ID, 2L, "Pasta Carbonara",
-                                "Receta romana", new BigDecimal("13.50"),
-                                "https://example.com/pasta.jpg", true, 40,
-                                "Pastas", "Atlántico"
-                        )
-                );
-
-                mockGroupedProducts = List.of(
-                        new GroupedProductsResponseDto(
-                                "Pizzas", 1L, "Atlántico", RESTAURANT_ID, pizzasProducts
-                        ),
-                        new GroupedProductsResponseDto(
-                                "Pastas", 2L, "Atlántico", RESTAURANT_ID, pastasProducts
-                        )
-                );
+                mockGroupedProducts = ProductFactory.groupedProductsDefault();
             }
 
             /**
@@ -535,14 +462,15 @@ public class ProductControllerGetTests {
                         .andExpect(jsonPath("$", hasSize(2)))
                         .andExpect(jsonPath("$[0].categoryName").value("Pizzas"))
                         .andExpect(jsonPath("$[0].categoryId").value(1L))
-                        .andExpect(jsonPath("$[0].restaurantName").value("Atlántico"))
+                        .andExpect(jsonPath("$[0].restaurantName").value("Mediterráneo"))
+                        .andExpect(jsonPath("$[1].restaurantName").value("Atlántico"))
                         .andExpect(jsonPath("$[0].products", hasSize(2)))
                         .andExpect(jsonPath("$[0].products[0].name").value("Pizza Margherita"))
-                        .andExpect(jsonPath("$[0].products[1].name").value("Pizza Quattro Formaggi"))
+                        .andExpect(jsonPath("$[0].products[1].name").value("La Paella"))
                         .andExpect(jsonPath("$[1].categoryName").value("Pastas"))
                         .andExpect(jsonPath("$[1].categoryId").value(2L))
                         .andExpect(jsonPath("$[1].products", hasSize(1)))
-                        .andExpect(jsonPath("$[1].products[0].name").value("Pasta Carbonara"));
+                        .andExpect(jsonPath("$[1].products[0].name").value("Pasta bolognese"));
 
                 verify(productService, times(1)).findProductsByRestaurantIdAndCategory(RESTAURANT_ID);
             }

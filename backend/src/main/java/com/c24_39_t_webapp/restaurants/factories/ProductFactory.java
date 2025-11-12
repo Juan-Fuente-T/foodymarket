@@ -1,8 +1,10 @@
 package com.c24_39_t_webapp.restaurants.factories;
 
 import com.c24_39_t_webapp.restaurants.dtos.request.ProductRequestDto;
+import com.c24_39_t_webapp.restaurants.dtos.response.GroupedProductsResponseDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.ProductResponseDto;
 import com.c24_39_t_webapp.restaurants.dtos.request.ProductUpdateDto;
+import com.c24_39_t_webapp.restaurants.dtos.response.ProductSummaryResponseDto;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -61,6 +63,7 @@ public final class ProductFactory {
         );
     }
     //Similar a defaultUpdatedProduct pero con overrides sencillos
+
     /**
      * Payload DEFAULT para la respuesta al crear o actualizar un producto a partir de un update request.
      * Usado en POST /api/product y PUT /api/product.
@@ -141,6 +144,25 @@ public final class ProductFactory {
                 "Mediterráneo"
         );
     }
+
+    /**
+     * Genera ProductSummaryResponseDto a partir de un ProductUpdateDto (uso: PATCH /update).
+     * Cada llamada retorna una nueva instancia.
+     *
+     * @param responseId Id de la respuesta del producto creado
+     * @return nueva instancia de ProductSummaryResponseDto con datos por defecto
+     */
+    public static ProductSummaryResponseDto responseSummaryDto(long responseId) {
+        return new ProductSummaryResponseDto(
+                responseId,
+                1L,
+                1L,
+                "Pizza Margherita",
+                "Auténtica pizza italiana",
+                "https://example.com/pizza.jpg"
+        );
+    }
+
     // ================= LIST HELPERS =================
 
     /**
@@ -179,5 +201,86 @@ public final class ProductFactory {
                 req2.quantity()
         );
         return responseListFromRequests(List.of(req1, req2Modified), 1L);
+    }
+
+    /**
+     * Lista por defecto de ProductSummaryResponseDto(2 productos).
+     */
+//    public static List<ProductSummaryResponseDto> responseListSummary() {
+//        List<ProductSummaryResponseDto> list = new ArrayList<>();
+//        long i = 2;
+//        for (i = 0; i < 2; i++){
+//            list.add(responseSummaryDto(i));
+//        };
+//        return list;
+//    }
+    public static List<ProductSummaryResponseDto> responseListSummary() {
+        List<ProductSummaryResponseDto> list = new ArrayList<>();
+
+        for (long i = 1; i <= 2; i++) {
+            ProductSummaryResponseDto dto = responseSummaryDto(i);
+            if (i == 2) {
+                dto = new ProductSummaryResponseDto(
+                        i,
+                        1L,
+                        1L,
+                        "Pizza Carbonara",
+                        "Auténtica carbonara extra",
+                        "https://example.com/pizza2.jpg"
+                );
+            }
+            list.add(dto);
+        }
+        return list;
+    }
+
+    /**
+     * Lista de ProductResponseDto para "Pastas" (ejemplo).
+     * Puedes ajustar ids/valores si quieres otros datos.
+     */
+    public static List<ProductResponseDto> responseListPastas() {
+        return List.of(
+                new ProductResponseDto(
+                        3L,
+                        1L,
+                        2L,
+                        "Pasta bolognese",
+                        "Receta romana",
+                        new BigDecimal("13.50"),
+                        "https://example.com/pasta.jpg",
+                        true,
+                        40,
+                        "Pastas",
+                        "Atlántico"
+                )
+        );
+    }
+
+    /**
+     * Devuelve la estructura agrupada por categoría (GroupedProductsResponseDto) por defecto.
+     * - Pizzas: usa responseListDefault()
+     * - Pastas: usa responseListPastas()
+     */
+    public static List<GroupedProductsResponseDto> groupedProductsDefault() {
+        List<ProductResponseDto> pizzasProducts = responseListDefault();
+        List<ProductResponseDto> pastasProducts = responseListPastas();
+
+        GroupedProductsResponseDto pizzasGroup = new GroupedProductsResponseDto(
+                "Pizzas",
+                1L,
+                "Mediterráneo",
+                1L,
+                pizzasProducts
+        );
+
+        GroupedProductsResponseDto pastasGroup = new GroupedProductsResponseDto(
+                "Pastas",
+                2L,
+                "Atlántico",
+                2L,
+                pastasProducts
+        );
+
+        return List.of(pizzasGroup, pastasGroup);
     }
 }
