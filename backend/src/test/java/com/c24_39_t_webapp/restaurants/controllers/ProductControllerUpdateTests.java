@@ -1,11 +1,13 @@
 package com.c24_39_t_webapp.restaurants.controllers;
 
 import com.c24_39_t_webapp.restaurants.config.security.JwtTokenFilter;
+import com.c24_39_t_webapp.restaurants.dtos.request.ProductRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.request.ProductUpdateDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.ProductResponseDto;
 import com.c24_39_t_webapp.restaurants.exception.CategoryNotFoundException;
 import com.c24_39_t_webapp.restaurants.exception.ProductNotFoundException;
 import com.c24_39_t_webapp.restaurants.exception.UnauthorizedAccessException;
+import com.c24_39_t_webapp.restaurants.factories.ProductFactory;
 import com.c24_39_t_webapp.restaurants.services.IProductService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -20,8 +22,6 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-
-import java.math.BigDecimal;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -94,37 +94,18 @@ public class ProductControllerUpdateTests {
     class SuccessCases {
 
         private ProductUpdateDto validUpdateDto;
-        private ProductResponseDto expectedUpdatedProduct;
+        private ProductResponseDto expectedResponseProduct;
 
         @BeforeEach
         void setUp() {
-            validUpdateDto = new ProductUpdateDto(
-                    RESTAURANT_ID,
-                    CATEGORY_ID,
-                    "Pizza Margherita Mejorada",
-                    "Auténtica pizza italiana con ingredientes premium",
-                    new BigDecimal("14.99"),
-                    "https://example.com/pizza-mejorada.jpg",
-                    true,
-                    60,
-                    "Pizzas"
-            );
-
-            expectedUpdatedProduct = new ProductResponseDto(
+            // Arrange común para todos los tests de registro
+            validUpdateDto = ProductFactory.defaultUpdatedProduct(
                     PRODUCT_ID,
-                    RESTAURANT_ID,
-                    CATEGORY_ID,
                     "Pizza Margherita Mejorada",
-                    "Auténtica pizza italiana con ingredientes premium",
-                    new BigDecimal("14.99"),
-                    "https://example.com/pizza-mejorada.jpg",
-                    true,
-                    60,
-                    "Pizzas",
-                    "Atlántico"
+                    "Auténtica pizza italiana con ingredientes premium"
             );
+            expectedResponseProduct = ProductFactory.responseFromUpdate(validUpdateDto , PRODUCT_ID);
         }
-
         /**
          * Test que verifica que al actualizar un producto con un ID válido,
          * se retorna el código 200 Ok y los datos del producto actualizado
@@ -139,7 +120,7 @@ public class ProductControllerUpdateTests {
         void whenUpdateProductWithValidData_thenReturnsOkWithUpdatedData() throws Exception {
             // Arrange
             when(productService.updateProduct(eq(PRODUCT_ID), any(ProductUpdateDto.class)))
-                    .thenReturn(expectedUpdatedProduct);
+                    .thenReturn(expectedResponseProduct);
 
             // Act & Assert
             mockMvc.perform(patch(PRODUCT_ENDPOINT + "/" + PRODUCT_ID)
@@ -151,8 +132,8 @@ public class ProductControllerUpdateTests {
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.prd_id").value(PRODUCT_ID))
                     .andExpect(jsonPath("$.name").value("Pizza Margherita Mejorada"))
-                    .andExpect(jsonPath("$.price").value(14.99))
-                    .andExpect(jsonPath("$.quantity").value(60));
+                    .andExpect(jsonPath("$.description").value(
+                            "Auténtica pizza italiana con ingredientes premium"));
 
             // Verify
             verify(productService, times(1)).updateProduct(eq(PRODUCT_ID), any(ProductUpdateDto.class));
@@ -171,31 +152,12 @@ public class ProductControllerUpdateTests {
         @DisplayName("PATCH /api/product/{id} - Debe permitir actualización parcial (solo algunos campos)")
         void whenUpdateProductPartially_thenReturnsOk() throws Exception {
             // Arrange
-            ProductUpdateDto partialUpdateDto = new ProductUpdateDto(
-                    null,  // Sin cambios en restaurantId
-                    CATEGORY_ID,
-                    "Pizza Margherita Mejorada",  // Solo se actualiza el nombre
-                    null,  // Sin cambios en description
-                    null,  // Sin cambios en price
-                    null,  // Sin cambios en image
-                    null,  // Sin cambios en isActive
-                    null,  // Sin cambios en quantity
-                    null   // Sin cambios en categoryName
-            );
-
-            ProductResponseDto partialResponse = new ProductResponseDto(
-                    PRODUCT_ID,
-                    RESTAURANT_ID,
-                    CATEGORY_ID,
-                    "Pizza Margherita Mejorada",
-                    "Auténtica pizza italiana con mozzarella fresca",
-                    new BigDecimal("12.99"),
-                    "https://example.com/pizza.jpg",
-                    true,
-                    50,
-                    "Pizzas",
-                    "Atlántico"
-            );
+            // Crea un producto base
+            ProductUpdateDto baseFull = ProductFactory.defaultUpdatedProduct(RESTAURANT_ID, "Pizza Margherita", "Auténtica pizza italiana");
+            // Actualiza un único cambio (descripción)
+            ProductUpdateDto partialUpdateDto = ProductFactory.updatedFrom(baseFull, RESTAURANT_ID, null, "Auténtica pizza italiana MEJORADA", null);
+            // La respuesta que devuelve el servicio tras la actualización parcial
+            ProductResponseDto partialResponse = ProductFactory.responseFromUpdate(partialUpdateDto , PRODUCT_ID);
 
             when(productService.updateProduct(eq(PRODUCT_ID), any(ProductUpdateDto.class)))
                     .thenReturn(partialResponse);
@@ -207,7 +169,7 @@ public class ProductControllerUpdateTests {
                             .with(user(RESTAURANTE_EMAIL).roles("RESTAURANTE"))
                             .with(csrf()))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.name").value("Pizza Margherita Mejorada"));
+                    .andExpect(jsonPath("$.description").value("Auténtica pizza italiana MEJORADA"));
 
             verify(productService, times(1)).updateProduct(eq(PRODUCT_ID), any(ProductUpdateDto.class));
         }
@@ -225,27 +187,12 @@ public class ProductControllerUpdateTests {
         @DisplayName("PATCH /api/product/{id} - Debe permitir desactivar un producto (isActive = false)")
         void whenDeactivateProduct_thenReturnsOk() throws Exception {
             // Arrange
-            ProductUpdateDto deactivateDto = new ProductUpdateDto(
-                    RESTAURANT_ID,
-                    CATEGORY_ID,
-                    null, null, null, null,
-                    false,  // ← Deactivar
-                    null, null
-            );
-
-            ProductResponseDto deactivatedResponse = new ProductResponseDto(
-                    PRODUCT_ID,
-                    RESTAURANT_ID,
-                    CATEGORY_ID,
-                    "Pizza Margherita",
-                    "Auténtica pizza italiana",
-                    new BigDecimal("12.99"),
-                    "https://example.com/pizza.jpg",
-                    false,  // ← Inactivo
-                    50,
-                    "Pizzas",
-                    "Atlántico"
-            );
+            // Crea un objeto base activo
+            ProductUpdateDto baseFull = ProductFactory.defaultUpdatedProduct(RESTAURANT_ID, "Pizza Margherita", "Auténtica pizza italiana");
+            // Crea el objeto completo que representa el producto tras la desactivación
+            ProductUpdateDto fullAfterDeactivate = ProductFactory.updatedFrom(baseFull, RESTAURANT_ID, null, null, false);
+            // La respuesta que devuelve el servicio
+            ProductResponseDto deactivatedResponse = ProductFactory.responseFromUpdate(fullAfterDeactivate, PRODUCT_ID);
 
             when(productService.updateProduct(eq(PRODUCT_ID), any(ProductUpdateDto.class)))
                     .thenReturn(deactivatedResponse);
@@ -253,7 +200,7 @@ public class ProductControllerUpdateTests {
             // Act & Assert
             mockMvc.perform(patch(PRODUCT_ENDPOINT + "/" + PRODUCT_ID)
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(deactivateDto))
+                            .content(objectMapper.writeValueAsString(fullAfterDeactivate))
                             .with(user(RESTAURANTE_EMAIL).roles("RESTAURANTE"))
                             .with(csrf()))
                     .andExpect(status().isOk())
@@ -273,16 +220,11 @@ public class ProductControllerUpdateTests {
 
         @BeforeEach
         void setUp() {
-            validUpdateDto = new ProductUpdateDto(
-                    RESTAURANT_ID,
-                    CATEGORY_ID,
+            // Arrange común para todos los tests de registro
+            validUpdateDto = ProductFactory.defaultUpdatedProduct(
+                    PRODUCT_ID,
                     "Pizza Margherita Mejorada",
-                    "Descripción actualizada",
-                    new BigDecimal("14.99"),
-                    "https://example.com/pizza-mejorada.jpg",
-                    true,
-                    60,
-                    "Pizzas"
+                    "Auténtica pizza italiana con ingredientes premium"
             );
         }
 

@@ -1,14 +1,8 @@
 package com.c24_39_t_webapp.restaurants.factories;
 
 import com.c24_39_t_webapp.restaurants.dtos.request.ProductRequestDto;
-import com.c24_39_t_webapp.restaurants.dtos.request.RestaurantRequestDto;
-import com.c24_39_t_webapp.restaurants.dtos.request.ProductRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.ProductResponseDto;
 import com.c24_39_t_webapp.restaurants.dtos.request.ProductUpdateDto;
-import com.c24_39_t_webapp.restaurants.dtos.response.RestaurantResponseDto;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -21,9 +15,11 @@ public final class ProductFactory {
     }
 
     // ================= CREATE (REGISTER) payload =================
+
     /**
      * Payload DEFAULT para crear un producto (usado en POST /api/product).
      * Cada llamada retorna una NUEVA instancia.
+     *
      * @param rst_Id ID del restaurante al que pertenece el producto.
      * @return nueva instancia de ProductRequestDto con datos por defecto
      */
@@ -41,37 +37,40 @@ public final class ProductFactory {
     }
 
     // ================= UPDATE payload =================
+
     /**
      * Payload DEFAULT para actualizar un producto (usado en PATCH /api/product).
      * Cada llamada retorna una NUEVA instancia.
-     * @param rst_Id Id del restaurante al que pertenece el producto.
-     * @param newName Nuevo nombre del producto.
+     *
+     * @param rst_Id         Id del restaurante al que pertenece el producto.
+     * @param newName        Nuevo nombre del producto.
      * @param newDescription Nueva descripción del producto.
      * @return nueva instancia de ProductUpdateDto con datos por defecto
      */
     public static ProductUpdateDto defaultUpdatedProduct(long rst_Id, String newName, String newDescription) {
-            return new ProductUpdateDto(
-                    rst_Id,
-                    1L,
-                    newName,
-                    newDescription,
-                    new BigDecimal("14.99"),
-                    "https://example.com/pizza-mejorada.jpg",
-                    true,
-                    60,
-                    "Pizzas"
-            );
-        }
+        return new ProductUpdateDto(
+                rst_Id,
+                1L,
+                newName,
+                newDescription,
+                new BigDecimal("14.99"),
+                "https://example.com/pizza-mejorada.jpg",
+                true,
+                60,
+                "Pizzas"
+        );
+    }
     //Similar a defaultUpdatedProduct pero con overrides sencillos
     /**
      * Payload DEFAULT para la respuesta al crear o actualizar un producto a partir de un update request.
      * Usado en POST /api/product y PUT /api/product.
      * Cada llamada retorna una NUEVA instancia.
-     * @param base Datos base de un ProductRequestDto.
-     * @param rst_id Id del restaurante al que pertenece el producto.
-     * @param newName Nuevo nombre del producto (si null, mantiene el original).
+     *
+     * @param base           Datos base de un ProductRequestDto.
+     * @param rst_id         Id del restaurante al que pertenece el producto.
+     * @param newName        Nuevo nombre del producto (si null, mantiene el original).
      * @param newDescription Nueva descripción del producto (si null, mantiene el original).
-     * @param newActive Nuevo estado activo del producto (si null, mantiene el original).
+     * @param newActive      Nuevo estado activo del producto (si null, mantiene el original).
      * @return nueva instancia de ProductResponseDto con datos mapeados desde el request.
      */
     public static ProductUpdateDto updatedFrom(ProductUpdateDto base,
@@ -97,11 +96,13 @@ public final class ProductFactory {
     }
 
     // ================= RESPONSE payload =================
+
     /**
      * Payload DEFAULT para la respuesta al crear o actualizar un producto.
      * Usado en POST /api/product y PUT /api/product.
      * Cada llamada retorna una NUEVA instancia.
-     * @param base Datos base de un ProductRequestDto.
+     *
+     * @param base       Datos base de un ProductRequestDto.
      * @param responseId Id de la respuesta del producto creado.
      * @return nueva instancia de ProductResponseDto con datos mapeados desde el request.
      */
@@ -120,6 +121,7 @@ public final class ProductFactory {
                 "Mediterráneo"
         );
     }
+
     /**
      * Genera ProductResponseDto a partir de un ProductUpdateDto (uso: PATCH /update).
      * Firma distinta: acepta ProductUpdateDto para evitar errores de tipo.
@@ -147,7 +149,7 @@ public final class ProductFactory {
      * Devuelve UNA LISTA NUEVA.
      *
      * @param requests lista de ProductRequestDto (cada uno se convierte en una response coherente)
-     * @param startId id inicial para la primera response (ej. 1L)
+     * @param startId  id inicial para la primera response (ej. 1L)
      */
     public static List<ProductResponseDto> responseListFromRequests(List<ProductRequestDto> requests, long startId) {
         List<ProductResponseDto> list = new ArrayList<>();
@@ -178,4 +180,4 @@ public final class ProductFactory {
         );
         return responseListFromRequests(List.of(req1, req2Modified), 1L);
     }
-    }
+}
