@@ -3,6 +3,7 @@ package com.c24_39_t_webapp.restaurants.controllers;
 import com.c24_39_t_webapp.restaurants.config.security.JwtTokenFilter;
 import com.c24_39_t_webapp.restaurants.dtos.request.RestaurantRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.RestaurantResponseDto;
+import com.c24_39_t_webapp.restaurants.factories.RestaurantFactory;
 import com.c24_39_t_webapp.restaurants.services.IRestaurantService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -79,33 +80,8 @@ class RestaurantControllerRegisterTests {
     @BeforeEach
     void setUp() {
         // Arrange común para todos los tests de registro
-        validRestaurantDto = new RestaurantRequestDto(
-                RESTAURANT_ID,
-                "Atlántico",
-                "Deliciosas recetas marineras",
-                1L,
-                "555 666 777",
-                VALID_EMAIL,
-                "Calle Arriba 11",
-                "10-15 h y 20-24 h",
-                "https://example.com/logo.png",
-                "https://example.com/cover.jpg"
-        );
-
-        expectedRestaurantResponse = new RestaurantResponseDto(
-                RESTAURANT_ID,
-                1L,
-                "Atlántico",
-                "Deliciosas recetas marineras",
-                "555 666 777",
-                VALID_EMAIL,
-                "Calle Arriba 11",
-                "10-15 h y 20-24 h",
-                "https://ejemplo.com/logo.jpg",
-                "https://ejemplo.com/cover.jpg",
-                1L,
-                "Mediterránea"
-        );
+        validRestaurantDto = RestaurantFactory.defaultRequest(RESTAURANT_ID, VALID_EMAIL);
+        expectedRestaurantResponse = RestaurantFactory.responseFromRequest(validRestaurantDto, RESTAURANT_ID);
     }
 
     /**

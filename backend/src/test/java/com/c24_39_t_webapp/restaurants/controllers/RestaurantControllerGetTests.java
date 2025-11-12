@@ -1,10 +1,12 @@
 package com.c24_39_t_webapp.restaurants.controllers;
 
 import com.c24_39_t_webapp.restaurants.config.security.JwtTokenFilter;
+import com.c24_39_t_webapp.restaurants.dtos.request.RestaurantRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.RestaurantResponseDto;
 import com.c24_39_t_webapp.restaurants.exception.ResourceNotFoundException;
 import com.c24_39_t_webapp.restaurants.exception.RestaurantNotFoundException;
 import com.c24_39_t_webapp.restaurants.exception.UnauthorizedAccessException;
+import com.c24_39_t_webapp.restaurants.factories.RestaurantFactory;
 import com.c24_39_t_webapp.restaurants.services.IRestaurantService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -80,22 +82,15 @@ public class RestaurantControllerGetTests {
     private RestaurantResponseDto expectedRestaurantResponse;
     //Lista de restaurantes esperada en las respuestas
     private List<RestaurantResponseDto> mockRestaurantsList;
-    //ID de estaurante esperado en las respuestas
+    //ID de restaurante esperado en las respuestas
     private Long restId;
 
     @BeforeEach
     void setUp() {
-        // Prepara lista de restaurantes mock
-        mockRestaurantsList = List.of(
-                new RestaurantResponseDto(1L, 1L, "Atlántico", "Marinera", "555 666 777",
-                        "atlantic@example.com", "Calle Arriba 11", "10-15 h", "logo1.jpg",
-                        "cover1.jpg", 1L, "Mediterránea"),
-                new RestaurantResponseDto(2L, 2L, "La Paella", "Española", "555 888 999",
-                        "paella@example.com", "Calle Abajo 22", "11-16 h", "logo2.jpg",
-                        "cover2.jpg", 2L, "Española")
-        );
-        expectedRestaurantResponse = mockRestaurantsList.getFirst();
-        restId = mockRestaurantsList.get(0).rst_id();
+        RestaurantRequestDto newRequestDto = RestaurantFactory.defaultRequest(1, "emailTest1@email.com" );
+        expectedRestaurantResponse = RestaurantFactory.responseFromRequest(newRequestDto,1);
+        mockRestaurantsList = RestaurantFactory.responseListDefault();
+        restId = expectedRestaurantResponse.rst_id();
     }
 
     @Nested

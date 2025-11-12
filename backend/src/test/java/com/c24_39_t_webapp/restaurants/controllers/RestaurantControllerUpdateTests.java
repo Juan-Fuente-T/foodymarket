@@ -5,6 +5,7 @@ import com.c24_39_t_webapp.restaurants.dtos.request.RestaurantRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.RestaurantResponseDto;
 import com.c24_39_t_webapp.restaurants.exception.RestaurantNotFoundException;
 import com.c24_39_t_webapp.restaurants.exception.UnauthorizedAccessException;
+import com.c24_39_t_webapp.restaurants.factories.RestaurantFactory;
 import com.c24_39_t_webapp.restaurants.services.IRestaurantService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -86,33 +87,8 @@ public class RestaurantControllerUpdateTests {
     @BeforeEach
     void setUp() {
         // Arrange común para todos los tests de registro
-        validRestaurantDto = new RestaurantRequestDto(
-                RESTAURANT_ID,
-                "Atlántico",
-                "Deliciosas recetas marineras",
-                1L,
-                "555 666 777",
-                VALID_EMAIL,
-                "Calle Arriba 11",
-                "10-15 h y 20-24 h",
-                "https://example.com/logo.png",
-                "https://example.com/cover.jpg"
-        );
-
-        expectedRestaurantResponse = new RestaurantResponseDto(
-                RESTAURANT_ID,
-                1L,
-                "Atlántico",
-                "Deliciosas recetas marineras",
-                "555 666 777",
-                VALID_EMAIL,
-                "Calle Arriba 11",
-                "10-15 h y 20-24 h",
-                "https://ejemplo.com/logo.jpg",
-                "https://ejemplo.com/cover.jpg",
-                1L,
-                "Mediterránea"
-        );
+            validRestaurantDto = RestaurantFactory.defaultRequest(RESTAURANT_ID, VALID_EMAIL);
+            expectedRestaurantResponse = RestaurantFactory.responseFromRequest(validRestaurantDto, RESTAURANT_ID);
     }
 
     @Nested
@@ -219,7 +195,7 @@ public class RestaurantControllerUpdateTests {
          */
         @Test
         @DisplayName("Fail UPDATE /api/restaurant/{id} - Lanza 401 Unathorized Rechaza PATCH sin autenticación")
-        void whenDeleteWithoutAuthentication_thenUnauthorized() throws Exception {
+        void whenUpdateWithoutAuthentication_thenUnauthorized() throws Exception {
             // Arrange
             when(restaurantService.updateRestaurant(any(RestaurantRequestDto.class), eq(999L)))
                     .thenThrow(new UnauthorizedAccessException("Restaurante no encontrado"));
