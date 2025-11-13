@@ -50,7 +50,7 @@ public class OrderServiceImpl implements IOrderService {
         UserEntity client = userRepository.findById(orderRequestDto.clientId()).orElseThrow(() -> new UserNotFoundException("No se ha encontrado el usuario"));
 
         if (!client.getEmail().equals(email)) {
-            throw new IllegalArgumentException("El usuario no coincide con el email proporcionado");
+            throw new BadOrderRequestException("El usuario no coincide con el email proporcionado");
         }
         Order order = new Order();
         order.setClientId(client);
