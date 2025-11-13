@@ -38,6 +38,56 @@ public final class ProductFactory {
         );
     }
 
+    /**
+     * Payload DEFAULT para crear un producto (usado en POST /api/product) con overrides seguros.
+     *
+     * @param rstId       Id del restaurante al que pertenece el producto.
+     * @param categoryId  Id de la categoría del producto.
+     * @param name        Nombre del producto.
+     * @param description Descripción del producto.
+     * @param price       Precio del producto.
+     * @param image       URL de la imagen del producto.
+     * @param isActive    Estado activo del producto.
+     * @param quantity    Cantidad disponible del producto.
+     * @return nueva instancia de ProductRequestDto con datos por defecto o sobrescritos
+     */
+    public static ProductRequestDto defaultProductRequestWith(
+            Long rstId,
+            Long categoryId,
+            String name,
+            String description,
+            BigDecimal price,
+            String image,
+            Boolean isActive,
+            Integer quantity
+    ) {
+        ProductRequestDto base = defaultProductRequest(rstId == null ? 1L : rstId);
+        return new ProductRequestDto(
+                Objects.requireNonNullElse(rstId, base.restaurantId()),
+                Objects.requireNonNullElse(categoryId, base.categoryId()),
+                Objects.requireNonNullElse(name, base.name()),
+                Objects.requireNonNullElse(description, base.description()),
+                Objects.requireNonNullElse(price, base.price()),
+                Objects.requireNonNullElse(image, base.image()),
+                Objects.requireNonNullElse(isActive, base.isActive()),
+                Objects.requireNonNullElse(quantity, base.quantity())
+        );
+    }
+
+    /**
+     * * Payload DEFAULT para crear un producto (usado en POST /api/product) con función de modificación.
+     *
+     * @param rstId Id del restaurante al que pertenece el producto.
+     * @param fn    Función que recibe el ProductRequestDto por defecto y devuelve uno modificado.
+     * @return nueva instancia de ProductRequestDto con datos modificados por la función
+     */
+    public static ProductRequestDto productRequestFromDefault(
+            long rstId,
+            java.util.function.Function<ProductRequestDto, ProductRequestDto> fn) {
+        ProductRequestDto base = defaultProductRequest(rstId);
+        return fn.apply(base);
+    }
+
     // ================= UPDATE payload =================
 
     /**
@@ -98,6 +148,50 @@ public final class ProductFactory {
         );
     }
 
+    // Override-safe for ProductUpdateDto
+
+    /**
+     * Payload DEFAULT para actualizar un producto (usado en PATCH /api/product) con overrides seguros.
+     *
+     * @param rstId        Id del restaurante al que pertenece el producto.
+     * @param categoryId   Id de la categoría del producto.
+     * @param name         Nombre del producto.
+     * @param description  Descripción del producto.
+     * @param price        Precio del producto.
+     * @param image        URL de la imagen del producto.
+     * @param isActive     Estado activo del producto.
+     * @param quantity     Cantidad disponible del producto.
+     * @param categoryName Nombre de la categoría del producto.
+     * @return nueva instancia de ProductUpdateDto con datos por defecto o sobrescritos
+     */
+    public static ProductUpdateDto defaultUpdatedProductWith(
+            Long rstId,
+            Long categoryId,
+            String name,
+            String description,
+            BigDecimal price,
+            String image,
+            Boolean isActive,
+            Integer quantity,
+            String categoryName
+    ) {
+        ProductUpdateDto base = defaultUpdatedProduct(
+                rstId == null ? 1L : rstId,
+                "Pizza Margherita",
+                "Auténtica pizza italiana"
+        );
+        return new ProductUpdateDto(
+                Objects.requireNonNullElse(rstId, base.restaurantId()),
+                Objects.requireNonNullElse(categoryId, base.categoryId()),
+                Objects.requireNonNullElse(name, base.name()),
+                Objects.requireNonNullElse(description, base.description()),
+                Objects.requireNonNullElse(price, base.price()),
+                Objects.requireNonNullElse(image, base.image()),
+                Objects.requireNonNullElse(isActive, base.isActive()),
+                Objects.requireNonNullElse(quantity, base.quantity()),
+                Objects.requireNonNullElse(categoryName, base.categoryName())
+        );
+    }
     // ================= RESPONSE payload =================
 
     /**
