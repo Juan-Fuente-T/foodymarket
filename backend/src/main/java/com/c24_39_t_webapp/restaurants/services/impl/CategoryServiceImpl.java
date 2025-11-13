@@ -3,6 +3,7 @@ package com.c24_39_t_webapp.restaurants.services.impl;
 import com.c24_39_t_webapp.restaurants.dtos.request.CategoryRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.CategoryResponseDto;
 import com.c24_39_t_webapp.restaurants.exception.CategoryNotFoundException;
+import com.c24_39_t_webapp.restaurants.exception.RestaurantNotFoundException;
 import com.c24_39_t_webapp.restaurants.exception.UnauthorizedAccessException;
 import com.c24_39_t_webapp.restaurants.models.Category;
 import com.c24_39_t_webapp.restaurants.models.Restaurant;
@@ -10,7 +11,6 @@ import com.c24_39_t_webapp.restaurants.repository.CategoryRepository;
 import com.c24_39_t_webapp.restaurants.repository.ProductRepository;
 import com.c24_39_t_webapp.restaurants.repository.RestaurantRepository;
 import com.c24_39_t_webapp.restaurants.services.ICategoryService;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -128,7 +128,7 @@ public class CategoryServiceImpl implements ICategoryService {
         log.info("Intentando eliminar categoría global con ID: {}", categoryId);
 
         Restaurant restaurant = restaurantRepository.findById(restaurantId)
-                .orElseThrow(() -> new EntityNotFoundException("Restaurante no encontrado con ID: " + restaurantId));
+                .orElseThrow(() -> new RestaurantNotFoundException("Restaurante no encontrado con ID: " + restaurantId));
 
         String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
         log.info("Usuario autenticado con email: {}", userEmail);

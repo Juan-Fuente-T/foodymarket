@@ -17,7 +17,6 @@ import com.c24_39_t_webapp.restaurants.repository.UserRepository;
 import com.c24_39_t_webapp.restaurants.services.ICategoryService;
 import com.c24_39_t_webapp.restaurants.services.IRestaurantService;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceContext;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -297,7 +296,7 @@ public class RestaurantServiceImpl implements IRestaurantService {
         Restaurant restaurant = restaurantRepository.findByIdFetchingCategories(restaurantId)
                 .orElseThrow(() -> {
                     log.error("Restaurante con ID {} no encontrado al intentar añadir categoría.", restaurantId);
-                    return new EntityNotFoundException("Restaurante no encontrado con ID: " + restaurantId);
+                    return new RestaurantNotFoundException("Restaurante no encontrado con ID: " + restaurantId);
                 });
         boolean added = restaurant.getOfferedCategories().add(categoryToAdd);
 
