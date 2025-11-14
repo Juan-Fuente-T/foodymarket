@@ -4,6 +4,7 @@ import com.c24_39_t_webapp.restaurants.config.security.JwtTokenFilter;
 import com.c24_39_t_webapp.restaurants.dtos.request.OrderRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.OrderResponseDto;
 import com.c24_39_t_webapp.restaurants.exception.RestaurantNotFoundException;
+import com.c24_39_t_webapp.restaurants.exception.UnauthorizedAccessException;
 import com.c24_39_t_webapp.restaurants.exception.UserNotFoundException;
 import com.c24_39_t_webapp.restaurants.factories.OrderFactory;
 import com.c24_39_t_webapp.restaurants.services.IOrderService;
@@ -38,6 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * - UserNotFoundException: cuando el usuario/cliente no existe. Retorna 404 Not Found
  * - Datos inválidos (restaurantId ≤ 0, clientId ≤ 0, etc.): retorna 400 Bad Request
  * - Petición sin autenticación: retorna 401 Unauthorized
+ * - Sin rol CLIENTE: retorna 403 Forbidden
  *
  * Patrón AAA: Arrange, Act, Assert
  */
@@ -224,6 +226,35 @@ public class OrderControllerRegisterTests {
 
             // Verify que el servicio NO fue llamado
             verify(orderService, never()).addOrder(any(), any());
+        }
+        /**
+         * Test que verifica que al intentar crear un pedido sin el rol CLIENTE,
+         * se retorna el código 403 Forbidden
+         * Arrange: Configura el mock del servicio para lanzar UnauthorizedAccessException
+         * Act & Assert: Realiza la petición POST y verifica el status 403
+         * Verify: Verifica que el servicio se llamó una sola vez
+         *
+         * @throws Exception
+         */
+        @Test
+        @DisplayName("Fail POST /api/order - Retorna 403 sin rol CLIENTE")
+        void whenNoClientRole_thenReturnsForbidden() throws Exception {
+            // Arrange
+            doThrow(new UnauthorizedAccessException("No tienes permiso para crear pedidos"))
+                    .when(orderService).addOrder(any(OrderRequestDto.class), eq(CLIENT_EMAIL));
+
+            // Act & Assert - CON autenticación pero SIN rol CLIENTE
+            mockMvc.perform(post(ORDER_ENDPOINT)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(validOrderDto))
+                            .param("email", CLIENT_EMAIL)
+                            .with(user(CLIENT_EMAIL).roles("RESTAURANTE"))
+                            .with(csrf()))
+                    .andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.error").value("UnauthorizedAccessException"));
+
+            // Verify
+            verify(orderService, times(1)).addOrder(any(OrderRequestDto.class), eq(CLIENT_EMAIL));
         }
     }
 }

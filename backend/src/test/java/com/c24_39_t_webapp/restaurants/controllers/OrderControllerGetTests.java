@@ -3,6 +3,7 @@ package com.c24_39_t_webapp.restaurants.controllers;
 import com.c24_39_t_webapp.restaurants.config.security.JwtTokenFilter;
 import com.c24_39_t_webapp.restaurants.dtos.response.OrderResponseDto;
 import com.c24_39_t_webapp.restaurants.exception.OrderNotFoundException;
+import com.c24_39_t_webapp.restaurants.exception.UnauthorizedAccessException;
 import com.c24_39_t_webapp.restaurants.factories.OrderFactory;
 import com.c24_39_t_webapp.restaurants.models.OrderStatus;
 import com.c24_39_t_webapp.restaurants.services.IOrderService;
@@ -137,6 +138,32 @@ public class OrderControllerGetTests {
 
             // Verify
             verify(orderService, never()).findAllOrders(any());
+        }
+        /**
+         * Test que verifica que al intentar obtener pedidos sin el rol RESTAURANTE,
+         * se lanza UnauthorizedAccessException y se retorna 403 Forbidden
+         * Arrange: Configura el mock del servicio para que lance UnauthorizedAccessException
+         * Act & Assert: Realiza la petición GET y verifica el status 403
+         * Verify: Verifica que el servicio se llamó una vez con el ID correcto
+         *
+         * @throws Exception
+         */
+        @Test
+        @DisplayName("Fail GET /api/order - Retorna 403 sin rol RESTAURANTE")
+        void whenNoRestauranteRole_thenReturnsForbidden() throws Exception {
+            // Arrange
+            when(orderService.findAllOrders(eq(RESTAURANT_ID)))
+                    .thenThrow(new UnauthorizedAccessException("No tienes permiso para ver pedidos"));
+
+            // Act & Assert - CON autenticación pero SIN rol RESTAURANTE
+            mockMvc.perform(get(ORDER_ENDPOINT)
+                            .param("restaurantId", String.valueOf(RESTAURANT_ID))
+                            .with(user(RESTAURANT_EMAIL).roles("CLIENTE")))
+                    .andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.error").value("UnauthorizedAccessException"));
+
+            // Verify
+            verify(orderService, times(1)).findAllOrders(eq(RESTAURANT_ID));
         }
     }
 
