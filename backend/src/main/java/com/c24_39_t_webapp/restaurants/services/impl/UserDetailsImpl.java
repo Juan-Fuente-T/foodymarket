@@ -2,6 +2,7 @@ package com.c24_39_t_webapp.restaurants.services.impl;
 
 import com.c24_39_t_webapp.restaurants.models.UserEntity;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -9,6 +10,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.Collections;
 
+@Getter
 @AllArgsConstructor
 public class UserDetailsImpl implements UserDetails {
 
@@ -53,8 +55,5 @@ public class UserDetailsImpl implements UserDetails {
     public String getPassword() {
         return userEntity.getPassword();
 
-    }
-    public UserEntity getUserEntity() {
-        return userEntity;
     }
 }
