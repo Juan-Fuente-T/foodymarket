@@ -74,21 +74,21 @@ public final class OrderFactory {
      * @param details      Lista de OrderDetailsRequestDto
      * @return nueva instancia de OrderRequestDto con detalles personalizados
      */
-    public static OrderRequestDto requestWithDetails(Long restaurantId, Long clientId, List<OrderDetailsRequestDto> details) {
-        BigDecimal total = details.stream()
-                .map(OrderDetailsRequestDto::subtotal)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        return new OrderRequestDto(
-                1L,
-                clientId,
-                restaurantId,
-                OrderStatus.pendiente,
-                total,
-                "Pedido personalizado",
-                details
-        );
-    }
+//    public static OrderRequestDto requestWithDetails(Long restaurantId, Long clientId, List<OrderDetailsRequestDto> details) {
+//        BigDecimal total = details.stream()
+//                .map(OrderDetailsRequestDto::subtotal)
+//                .reduce(BigDecimal.ZERO, BigDecimal::add);
+//
+//        return new OrderRequestDto(
+//                1L,
+//                clientId,
+//                restaurantId,
+//                OrderStatus.pendiente,
+//                total,
+//                "Pedido personalizado",
+//                details
+//        );
+//    }
 
     // ================= UPDATE REQUEST payload =================
 

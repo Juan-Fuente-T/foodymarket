@@ -42,12 +42,12 @@ public final class CategoryFactory {
      * @param description Descripción de la categoría
      * @return nueva instancia de CategoryRequestDto con datos personalizados
      */
-    public static CategoryRequestDto requestWith(String name, String description) {
-        return new CategoryRequestDto(
-                name,
-                description
-        );
-    }
+//    public static CategoryRequestDto requestWith(String name, String description) {
+//        return new CategoryRequestDto(
+//                name,
+//                description
+//        );
+//    }
 
     // ================= RESPONSE payload =================
 

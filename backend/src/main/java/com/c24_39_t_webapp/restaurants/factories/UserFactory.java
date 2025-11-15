@@ -2,12 +2,8 @@ package com.c24_39_t_webapp.restaurants.factories;
 
 import com.c24_39_t_webapp.restaurants.dtos.request.UserRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.UserResponseDto;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+//import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -73,8 +69,6 @@ public final class UserFactory {
      * @return nueva instancia de UserResponseDto con datos mapeados
      */
     public static UserResponseDto defaultResponse(Long userId) {
-        LocalDateTime now = LocalDateTime.now();
-
         return new UserResponseDto(
                 userId,
                 "Juan Pérez",
@@ -93,8 +87,7 @@ public final class UserFactory {
      * @return nueva instancia de UserResponseDto mapeado desde el request
      */
     public static UserResponseDto responseFromRequest(UserRequestDto req, Long userId) {
-        LocalDateTime now = LocalDateTime.now();
-
+//        LocalDateTime now = LocalDateTime.now();
         return new UserResponseDto(
                 userId,
                 req.name(),

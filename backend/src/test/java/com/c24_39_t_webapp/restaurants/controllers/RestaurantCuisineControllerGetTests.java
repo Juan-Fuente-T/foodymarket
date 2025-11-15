@@ -1,9 +1,7 @@
 package com.c24_39_t_webapp.restaurants.controllers;
 
 import com.c24_39_t_webapp.restaurants.config.security.JwtTokenFilter;
-import com.c24_39_t_webapp.restaurants.dtos.request.UserRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.CuisineResponseDto;
-import com.c24_39_t_webapp.restaurants.exception.UnauthorizedAccessException;
 import com.c24_39_t_webapp.restaurants.factories.RestaurantCuisineFactory;
 import com.c24_39_t_webapp.restaurants.services.IRestaurantCuisineService;
 import com.fasterxml.jackson.databind.ObjectMapper;

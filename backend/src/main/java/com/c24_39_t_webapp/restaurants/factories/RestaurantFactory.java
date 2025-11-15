@@ -28,20 +28,20 @@ public final class RestaurantFactory {
     }
 
     // Request para update — solo cambia campos que pases como parámetros (ejemplo simple)
-    public static RestaurantRequestDto updatedRequest(long id, String email, String newName) {
-        return new RestaurantRequestDto(
-                id,
-                newName,
-                "Nueva descripción",
-                1L,
-                "555 777 999",
-                email,
-                "Calle Nueva 33",
-                "09-17 h",
-                "https://example.com/logo_new.png",
-                "https://example.com/cover_new.jpg"
-        );
-    }
+//    public static RestaurantRequestDto updatedRequest(long id, String email, String newName) {
+//        return new RestaurantRequestDto(
+//                id,
+//                newName,
+//                "Nueva descripción",
+//                1L,
+//                "555 777 999",
+//                email,
+//                "Calle Nueva 33",
+//                "09-17 h",
+//                "https://example.com/logo_new.png",
+//                "https://example.com/cover_new.jpg"
+//        );
+//    }
 
     // Genera una Response coherente a partir de un Request
     public static RestaurantResponseDto responseFromRequest(RestaurantRequestDto req, long responseId) {
@@ -101,8 +101,6 @@ public final class RestaurantFactory {
     public static List<RestaurantResponseDto> responseListDefault() {
         List<RestaurantRequestDto> reqs = new ArrayList<>();
         reqs.add(defaultRequest(1L, "atlantic@example.com"));
-        // Para el segundo elemento, si se necesita otros datos, crear el request con el nombre cambiado
-        // usando updatedRequestFrom (2L, "La Paella", ...)
         RestaurantRequestDto req2 = defaultRequest(2L, "paella@example.com");
         reqs.add(updatedRequestFrom(req2, "La Paella", null, "La calle de enmedio 999"));
 
