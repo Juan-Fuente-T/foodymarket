@@ -2,6 +2,7 @@ package com.c24_39_t_webapp.restaurants.services.impl;
 
 import com.c24_39_t_webapp.restaurants.dtos.request.UserRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.UserResponseDto;
+import com.c24_39_t_webapp.restaurants.exception.UnauthorizedAccessException;
 import com.c24_39_t_webapp.restaurants.exception.UserNotFoundException;
 import com.c24_39_t_webapp.restaurants.models.UserEntity;
 import com.c24_39_t_webapp.restaurants.repository.UserRepository;
@@ -79,7 +80,7 @@ public class UserServiceImpl implements IUserService {
         // Verificar si el usuario autenticado es el mismo que el usuario que se está actualizando
         if (!existingUser.getEmail().equals(authenticatedUsername)) {
             log.warn("Usuario {} intentando actualizar usuario {} sin permiso.", authenticatedUsername, userIdToUpdate);
-            throw new AccessDeniedException("No tienes permiso para actualizar este perfil.");
+            throw new UnauthorizedAccessException("No tienes permiso para actualizar este perfil.");
         }
         if (updateDto.name() != null) { // Asume que UserUpdateDto tiene estos getters
             existingUser.setName(updateDto.name());
