@@ -54,4 +54,7 @@ public class UserDetailsImpl implements UserDetails {
         return userEntity.getPassword();
 
     }
+    public UserEntity getUserEntity() {
+        return userEntity;
+    }
 }

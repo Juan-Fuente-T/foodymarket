@@ -3,7 +3,7 @@ package com.c24_39_t_webapp.restaurants.controllers;
 import com.c24_39_t_webapp.restaurants.dtos.request.UserRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.UserResponseDto;
 import com.c24_39_t_webapp.restaurants.services.IUserService;
-import jakarta.validation.Valid;
+//import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -11,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import com.c24_39_t_webapp.restaurants.services.impl.UserDetailsImpl;
+
 
 @Slf4j
 @RestController
@@ -29,10 +31,12 @@ public class UserController {
 //    }
 
     @PutMapping
-    @PreAuthorize("hasRole('CLIENTE')")
+//    @PreAuthorize("hasRole('CLIENTE')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<UserResponseDto> updateUser(
-            @RequestBody final Long userIdToUpdate,
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
             @RequestBody final UserRequestDto userRequestDto) {
+        Long userIdToUpdate = userDetails.getUserEntity().getId();  // ← Extrae el ID desde el UserEntity
         UserResponseDto updatedUser = userService.updateUser(userIdToUpdate, userRequestDto);
         return ResponseEntity.ok(updatedUser);
     }
@@ -50,9 +54,10 @@ public class UserController {
     }
 
     @DeleteMapping
-    @PreAuthorize("hasRole('CLIENTE')")
-//    public ResponseEntity<Void> deleteUser(@AuthenticationPrincipal final UserDetailsImpl userDetails) {
-    public ResponseEntity<Void> deleteUser(@AuthenticationPrincipal final Long userId) {
+//    @PreAuthorize("hasRole('CLIENTE')")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> deleteUser(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+        Long userId = userDetails.getUserEntity().getId();  // ← Extrae el ID desde el UserEntity
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
@@ -60,7 +65,7 @@ public class UserController {
         userService.deleteUser(userId);
         return ResponseEntity.noContent().build();
     }
-//    @DeleteMapping("/{id}")
+//    @DeleteMapping("/{id}") //No toma el ID de un parámetro, sino de datos de autenticación
 //    @PreAuthorize("hasAnyAuthority('cliente')")
 //    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
 //        userService.deleteUser(id);

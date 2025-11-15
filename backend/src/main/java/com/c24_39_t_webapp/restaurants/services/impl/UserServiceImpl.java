@@ -140,16 +140,16 @@ public class UserServiceImpl implements IUserService {
     @Override
     @Transactional
     public void deleteUser(Long id) {
-        //  REVISAR CON CUIDADO
-//        log.info("Eliminando usuario con ID: {}", id);
-//        String authenticatedUsername = SecurityContextHolder.getContext().getAuthentication().getName();
-//        UserEntity user = userRepository.findById(id)
-//                .orElseThrow(() -> new UserNotFoundException("El usuario con el siguiente ID no ha sido encontrado: " + id));
-//        if (!user.getEmail().equals(authenticatedUsername /* && !SecurityUtils.isAdmin() */ )) { // Añadir lógica si admin puede ver
-//            log.warn("Usuario {} no tiene permiso para borrar al usuario {}", authenticatedUsername, id);
-//            throw new SecurityException("No tienes permiso para borrar a este usuario.");
-//        }
-//        userRepository.deleteById(id);
-//        log.info("Usuario eliminado exitosamente con ID: {}", id);
+        log.info("Eliminando usuario con ID: {}", id);
+        UserEntity user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("El usuario con el siguiente ID no ha sido encontrado: " + id));
+        String authenticatedUsername = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        if (!user.getEmail().equals(authenticatedUsername)) { // Añadir lógica si admin puede ver  /* && !SecurityUtils.isAdmin() */
+            log.warn("Usuario {} no tiene permiso para borrar al usuario {}", authenticatedUsername, id);
+            throw new AccessDeniedException("No tienes permiso para borrar a este usuario.");
+        }
+        userRepository.deleteById(id);
+        log.info("Usuario eliminado exitosamente con ID: {}", id);
     }
 }
