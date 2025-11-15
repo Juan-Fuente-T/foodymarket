@@ -20,13 +20,13 @@ public class UserController {
 
     private IUserService userService;
 
-    @PostMapping
-    public ResponseEntity<UserResponseDto> createUser(@Valid @RequestBody final UserRequestDto userCreateRequestDto) {
-        log.info("Creando un nuevo usuario con email: {}", userCreateRequestDto.email());
-        UserResponseDto newUser = userService.createUser(userCreateRequestDto);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(newUser);
-    }
+//    @PostMapping  //El Registro de usuarios se maneja desde AuthController
+//    public ResponseEntity<UserResponseDto> createUser(@Valid @RequestBody final UserRequestDto userCreateRequestDto) {
+//        log.info("Creando un nuevo usuario con email: {}", userCreateRequestDto.email());
+//        UserResponseDto newUser = userService.createUser(userCreateRequestDto);
+//
+//        return ResponseEntity.status(HttpStatus.CREATED).body(newUser);
+//    }
 
     @PutMapping
     @PreAuthorize("hasRole('CLIENTE')")
