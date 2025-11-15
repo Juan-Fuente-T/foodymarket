@@ -6,7 +6,7 @@ import com.c24_39_t_webapp.restaurants.services.IUserService;
 //import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
+//import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -45,9 +45,9 @@ public class UserController {
 //    @GetMapping("/profile"")
     public ResponseEntity<UserResponseDto> getUserProfile(
             @AuthenticationPrincipal(expression = "username") String userEmail) {
-        if (userEmail == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+//        if (userEmail == null) { //No es necesario, ya se verifica con el @PreAuthorize
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+//        }
         log.info("Obteniendo perfil para usuario: {}", userEmail);
         UserResponseDto userDto = userService.getUserProfile(userEmail);
         return ResponseEntity.ok(userDto);
@@ -58,9 +58,9 @@ public class UserController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> deleteUser(@AuthenticationPrincipal UserDetailsImpl userDetails) {
         Long userId = userDetails.getUserEntity().getId();  // ← Extrae el ID desde el UserEntity
-        if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+//        if (userId == null) { //No es necesario, ya se verifica con el @PreAuthorize
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+//        }
         log.info("Eliminando usuario con ID: {}", userId);
         userService.deleteUser(userId);
         return ResponseEntity.noContent().build();
