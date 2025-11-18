@@ -3,8 +3,10 @@ package com.c24_39_t_webapp.restaurants.services.impl;
 import com.c24_39_t_webapp.restaurants.dtos.request.AddReviewDto;
 import com.c24_39_t_webapp.restaurants.dtos.request.UpdateReviewDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.ReviewResponseDto;
+import com.c24_39_t_webapp.restaurants.exception.RestaurantNotFoundException;
 import com.c24_39_t_webapp.restaurants.exception.UnauthorizedAccessException;
 import com.c24_39_t_webapp.restaurants.exception.ResourceNotFoundException;
+import com.c24_39_t_webapp.restaurants.exception.UserNotFoundException;
 import com.c24_39_t_webapp.restaurants.models.Restaurant;
 import com.c24_39_t_webapp.restaurants.models.Review;
 import com.c24_39_t_webapp.restaurants.models.UserEntity;
@@ -14,7 +16,6 @@ import com.c24_39_t_webapp.restaurants.repository.UserRepository;
 import com.c24_39_t_webapp.restaurants.services.IReviewService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,16 +33,17 @@ public class ReviewServiceImpl implements IReviewService {
     private final RestaurantRepository restaurantRepository;
     private final ReviewRepository reviewRepository;
 
-    @PreAuthorize("hasRole('CLIENTE')")
     @Override
+    @Transactional
     public ReviewResponseDto addReview(AddReviewDto reviewDto, Long userId) {
 
         log.info("verificando permisos para agregar una reseña");
         UserEntity user =
-                userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException(
+                userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(
                         "No se encontró el usuario buscado"));
 
-        Restaurant restaurant = restaurantRepository.findById(reviewDto.restaurantId()).orElseThrow(() -> new ResourceNotFoundException(
+        Restaurant restaurant = restaurantRepository.findById(
+                reviewDto.restaurantId()).orElseThrow(() -> new RestaurantNotFoundException(
                 "No se encontró el restaurante buscado"));
 
         log.info("Creando la entidad al asignar Valores");
@@ -105,8 +107,8 @@ public class ReviewServiceImpl implements IReviewService {
         );
     }
 
-    @PreAuthorize("hasRole('CLIENTE')")
     @Override
+    @Transactional
     public ReviewResponseDto updateReview(UpdateReviewDto updateReviewDto, Long reviewId) {
         log.info("Buscando recursos para actualizar la reseña");
         Review review =
@@ -116,9 +118,6 @@ public class ReviewServiceImpl implements IReviewService {
         log.info("validando que el usuario que esta intentando actualizar la reseña tenga los permisos necesarios id:" +
                         " {}", reviewId);
         validateUserPermissions(review, reviewId);
-//        if (!review.getId().equals(userId)) {
-//            throw new UnauthorizedAccessException("El usuario no tiene permisos para el cambio");
-//        }
 
         log.info("Actualizando datos");
         Optional.ofNullable(updateReviewDto.comments())
@@ -141,24 +140,23 @@ public class ReviewServiceImpl implements IReviewService {
         );
     }
 
-    @PreAuthorize("hasRole('CLIENTE')")
     @Override
-    public void deleteReview(Long reviewId) {
+    @Transactional
+    public void deleteReview(Long reviewId, Long userId) {
         log.info("Obteniendo recursos de la db");
-        Review review = reviewRepository.findById(reviewId).orElseThrow(() ->
-                new ResourceNotFoundException("No se encontro la reseña"));
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontro la reseña"));
 
         log.info("Validando que el usuario tenga permisos para eliminar la reseña");
-        validateUserPermissions(review, reviewId);
+        validateUserPermissions(review, userId);
 
         log.warn("Eliminando la reseña");
         reviewRepository.deleteById(reviewId);
-
         log.info("Reseña eliminada");
     }
 
-    private static void validateUserPermissions(Review review, Long reviewId) {
-        if (!review.getId().equals(reviewId)) {
+    private static void validateUserPermissions(Review review, Long userId) {
+        if (!review.getId().equals(userId)) {
             throw new UnauthorizedAccessException("El usuario no tiene permisos para el cambio");
         }
     }

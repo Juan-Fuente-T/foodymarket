@@ -6,12 +6,15 @@ import com.c24_39_t_webapp.restaurants.dtos.response.ReviewResponseDto;
 import com.c24_39_t_webapp.restaurants.models.Restaurant;
 import com.c24_39_t_webapp.restaurants.models.Review;
 import com.c24_39_t_webapp.restaurants.services.IReviewService;
+import com.c24_39_t_webapp.restaurants.services.impl.UserDetailsImpl;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,15 +31,18 @@ public class ReviewController {
      *Endpoint add a new {@link Review} entity to the Db.
      *It's processed in the service {@link IReviewService#addReview(AddReviewDto, Long)}
      * @param reviewDto request {Long restaurantId, Integer score(in a 0 - 10 range), and a String Comment}.
-     * @param userId Validates the user had logged in before add a
-     * new {@link Review} and then it's requested in the
-     *service to validate they have a User role.
+     * @param  userDetails The user details of the authenticated user adding the review.
+     *                     From here, we extract the user ID to associate with the
+     * new {@link Review} and then it's requested in the service to validate they have a User role.
      * @return a Response Entity, which returns Http status 201(Created) when the task were finished.
      */
 
     @PostMapping
+    @PreAuthorize("hasRole('CLIENTE')")
+    @Transactional
     public ResponseEntity<?> addReview(@RequestBody @Valid final AddReviewDto reviewDto,
-                                       @AuthenticationPrincipal final Long userId) {
+                                       @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        Long userId = userDetails.getUserEntity().getId();
         ReviewResponseDto reviewResponseDto = iReviewService.addReview(reviewDto, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(reviewResponseDto);
     }
@@ -48,8 +54,9 @@ public class ReviewController {
      * @return a 200 ok, with a list of {@link ReviewResponseDto}
      */
 
-    @GetMapping("/restaurant")
-    public ResponseEntity<?> allRestaurantReviews(@RequestBody final Long restaurantId) {
+    @GetMapping("/restaurant/{restaurantId}")
+    @Transactional(readOnly = true)
+    public ResponseEntity<?> allRestaurantReviews(@PathVariable final Long restaurantId) {
         List<ReviewResponseDto> reviewList = iReviewService.getAllRestaurantReviews(restaurantId);
         return ResponseEntity.ok(reviewList);
     }
@@ -60,9 +67,9 @@ public class ReviewController {
      * @param reviewId The Review id wanted.
      * @return Returns Code 200 ok, with {@link ReviewResponseDto}
      */
-
-    @GetMapping("/id")
-    public ResponseEntity<?> getReviewById(@RequestBody final Long reviewId) {
+    @GetMapping("/id/{reviewId}")
+    @Transactional(readOnly = true)
+    public ResponseEntity<?> getReviewById(@PathVariable final Long reviewId) {
         ReviewResponseDto reviewResponseDto = iReviewService.getReviewById(reviewId);
         return ResponseEntity.ok(reviewResponseDto);
     }
@@ -79,6 +86,7 @@ public class ReviewController {
      */
 
     @PatchMapping()
+    @PreAuthorize("hasRole('CLIENTE')")
     public ResponseEntity<?> updateReview(@RequestBody final UpdateReviewDto updateReviewDto,
                  @AuthenticationPrincipal Long reviewId) {
         ReviewResponseDto reviewResponseDto = iReviewService.updateReview(updateReviewDto, reviewId);
@@ -87,14 +95,17 @@ public class ReviewController {
 
     /**
      * EndPoint deletes a {@link Review} looked for id.
-     * it is processed in the service {@link IReviewService#deleteReview(Long)}
+     * it is processed in the service {@link IReviewService#deleteReview(Long, Long)}
      * @param reviewId The wanted id to delete.
+     * @param userDetails The user details of the authenticated user deleting the review
      * @return an Empty responseEntity code 200.Ok if the review is deleted.
      */
-
-    @DeleteMapping
-    public ResponseEntity<?> deleteReview(@RequestBody final Long reviewId) {
-        iReviewService.deleteReview(reviewId);
+    @DeleteMapping("/{reviewId}")
+    @PreAuthorize("hasRole('CLIENTE')")
+    public ResponseEntity<?> deleteReview(@PathVariable final Long reviewId,
+                                          @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        Long userId = userDetails.getUserEntity().getId();
+        iReviewService.deleteReview(reviewId, userId);
         return ResponseEntity.ok().build();
     }
 }

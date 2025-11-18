@@ -16,5 +16,5 @@ public interface IReviewService {
 
     ReviewResponseDto updateReview(UpdateReviewDto updateReviewDto, Long reviewId);
 
-    void deleteReview(Long reviewId);
+    void deleteReview(Long reviewId, Long userId);
 }
