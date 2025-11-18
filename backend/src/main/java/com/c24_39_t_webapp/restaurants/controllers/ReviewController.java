@@ -76,7 +76,7 @@ public class ReviewController {
 
     /**
      * EndPoint updates a {@link Review} looked for id.
-     * it is processed in the service {@link IReviewService#updateReview(UpdateReviewDto, Long)}
+     * it is processed in the service {@link IReviewService#updateReview(UpdateReviewDto, Long, Long)}
      * @param updateReviewDto The information needed to update a Review
      * which Contains (Long reviewToUpdateId, Integer score, String
      * comments)

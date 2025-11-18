@@ -70,9 +70,9 @@ public final class ReviewFactory {
      * @param comments Comentario actualizado
      * @return nueva instancia de UpdateReviewDto personalizado
      */
-    public static UpdateReviewDto updateReviewRequestWith(Long reviewId, Integer score, String comments) {
-        return new UpdateReviewDto(reviewId, score, comments);
-    }
+//    public static UpdateReviewDto updateReviewRequestWith(Long reviewId, Integer score, String comments) {
+//        return new UpdateReviewDto(reviewId, score, comments);
+//    }
 
     // ================= RESPONSE payload =================
 
@@ -81,10 +81,9 @@ public final class ReviewFactory {
      * Usado en POST /api/review, PATCH /api/review y GET endpoints.
      * Cada llamada retorna una NUEVA instancia.
      *
-     * @param reviewId ID de la reseña
      * @return nueva instancia de ReviewResponseDto con datos por defecto
      */
-    public static ReviewResponseDto defaultReviewResponse(Long reviewId) {
+    public static ReviewResponseDto defaultReviewResponse() {
         LocalDateTime now = LocalDateTime.now();
 
         return new ReviewResponseDto(
@@ -101,12 +100,11 @@ public final class ReviewFactory {
      * Genera una Response coherente a partir de un ReviewRequestDto.
      *
      * @param req      Datos base de un ReviewRequestDto
-     * @param reviewId ID de la reseña generada
      * @param userId   ID del usuario que creó la reseña
      * @param userName Nombre del usuario
      * @return nueva instancia de ReviewResponseDto mapeado desde el request
      */
-    public static ReviewResponseDto responseFromAddRequest(ReviewRequestDto req, Long reviewId, Long userId, String userName) {
+    public static ReviewResponseDto responseFromAddRequest(ReviewRequestDto req, Long userId, String userName) {
         LocalDateTime now = LocalDateTime.now();
 
         return new ReviewResponseDto(

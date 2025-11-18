@@ -77,7 +77,7 @@ public class ReviewControllerCreateTests {
         @BeforeEach
         void setUp() {
             validAddReviewDto = ReviewFactory.addReviewRequestWith(RESTAURANT_ID, 8, "Excelente comida y servicio");
-            expectedReviewResponse = ReviewFactory.responseFromAddRequest(validAddReviewDto, 1L, USER_ID, "Juan Pérez");
+            expectedReviewResponse = ReviewFactory.responseFromAddRequest(validAddReviewDto, USER_ID, "Juan Pérez");
         }
 
         /**
