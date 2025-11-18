@@ -1,6 +1,6 @@
 package com.c24_39_t_webapp.restaurants.factories;
 
-import com.c24_39_t_webapp.restaurants.dtos.request.AddReviewDto;
+import com.c24_39_t_webapp.restaurants.dtos.request.ReviewRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.request.UpdateReviewDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.ReviewResponseDto;
 
@@ -25,10 +25,10 @@ public final class ReviewFactory {
      * Payload DEFAULT para crear una reseña (POST /api/review).
      * Cada llamada retorna una NUEVA instancia.
      *
-     * @return nueva instancia de AddReviewDto con datos por defecto
+     * @return nueva instancia de ReviewRequestDto con datos por defecto
      */
-    public static AddReviewDto defaultAddReviewRequest() {
-        return new AddReviewDto(
+    public static ReviewRequestDto defaultAddReviewRequest() {
+        return new ReviewRequestDto(
                 1L,          // restaurantId
                 8,           // score (0-10)
                 "Excelente comida y buen servicio"  // comments
@@ -41,10 +41,10 @@ public final class ReviewFactory {
      * @param restaurantId ID del restaurante
      * @param score        Puntuación (0-10)
      * @param comments     Comentario
-     * @return nueva instancia de AddReviewDto personalizado
+     * @return nueva instancia de ReviewRequestDto personalizado
      */
-    public static AddReviewDto addReviewRequestWith(Long restaurantId, Integer score, String comments) {
-        return new AddReviewDto(restaurantId, score, comments);
+    public static ReviewRequestDto addReviewRequestWith(Long restaurantId, Integer score, String comments) {
+        return new ReviewRequestDto(restaurantId, score, comments);
     }
 
     /**
@@ -98,15 +98,15 @@ public final class ReviewFactory {
     }
 
     /**
-     * Genera una Response coherente a partir de un AddReviewDto.
+     * Genera una Response coherente a partir de un ReviewRequestDto.
      *
-     * @param req      Datos base de un AddReviewDto
+     * @param req      Datos base de un ReviewRequestDto
      * @param reviewId ID de la reseña generada
      * @param userId   ID del usuario que creó la reseña
      * @param userName Nombre del usuario
      * @return nueva instancia de ReviewResponseDto mapeado desde el request
      */
-    public static ReviewResponseDto responseFromAddRequest(AddReviewDto req, Long reviewId, Long userId, String userName) {
+    public static ReviewResponseDto responseFromAddRequest(ReviewRequestDto req, Long reviewId, Long userId, String userName) {
         LocalDateTime now = LocalDateTime.now();
 
         return new ReviewResponseDto(

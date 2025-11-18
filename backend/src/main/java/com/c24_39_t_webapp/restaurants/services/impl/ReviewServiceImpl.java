@@ -1,6 +1,6 @@
 package com.c24_39_t_webapp.restaurants.services.impl;
 
-import com.c24_39_t_webapp.restaurants.dtos.request.AddReviewDto;
+import com.c24_39_t_webapp.restaurants.dtos.request.ReviewRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.request.UpdateReviewDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.ReviewResponseDto;
 import com.c24_39_t_webapp.restaurants.exception.RestaurantNotFoundException;
@@ -35,7 +35,7 @@ public class ReviewServiceImpl implements IReviewService {
 
     @Override
     @Transactional
-    public ReviewResponseDto addReview(AddReviewDto reviewDto, Long userId) {
+    public ReviewResponseDto addReview(ReviewRequestDto reviewDto, Long userId) {
 
         log.info("verificando permisos para agregar una reseña");
         UserEntity user =
@@ -109,7 +109,7 @@ public class ReviewServiceImpl implements IReviewService {
 
     @Override
     @Transactional
-    public ReviewResponseDto updateReview(UpdateReviewDto updateReviewDto, Long reviewId) {
+    public ReviewResponseDto updateReview(UpdateReviewDto updateReviewDto, Long reviewId, Long userId) {
         log.info("Buscando recursos para actualizar la reseña");
         Review review =
                 reviewRepository.findById(updateReviewDto.reviewToUpdateId()).orElseThrow(() -> new ResourceNotFoundException(
@@ -117,7 +117,7 @@ public class ReviewServiceImpl implements IReviewService {
 
         log.info("validando que el usuario que esta intentando actualizar la reseña tenga los permisos necesarios id:" +
                         " {}", reviewId);
-        validateUserPermissions(review, reviewId);
+        validateUserPermissions(review, userId);
 
         log.info("Actualizando datos");
         Optional.ofNullable(updateReviewDto.comments())

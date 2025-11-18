@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.Range;
 
-public record AddReviewDto(
+public record ReviewRequestDto(
         @NotNull(message = "El restaurante no puede estar vacío")
         Long restaurantId,
         @NotNull(message = "El puntaje no puede estar vacío")

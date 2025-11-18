@@ -1,7 +1,7 @@
 package com.c24_39_t_webapp.restaurants.controllers;
 
 import com.c24_39_t_webapp.restaurants.config.security.JwtTokenFilter;
-import com.c24_39_t_webapp.restaurants.dtos.request.AddReviewDto;
+import com.c24_39_t_webapp.restaurants.dtos.request.ReviewRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.ReviewResponseDto;
 import com.c24_39_t_webapp.restaurants.exception.ResourceNotFoundException;
 import com.c24_39_t_webapp.restaurants.exception.UnauthorizedAccessException;
@@ -71,7 +71,7 @@ public class ReviewControllerCreateTests {
     @DisplayName("Success Cases - POST /api/review")
     class SuccessCases {
 
-        private AddReviewDto validAddReviewDto;
+        private ReviewRequestDto validAddReviewDto;
         private ReviewResponseDto expectedReviewResponse;
 
         @BeforeEach
@@ -106,7 +106,7 @@ public class ReviewControllerCreateTests {
             UserDetailsImpl userDetails = new UserDetailsImpl(userEntity);
 
 
-            when(reviewService.addReview(any(AddReviewDto.class), eq(USER_ID)))
+            when(reviewService.addReview(any(ReviewRequestDto.class), eq(USER_ID)))
                     .thenReturn(expectedReviewResponse);
 
             // Act & Assert
@@ -122,7 +122,7 @@ public class ReviewControllerCreateTests {
                     .andExpect(jsonPath("$.score").value(8));
 
             // Verify
-            verify(reviewService, times(1)).addReview(any(AddReviewDto.class), eq(USER_ID));
+            verify(reviewService, times(1)).addReview(any(ReviewRequestDto.class), eq(USER_ID));
         }
     }
 
@@ -132,7 +132,7 @@ public class ReviewControllerCreateTests {
     @DisplayName("Error Cases - POST /api/review")
     class ErrorCases {
 
-        private AddReviewDto validAddReviewDto;
+        private ReviewRequestDto validAddReviewDto;
 
         @BeforeEach
         void setUp() {
@@ -155,7 +155,7 @@ public class ReviewControllerCreateTests {
 
             UserDetailsImpl userDetails = new UserDetailsImpl(userEntity);
 
-            when(reviewService.addReview(any(AddReviewDto.class), eq(USER_ID)))
+            when(reviewService.addReview(any(ReviewRequestDto.class), eq(USER_ID)))
                     .thenThrow(new ResourceNotFoundException("No se encontró el restaurante buscado"));
 
             // Act & Assert
@@ -168,7 +168,7 @@ public class ReviewControllerCreateTests {
                     .andExpect(jsonPath("$.error").value("ResourceNotFoundException"));
 
             // Verify
-            verify(reviewService, times(1)).addReview(any(AddReviewDto.class), eq(USER_ID));
+            verify(reviewService, times(1)).addReview(any(ReviewRequestDto.class), eq(USER_ID));
         }
 
         /**
@@ -199,7 +199,7 @@ public class ReviewControllerCreateTests {
         @DisplayName("Fail POST /api/review - Retorna 403 sin rol CLIENTE")
         void whenNoClientRole_thenReturnsForbidden() throws Exception {
             // Arrange - Crea un UserEntity, un UserDetailsImpl válido y un mock de la respuesta del servicio
-            when(reviewService.addReview(any(AddReviewDto.class), any(Long.class)))
+            when(reviewService.addReview(any(ReviewRequestDto.class), any(Long.class)))
                     .thenThrow(new UnauthorizedAccessException("No tienes permiso para hacer esto"));
 
             UserEntity userEntity = new UserEntity();
@@ -222,7 +222,7 @@ public class ReviewControllerCreateTests {
                     .andExpect(status().isForbidden())
                     .andExpect(jsonPath("$.error").value("UnauthorizedAccessException"));
 
-            verify(reviewService, times(1)).addReview(any(AddReviewDto.class), any(Long.class));
+            verify(reviewService, times(1)).addReview(any(ReviewRequestDto.class), any(Long.class));
         }
 
         /**
@@ -234,7 +234,7 @@ public class ReviewControllerCreateTests {
         @DisplayName("Fail POST /api/review - Retorna 400 si score está fuera del rango 0-10")
         void whenScoreOutOfRange_thenReturnsBadRequest() throws Exception {
             // Arrange - Score fuera del rango
-            AddReviewDto invalidDto = ReviewFactory.addReviewRequestWith(RESTAURANT_ID, 15, "Comentario");
+            ReviewRequestDto invalidDto = ReviewFactory.addReviewRequestWith(RESTAURANT_ID, 15, "Comentario");
 
             UserEntity userEntity = new UserEntity();
             userEntity.setId(USER_ID);

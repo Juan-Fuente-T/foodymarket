@@ -1,6 +1,6 @@
 package com.c24_39_t_webapp.restaurants.controllers;
 
-import com.c24_39_t_webapp.restaurants.dtos.request.AddReviewDto;
+import com.c24_39_t_webapp.restaurants.dtos.request.ReviewRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.request.UpdateReviewDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.ReviewResponseDto;
 import com.c24_39_t_webapp.restaurants.models.Restaurant;
@@ -29,7 +29,7 @@ public class ReviewController {
 
     /**
      *Endpoint add a new {@link Review} entity to the Db.
-     *It's processed in the service {@link IReviewService#addReview(AddReviewDto, Long)}
+     *It's processed in the service {@link IReviewService#addReview(ReviewRequestDto, Long)}
      * @param reviewDto request {Long restaurantId, Integer score(in a 0 - 10 range), and a String Comment}.
      * @param  userDetails The user details of the authenticated user adding the review.
      *                     From here, we extract the user ID to associate with the
@@ -40,7 +40,7 @@ public class ReviewController {
     @PostMapping
     @PreAuthorize("hasRole('CLIENTE')")
     @Transactional
-    public ResponseEntity<?> addReview(@RequestBody @Valid final AddReviewDto reviewDto,
+    public ResponseEntity<?> addReview(@RequestBody @Valid final ReviewRequestDto reviewDto,
                                        @AuthenticationPrincipal UserDetailsImpl userDetails) {
         Long userId = userDetails.getUserEntity().getId();
         ReviewResponseDto reviewResponseDto = iReviewService.addReview(reviewDto, userId);
@@ -85,11 +85,13 @@ public class ReviewController {
      * with the updated entity.
      */
 
-    @PatchMapping()
+    @PatchMapping("/{reviewId}")
     @PreAuthorize("hasRole('CLIENTE')")
-    public ResponseEntity<?> updateReview(@RequestBody final UpdateReviewDto updateReviewDto,
-                 @AuthenticationPrincipal Long reviewId) {
-        ReviewResponseDto reviewResponseDto = iReviewService.updateReview(updateReviewDto, reviewId);
+    public ResponseEntity<?> updateReview(@PathVariable final Long reviewId,
+                                          @RequestBody final UpdateReviewDto updateReviewDto,
+                                          @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        Long userId = userDetails.getUserEntity().getId();
+        ReviewResponseDto reviewResponseDto = iReviewService.updateReview(updateReviewDto, reviewId, userId);
         return ResponseEntity.ok(reviewResponseDto);
     }
 
