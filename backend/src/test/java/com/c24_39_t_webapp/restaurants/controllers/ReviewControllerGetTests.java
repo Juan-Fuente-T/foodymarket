@@ -208,31 +208,31 @@ public class ReviewControllerGetTests {
     }
 
     // ==================== ERROR CASES - GET /api/review/id ====================
-//
-//    @Nested
-//    @DisplayName("Error Cases - GET /api/review/id")
-//    class GetReviewByIdErrorCases {
-//
-//        /**
-//         * Test que verifica que si la reseña no existe, se retorna 404 Not Found.
-//         *
-//         * @throws Exception
-//         */
-//        @Test
-//        @DisplayName("Fail GET /api/review/id - Retorna 404 si la reseña no existe")
-//        void whenReviewNotFound_thenReturns404() throws Exception {
-//            // Arrange
-//            when(reviewService.getReviewById(eq(REVIEW_ID)))
-//                    .thenThrow(new ResourceNotFoundException("Reseña no encontrada!"));
-//
-//            // Act & Assert
-//            mockMvc.perform(get(REVIEW_ENDPOINT + "/restaurant/" + RESTAURANT_ID)
-//                            .with(user(CLIENT_EMAIL).roles("CLIENTE")))
-//                    .andExpect(status().isNotFound())
-//                    .andExpect(jsonPath("$.error").value("ResourceNotFoundException"));
-//
-//            // Verify
-//            verify(reviewService, times(1)).getReviewById(eq(REVIEW_ID));
-//        }
-//    }
+
+    @Nested
+    @DisplayName("Error Cases - GET /api/review/id")
+    class GetReviewByIdErrorCases {
+
+        /**
+         * Test que verifica que si la reseña no existe, se retorna 404 Not Found.
+         *
+         * @throws Exception
+         */
+        @Test
+        @DisplayName("Fail GET /api/review/id - Retorna 404 si la reseña no existe")
+        void whenReviewNotFound_thenReturns404() throws Exception {
+            // Arrange
+            when(reviewService.getReviewById(eq(REVIEW_ID)))
+                    .thenThrow(new ResourceNotFoundException("Reseña no encontrada!"));
+
+            // Act & Assert
+            mockMvc.perform(get(REVIEW_ENDPOINT + "/id/" + REVIEW_ID)
+                            .with(user(CLIENT_EMAIL).roles("CLIENTE")))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.error").value("ResourceNotFoundException"));
+
+            // Verify
+            verify(reviewService, times(1)).getReviewById(eq(REVIEW_ID));
+        }
+    }
 }
