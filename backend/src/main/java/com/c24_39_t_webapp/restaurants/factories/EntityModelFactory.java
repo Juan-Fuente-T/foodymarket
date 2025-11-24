@@ -1,5 +1,6 @@
 package com.c24_39_t_webapp.restaurants.factories;
 
+import com.c24_39_t_webapp.restaurants.dtos.request.*;
 import com.c24_39_t_webapp.restaurants.dtos.response.ProductSummaryResponseDto;
 import com.c24_39_t_webapp.restaurants.models.Category;
 import com.c24_39_t_webapp.restaurants.models.Product;
@@ -12,10 +13,10 @@ import java.util.List;
 
 /**
  * Extensiones a las factories existentes para crear MODELOS (entidades JPA).
- *
+ * <p>
  * Las factories originales crean DTOs.
  * Estos métodos crean las entidades reales para tests unitarios que necesitan mocks.
- *
+ * <p>
  * Uso en tests:
  * UserEntity owner = EntityModelFactory.userEntity(1L, "owner@test.com");
  * Category category = EntityModelFactory.category(1L, "Pizzas");
@@ -30,26 +31,35 @@ public final class EntityModelFactory {
     // ================= UserEntity =================
 
     /**
-     * Crea una UserEntity por defecto para tests.
+     * Crea UserEntity SINCRONIZADA con UserFactory.defaultRequest().
+     *
+     * Valores consultados (NO hardcodeados):
+     * - name: "Juan Pérez" desde UserFactory.defaultRequest()
+     * - role: "CLIENTE" desde UserFactory.defaultRequest()
+     * - phone: "1234567890" desde UserFactory.defaultRequest()
+     * - address: "Calle de arriba 99" desde UserFactory.defaultRequest()
+     * - password: "password123" desde UserFactory.defaultRequest()
      *
      * @param id    ID del usuario
-     * @param email Email del usuario
+     * @param email Email personalizado (override)
      * @return nueva instancia de UserEntity
      */
     public static UserEntity userEntity(Long id, String email) {
+        UserRequestDto dto = UserFactory.defaultRequest();
+
         UserEntity user = new UserEntity();
         user.setId(id);
-        user.setEmail(email);
-        user.setName("Test User");
-        user.setRole("RESTAURANTE");
-        user.setPassword("hashed_password");
-        user.setPhone("123456789");
-        user.setAddress("Test Address");
+        user.setEmail(email);  // Override del email
+        user.setName(dto.name());              // "Juan Pérez" - desde factory
+        user.setRole(dto.role());              // "CLIENTE" - desde factory
+        user.setPassword(dto.password());      // "password123" - desde factory
+        user.setPhone(dto.phone());            // "1234567890" - desde factory
+        user.setAddress(dto.address());        // "Calle de arriba 99" - desde factory
         return user;
     }
 
     /**
-     * Crea una UserEntity con email "CLIENTE".
+     * Crea UserEntity con rol CLIENTE explícito.
      */
     public static UserEntity clientEntity(Long id, String email) {
         UserEntity user = userEntity(id, email);
@@ -57,23 +67,44 @@ public final class EntityModelFactory {
         return user;
     }
 
+    /**
+     * Crea UserEntity con rol RESTAURANTE explícito.
+     */
+    public static UserEntity restaurantOwnerEntity(Long id, String email) {
+        UserEntity user = userEntity(id, email);
+        user.setRole("RESTAURANTE");
+        return user;
+    }
+
     // ================= Category =================
 
     /**
-     * Crea una Category por defecto para tests.
+     * Crea Category SINCRONIZADA con CategoryFactory.defaultRequest().
      *
-     * @param id   ID de la categoría
-     * @param name Nombre de la categoría
+     * Valores consultados (NO hardcodeados):
+     * - name: "Pizzas" desde CategoryFactory.defaultRequest()
+     * - description: "Deliciosas pizzas artesanales" desde CategoryFactory.defaultRequest()
+     *
+     * @param id ID de la categoría
      * @return nueva instancia de Category
      */
-    public static Category category(Long id, String name) {
+    public static Category category(Long id) {
+        CategoryRequestDto dto = CategoryFactory.defaultRequest();
+
         Category category = new Category();
         category.setId(id);
-        category.setName(name);
-        category.setDescription("Test category: " + name);
+        category.setName(dto.name());              // "Pizzas" - desde factory
+        category.setDescription(dto.description()); // "Deliciosas pizzas artesanales" - desde factory
         return category;
     }
-
+    /**
+     * Crea Category con nombre personalizado.
+     */
+    public static Category category(Long id, String name) {
+        Category cat = category(id);
+        cat.setName(name);
+        return cat;
+    }
     /**
      * Crea una Category "Pizzas" con ID 1.
      */
@@ -91,24 +122,33 @@ public final class EntityModelFactory {
     // ================= Restaurant =================
 
     /**
-     * Crea un Restaurant por defecto para tests.
+     * Crea Restaurant SINCRONIZADA con RestaurantFactory.defaultRequest().
+     *
+     * Valores consultados (NO hardcodeados):
+     * - name: "Atlántico" desde RestaurantFactory.defaultRequest()
+     * - description: "Comida fresca del mar" desde RestaurantFactory.defaultRequest()
+     * - phone: "666234123" desde RestaurantFactory.defaultRequest()
+     * - address: "La calle de enmedio 45" desde RestaurantFactory.defaultRequest()
+     * - openingHours: "12:30-23:00" desde RestaurantFactory.defaultRequest()
      *
      * @param id    ID del restaurante
      * @param owner UserEntity propietario
      * @return nueva instancia de Restaurant
      */
     public static Restaurant restaurant(Long id, UserEntity owner) {
+        RestaurantRequestDto dto = RestaurantFactory.defaultRequest(owner.getId(), owner.getEmail());
+
         Restaurant restaurant = new Restaurant();
         restaurant.setId(id);
-        restaurant.setName("Test Restaurant " + id);
         restaurant.setUserEntity(owner);
-        restaurant.setDescription("Test restaurant description");
-        restaurant.setPhone("123456789");
-        restaurant.setEmail("restaurant" + id + "@test.com");
-        restaurant.setAddress("Test Address " + id);
-        restaurant.setOpeningHours("09:00-23:00");
-        restaurant.setLogo("logo.png");
-        restaurant.setCoverImage("cover.png");
+        restaurant.setName(dto.name());                      // "Atlántico" - desde factory
+        restaurant.setDescription(dto.description());        // "Comida fresca del mar" - desde factory
+        restaurant.setPhone(dto.phone());                    // "666234123" - desde factory
+        restaurant.setEmail(dto.email());                    // email del owner - desde factory
+        restaurant.setAddress(dto.address());                // "La calle de enmedio 45" - desde factory
+        restaurant.setOpeningHours(dto.openingHours());      // "12:30-23:00" - desde factory
+        restaurant.setLogo(dto.logo());                      // null - desde factory
+        restaurant.setCoverImage(dto.coverImage());          // null - desde factory
         return restaurant;
     }
 
@@ -123,45 +163,106 @@ public final class EntityModelFactory {
     // ================= Product =================
 
     /**
-     * Crea un Product por defecto para tests.
+     * Crea Product SINCRONIZADA con ProductFactory.defaultProductRequest().
      *
-     * @param id         ID del producto
+     * GARANTÍA: Los valores son IDÉNTICOS a los que devuelve ProductFactory.defaultProductRequest()
+     *
+     * Valores consultados (NO hardcodeados):
+     * - name: "Pizza Margherita" desde ProductFactory.defaultProductRequest()
+     * - description: "Auténtica pizza italiana" desde ProductFactory.defaultProductRequest()
+     * - price: 14.99 desde ProductFactory.defaultProductRequest()
+     * - image: "https://example.com/pizza-mejorada.jpg" desde ProductFactory.defaultProductRequest()
+     * - isActive: true desde ProductFactory.defaultProductRequest()
+     * - quantity: 60 desde ProductFactory.defaultProductRequest()
+     *
+     * @param productId  ID del producto
      * @param restaurant Restaurant propietario
      * @param category   Category del producto
      * @return nueva instancia de Product
      */
-    public static Product product(Long id, Restaurant restaurant, Category category) {
+    public static Product product(Long productId, Restaurant restaurant, Category category) {
+        ProductRequestDto dto = ProductFactory.defaultProductRequest(restaurant.getId());
+
         Product product = new Product();
-        product.setPrd_id(id);
+        product.setPrd_id(productId);
         product.setRestaurant(restaurant);
         product.setCategory(category);
-        product.setName("Test Product " + id);
-        product.setDescription("Test product description");
-        product.setPrice(new BigDecimal("14.99"));
-        product.setImage("product.jpg");
-        product.setIsActive(true);
-        product.setQuantity(50);
+        product.setName(dto.name());                         // "Pizza Margherita" - desde factory
+        product.setDescription(dto.description());           // "Auténtica pizza italiana" - desde factory
+        product.setPrice(dto.price());                       // 14.99 - desde factory
+        product.setImage(dto.image());                       // "https://example.com/pizza-mejorada.jpg" - desde factory
+        product.setIsActive(dto.isActive() != null ? dto.isActive() : true);
+        product.setQuantity(dto.quantity());                 // 60 - desde factory
+        return product;
+    }
+    /**
+     * Crea Product con valores PERSONALIZABLES (no sincronizado con factory).
+     *
+     * @param productId  ID del producto
+     * @param name       Nombre personalizado
+     * @param description Descripción personalizada
+     * @param price      Precio personalizado
+     * @param restaurant Restaurant propietario
+     * @param category   Category del producto
+     * @param quantity   Cantidad personalizada
+     * @param isActive   Estado personalizado
+     * @return nueva instancia de Product
+     */
+    public static Product product(Long productId, String name, String description, BigDecimal price,
+                                  Restaurant restaurant, Category category, Integer quantity, Boolean isActive) {
+        Product product = new Product();
+        product.setPrd_id(productId);
+        product.setRestaurant(restaurant);
+        product.setCategory(category);
+        product.setName(name);
+        product.setDescription(description);
+        product.setPrice(price);
+        product.setImage("https://example.com/product.jpg");
+        product.setIsActive(isActive != null ? isActive : true);
+        product.setQuantity(quantity != null ? quantity : 50);
         return product;
     }
 
     /**
      * Crea un Product "Pizza Margherita" con setup completo por defecto.
+     * USA EXCLUSIVAMENTE métodos existentes que llaman a las factories.
      */
     public static Product defaultProduct() {
         UserEntity owner = userEntity(1L, "owner@test.com");
         Restaurant restaurant = restaurant(1L, owner);
         Category category = defaultCategory();
-        Product product = product(1L, restaurant, category);
-        product.setName("Pizza Margherita");
-        product.setDescription("Auténtica pizza italiana");
+        return product(1L, restaurant, category);
+    }
+    /**
+     * Crea Product para UPDATE SINCRONIZADA con ProductFactory.defaultUpdatedProduct().
+     *
+     * GARANTÍA: Los valores son IDÉNTICOS a los que devuelve ProductFactory.defaultUpdatedProduct()
+     *
+     * @param productId  ID del producto
+     * @param restaurant Restaurant propietario
+     * @param category   Category del producto
+     * @return nueva instancia de Product
+     */
+    public static Product productForUpdate(Long productId, Restaurant restaurant, Category category) {
+        ProductUpdateDto dto = ProductFactory.defaultUpdatedProduct(restaurant.getId(), "Pizza Margherita", "Auténtica pizza italiana");
+
+        Product product = new Product();
+        product.setPrd_id(productId);
+        product.setRestaurant(restaurant);
+        product.setCategory(category);
+        product.setName(dto.name());                         // "Pizza Margherita" - desde factory
+        product.setDescription(dto.description());           // "Auténtica pizza italiana" - desde factory
+        product.setPrice(dto.price());                       // 14.99 - desde factory
+        product.setImage(dto.image());                       // "https://example.com/pizza-mejorada.jpg" - desde factory
+        product.setIsActive(dto.isActive() != null ? dto.isActive() : true);
+        product.setQuantity(dto.quantity());                 // 60 - desde factory
         return product;
     }
-
     /**
      * Crea un Product con todos los parámetros personalizables.
      */
     public static Product productWithAllData(Long id, String name, String description, BigDecimal price,
-                                  Restaurant restaurant, Category category, Integer quantity) {
+                                             Restaurant restaurant, Category category, Integer quantity) {
         Product product = product(id, restaurant, category);
         product.setName(name);
         product.setDescription(description);
@@ -185,21 +286,46 @@ public final class EntityModelFactory {
     public static List<Product> defaultProductList() {
         List<Product> list = new ArrayList<>();
 
-        for (long i = 1; i <= 2; i++) {
-            Product product = defaultProduct();
-            if (i == 2) {
-                product = productWithAllData(
-                        i,
-                        "Pizza Carbonara",
-                        "Auténtica carbonara extra",
-                        new BigDecimal("9.99"),
-                        restaurant(1L, userEntity(1L, "owner@test.com")),
-                        category(1L, "Pizzas"),
-                        20
-                );
-            }
-            list.add(product);
-        }
+        // Usar defaultProduct() para el primer producto
+        list.add(defaultProduct());
+
+        // Segundo producto, usando los métodos existentes que usan factories
+        UserEntity owner = userEntity(1L, "owner@test.com");
+        Restaurant restaurant = restaurant(1L, owner);
+        Category category = defaultCategory();
+
+        Product secondProduct = product(
+                2L,
+                restaurant,
+                category
+        );
+        // Si se necesita cambiar valores específicos, se hace después de crear el producto base
+        secondProduct.setName("Pizza Carbonara");
+        secondProduct.setDescription("Auténtica carbonara extra");
+        secondProduct.setPrice(new BigDecimal("9.99"));
+        secondProduct.setQuantity(20);
+
+        list.add(secondProduct);
         return list;
     }
+
+//    /**
+//     * Crea lista de productos para búsquedas por nombre - USANDO MÉTODOS EXISTENTES
+//     */
+//    public static List<Product> productsForNameSearch() {
+//        List<Product> list = new ArrayList<>();
+//        UserEntity owner = userEntity(1L, "owner@test.com");
+//        Restaurant restaurant = restaurant(1L, owner);
+//        Category category = defaultCategory();
+//
+//        // Usar productWithAllData que a su vez llama a product() base
+//        list.add(productWithAllData(1L, "Pizza Margherita", "Clásica italiana",
+//                new BigDecimal("12.99"), restaurant, category, 25));
+//        list.add(productWithAllData(2L, "Pizza Carbonara", "Carbonara auténtica",
+//                new BigDecimal("14.99"), restaurant, category, 20));
+//        list.add(productWithAllData(3L, "Pizza Barbacoa", "Barbacoa especial",
+//                new BigDecimal("15.99"), restaurant, category, 15));
+//
+//        return list;
+//    }
 }
