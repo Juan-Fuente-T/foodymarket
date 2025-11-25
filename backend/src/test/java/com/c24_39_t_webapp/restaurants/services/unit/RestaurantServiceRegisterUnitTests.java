@@ -58,8 +58,8 @@ public class RestaurantServiceRegisterUnitTests {
     @Mock
     private com.c24_39_t_webapp.restaurants.repository.UserRepository userRepository;
 
-    @Mock
-    private com.c24_39_t_webapp.restaurants.services.ICategoryService categoryService;
+//    @Mock
+//    private com.c24_39_t_webapp.restaurants.services.ICategoryService categoryService;
 
     @Mock
     private com.c24_39_t_webapp.restaurants.repository.RestaurantCuisineRepository cuisineRepository;

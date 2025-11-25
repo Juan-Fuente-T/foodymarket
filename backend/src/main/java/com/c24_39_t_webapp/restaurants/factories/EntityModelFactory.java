@@ -2,10 +2,8 @@ package com.c24_39_t_webapp.restaurants.factories;
 
 import com.c24_39_t_webapp.restaurants.dtos.request.*;
 import com.c24_39_t_webapp.restaurants.dtos.response.ProductSummaryResponseDto;
-import com.c24_39_t_webapp.restaurants.models.Category;
-import com.c24_39_t_webapp.restaurants.models.Product;
-import com.c24_39_t_webapp.restaurants.models.Restaurant;
-import com.c24_39_t_webapp.restaurants.models.UserEntity;
+import com.c24_39_t_webapp.restaurants.dtos.response.RestaurantResponseDto;
+import com.c24_39_t_webapp.restaurants.models.*;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -137,6 +135,8 @@ public final class EntityModelFactory {
      */
     public static Restaurant restaurant(Long id, UserEntity owner) {
         RestaurantRequestDto dto = RestaurantFactory.defaultRequest(owner.getId(), owner.getEmail());
+//        RestaurantRequestDto requestDto = RestaurantFactory.defaultRequest(owner.getId(), owner.getEmail());
+//        RestaurantResponseDto dto = RestaurantFactory.responseFromRequest(requestDto, 1L);
 
         Restaurant restaurant = new Restaurant();
         restaurant.setId(id);
@@ -159,6 +159,14 @@ public final class EntityModelFactory {
         UserEntity owner = userEntity(1L, "owner@test.com");
         return restaurant(id, owner);
     }
+
+    public static RestaurantCuisine restaurantCuisine(Long cuisineId, String cuisineName) {
+        RestaurantCuisine newCuisine = new RestaurantCuisine();
+        newCuisine.setId(cuisineId);
+        newCuisine.setName(cuisineName);
+        return newCuisine;
+    }
+
 
     // ================= Product =================
 
