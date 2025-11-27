@@ -5,6 +5,7 @@ import com.c24_39_t_webapp.restaurants.dtos.response.RestaurantResponseDto;
 import com.c24_39_t_webapp.restaurants.exception.RestaurantNotFoundException;
 import com.c24_39_t_webapp.restaurants.exception.UnauthorizedAccessException;
 import com.c24_39_t_webapp.restaurants.exception.UserNotFoundException;
+import com.c24_39_t_webapp.restaurants.factories.EntityModelFactory;
 import com.c24_39_t_webapp.restaurants.factories.RestaurantFactory;
 import com.c24_39_t_webapp.restaurants.models.Category;
 import com.c24_39_t_webapp.restaurants.models.Restaurant;
@@ -54,9 +55,9 @@ public class RestaurantServiceFindUnitTests {
 
     private static final Long RESTAURANT_ID = 1L;
     private static final Long RESTAURANT_ID_2 = 2L;
-    private static final Long USER_ID = 1L;
+//    private static final Long USER_ID = 1L;
     private static final Long OWNER_ID = 1L;
-    private static final Long UNAUTHORIZED_USER_ID = 2L;
+//    private static final Long UNAUTHORIZED_USER_ID = 2L;
     private static final Long CUISINE_ID = 1L;
     private static final String OWNER_EMAIL = "owner@restaurant.com";
     private static final String UNAUTHORIZED_EMAIL = "unauthorized@restaurant.com";
@@ -91,51 +92,28 @@ public class RestaurantServiceFindUnitTests {
         // Los mocks se configurarán en cada test específicamente
 
         // ✅ Usuario propietario
-        owner = com.c24_39_t_webapp.restaurants.factories.EntityModelFactory
+        owner = EntityModelFactory
                 .restaurantOwnerEntity(OWNER_ID, OWNER_EMAIL);
 
         // ✅ Cuisine
-        cuisine = new RestaurantCuisine();
-        cuisine.setId(CUISINE_ID);
-        cuisine.setName("Mediterránea");
+        cuisine= EntityModelFactory
+                .restaurantCuisine(CUISINE_ID, "Mediterránea");
+
+        // ✅ Restaurante
+        restaurant1 = EntityModelFactory.restaurant(RESTAURANT_ID, owner);
 
         // ✅ Restaurante 1
-        restaurant1 = new Restaurant();
-        restaurant1.setId(RESTAURANT_ID);
-        restaurant1.setUserEntity(owner);
-        restaurant1.setName("Atlántico");
-        restaurant1.setDescription("Comida fresca del mar");
         restaurant1.setCuisine(cuisine);
-        restaurant1.setPhone("555 666 777");
-        restaurant1.setEmail("atlantic@restaurant.com");
-        restaurant1.setAddress("Calle Arriba 11");
-        restaurant1.setOpeningHours("10-15 h y 20-24 h");
 
         // ✅ Restaurante 2
-        restaurant2 = new Restaurant();
-        restaurant2.setId(RESTAURANT_ID_2);
-        restaurant2.setUserEntity(owner);
-        restaurant2.setName("La Paella");
-        restaurant2.setDescription("Especialidad del restaurante");
+        restaurant2 = EntityModelFactory.restaurant(RESTAURANT_ID_2, owner);
         restaurant2.setCuisine(cuisine);
-        restaurant2.setPhone("555 777 888");
-        restaurant2.setEmail("paella@restaurant.com");
 
         // ✅ Categorías
-        category1 = new Category();
-        category1.setId(1L);
-        category1.setName("Pizzas");
-        category1.setDescription("Deliciosas pizzas");
-
-        category2 = new Category();
-        category2.setId(2L);
-        category2.setName("Pastas");
-        category2.setDescription("Deliciosas pastas");
+        category1 = EntityModelFactory.defaultCategory();
+        category2 = EntityModelFactory.pastasCategory();
 
         restaurant1.setOfferedCategories(new HashSet<>(Set.of(category1, category2)));
-
-        // Mock SecurityContext con usuario autorizado
-//        setupSecurityContextWithEmail(OWNER_EMAIL);
     }
 
     /**
@@ -151,7 +129,7 @@ public class RestaurantServiceFindUnitTests {
 //        SecurityContextHolder.setContext(securityContext);
 //    }
 
-    // ==================== FIN DALL TESTS ====================
+    // ==================== FIND ALL TESTS ====================
 
     @Nested
     @DisplayName("findAll() Tests")
