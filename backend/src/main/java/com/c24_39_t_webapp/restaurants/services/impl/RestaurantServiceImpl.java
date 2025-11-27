@@ -157,8 +157,8 @@ public class RestaurantServiceImpl implements IRestaurantService {
                     return dto;
                 })
                 .orElseThrow(() -> {
-                    log.warn("No se encontro un restaurante con el ID: {}", id);
-                    return new RestaurantNotFoundException("No se encontro un restaurante con ese ID: " + id);
+                    log.warn("No se encontró un restaurante con el ID: {}", id);
+                    return new RestaurantNotFoundException("No se encontró un restaurante con ese ID: " + id);
                 });
     }
 
