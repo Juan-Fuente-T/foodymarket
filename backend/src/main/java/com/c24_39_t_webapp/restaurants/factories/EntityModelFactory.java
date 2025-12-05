@@ -6,6 +6,7 @@ import com.c24_39_t_webapp.restaurants.dtos.response.RestaurantResponseDto;
 import com.c24_39_t_webapp.restaurants.models.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -336,4 +337,74 @@ public final class EntityModelFactory {
 //
 //        return list;
 //    }
-}
+
+// ================= Order =================
+
+        /**
+         * Crea Order SINCRONIZADA con OrderFactory.defaultRequest().
+         *
+         * @param orderId      ID de la orden
+         * @param client       UserEntity cliente (debe ser CLIENTE role)
+         * @param restaurant   Restaurant propietario
+         * @return nueva instancia de Order
+         */
+        public static Order order(Long orderId, UserEntity client, Restaurant restaurant) {
+            Order order = new Order();
+            order.setOrd_id(orderId);
+            order.setClientId(client);
+            order.setRestaurantId(restaurant);
+            order.setStatus(OrderStatus.pendiente);
+            order.setTotal(new BigDecimal("29.98"));
+            order.setComments("Sin instrucciones especiales");
+            order.setCreatedAt(LocalDateTime.now());
+            order.setUpdatedAt(LocalDateTime.now());
+            order.setDetails(new ArrayList<>());
+            return order;
+        }
+
+        /**
+         * Crea Order con valores PERSONALIZABLES.
+         */
+        public static Order order(Long orderId, UserEntity client, Restaurant restaurant,
+                OrderStatus status, BigDecimal total, String comments) {
+            Order order = order(orderId, client, restaurant);
+            order.setStatus(status);
+            order.setTotal(total);
+            order.setComments(comments);
+            return order;
+        }
+
+        /**
+         * Crea una Order por defecto (con cliente y restaurante por defecto).
+         */
+        public static Order defaultOrder() {
+            UserEntity client = clientEntity(1L, "client@test.com");
+            UserEntity owner = restaurantOwnerEntity(2L, "owner@test.com");
+            Restaurant restaurant = restaurant(1L, owner);
+            return order(1L, client, restaurant);
+        }
+
+        // ================= OrderDetails =================
+
+        /**
+         * Crea OrderDetails SINCRONIZADO.
+         *
+         * @param detailId ID del detalle
+         * @param order    Order asociada
+         * @param product  Product asociado
+         * @param quantity Cantidad
+         * @param subtotal Subtotal
+         * @return nueva instancia de OrderDetails
+         */
+        public static OrderDetails orderDetails(Long detailId, Order order, Product product,
+                Integer quantity, BigDecimal subtotal) {
+            OrderDetails detail = new OrderDetails();
+            detail.setOdt_id(detailId);
+            detail.setOrder(order);
+            detail.setProduct(product);
+            detail.setQuantity(quantity);
+            detail.setSubtotal(subtotal);
+            return detail;
+        }
+
+    }
