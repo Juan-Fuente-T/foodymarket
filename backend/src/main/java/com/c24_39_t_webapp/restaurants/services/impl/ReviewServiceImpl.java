@@ -69,7 +69,7 @@ public class ReviewServiceImpl implements IReviewService {
     public List<ReviewResponseDto> getAllRestaurantReviews(Long restaurantId) {
         log.info("Obteniendo la Entidad para la busqueda de la Reseña, rstId: {}", restaurantId);
         Restaurant restaurant =
-                restaurantRepository.findById(restaurantId).orElseThrow(() -> new ResourceNotFoundException("El " +
+                restaurantRepository.findById(restaurantId).orElseThrow(() -> new RestaurantNotFoundException("El " +
                         "restaurante con id enviado no existe"));
 
         log.info("Obteniendo la lista de reseñas del repositorio");

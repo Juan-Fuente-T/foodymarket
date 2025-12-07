@@ -39,15 +39,15 @@ public final class EntityModelFactory {
      * - address: "Calle de arriba 99" desde UserFactory.defaultRequest()
      * - password: "password123" desde UserFactory.defaultRequest()
      *
-     * @param id    ID del usuario
+//     * @param id    ID del usuario
      * @param email Email personalizado (override)
      * @return nueva instancia de UserEntity
      */
-    public static UserEntity userEntity(Long id, String email) {
+    public static UserEntity userEntity(String email) {
         UserRequestDto dto = UserFactory.defaultRequest();
 
         UserEntity user = new UserEntity();
-        user.setId(id);
+//        user.setId(id);
         user.setEmail(email);  // Override del email
         user.setName(dto.name());              // "Juan Pérez" - desde factory
         user.setRole(dto.role());              // "CLIENTE" - desde factory
@@ -156,10 +156,10 @@ public final class EntityModelFactory {
     /**
      * Crea un Restaurant con usuario propietario por defecto.
      */
-    public static Restaurant restaurantWithDefaultOwner(Long id) {
-        UserEntity owner = userEntity(1L, "owner@test.com");
-        return restaurant(id, owner);
-    }
+//    public static Restaurant restaurantWithDefaultOwner(Long id) {
+//        UserEntity owner = userEntity(1L, "owner@test.com");
+//        return restaurant(id, owner);
+//    }
 
     public static RestaurantCuisine restaurantCuisine(Long cuisineId, String cuisineName) {
         RestaurantCuisine newCuisine = new RestaurantCuisine();
@@ -217,20 +217,20 @@ public final class EntityModelFactory {
      * @param isActive   Estado personalizado
      * @return nueva instancia de Product
      */
-    public static Product product(Long productId, String name, String description, BigDecimal price,
-                                  Restaurant restaurant, Category category, Integer quantity, Boolean isActive) {
-        Product product = new Product();
-        product.setPrd_id(productId);
-        product.setRestaurant(restaurant);
-        product.setCategory(category);
-        product.setName(name);
-        product.setDescription(description);
-        product.setPrice(price);
-        product.setImage("https://example.com/product.jpg");
-        product.setIsActive(isActive != null ? isActive : true);
-        product.setQuantity(quantity != null ? quantity : 50);
-        return product;
-    }
+//    public static Product product(Long productId, String name, String description, BigDecimal price,
+//                                  Restaurant restaurant, Category category, Integer quantity, Boolean isActive) {
+//        Product product = new Product();
+//        product.setPrd_id(productId);
+//        product.setRestaurant(restaurant);
+//        product.setCategory(category);
+//        product.setName(name);
+//        product.setDescription(description);
+//        product.setPrice(price);
+//        product.setImage("https://example.com/product.jpg");
+//        product.setIsActive(isActive != null ? isActive : true);
+//        product.setQuantity(quantity != null ? quantity : 50);
+//        return product;
+//    }
 
     /**
      * Crea un Product "Pizza Margherita" con setup completo por defecto.
@@ -252,42 +252,42 @@ public final class EntityModelFactory {
      * @param category   Category del producto
      * @return nueva instancia de Product
      */
-    public static Product productForUpdate(Long productId, Restaurant restaurant, Category category) {
-        ProductUpdateDto dto = ProductFactory.defaultUpdatedProduct(restaurant.getId(), "Pizza Margherita", "Auténtica pizza italiana");
-
-        Product product = new Product();
-        product.setPrd_id(productId);
-        product.setRestaurant(restaurant);
-        product.setCategory(category);
-        product.setName(dto.name());                         // "Pizza Margherita" - desde factory
-        product.setDescription(dto.description());           // "Auténtica pizza italiana" - desde factory
-        product.setPrice(dto.price());                       // 14.99 - desde factory
-        product.setImage(dto.image());                       // "https://example.com/pizza-mejorada.jpg" - desde factory
-        product.setIsActive(dto.isActive() != null ? dto.isActive() : true);
-        product.setQuantity(dto.quantity());                 // 60 - desde factory
-        return product;
-    }
+//    public static Product productForUpdate(Long productId, Restaurant restaurant, Category category) {
+//        ProductUpdateDto dto = ProductFactory.defaultUpdatedProduct(restaurant.getId(), "Pizza Margherita", "Auténtica pizza italiana");
+//
+//        Product product = new Product();
+//        product.setPrd_id(productId);
+//        product.setRestaurant(restaurant);
+//        product.setCategory(category);
+//        product.setName(dto.name());                         // "Pizza Margherita" - desde factory
+//        product.setDescription(dto.description());           // "Auténtica pizza italiana" - desde factory
+//        product.setPrice(dto.price());                       // 14.99 - desde factory
+//        product.setImage(dto.image());                       // "https://example.com/pizza-mejorada.jpg" - desde factory
+//        product.setIsActive(dto.isActive() != null ? dto.isActive() : true);
+//        product.setQuantity(dto.quantity());                 // 60 - desde factory
+//        return product;
+//    }
     /**
      * Crea un Product con todos los parámetros personalizables.
      */
-    public static Product productWithAllData(Long id, String name, String description, BigDecimal price,
-                                             Restaurant restaurant, Category category, Integer quantity) {
-        Product product = product(id, restaurant, category);
-        product.setName(name);
-        product.setDescription(description);
-        product.setPrice(price);
-        product.setQuantity(quantity);
-        return product;
-    }
+//    public static Product productWithAllData(Long id, String name, String description, BigDecimal price,
+//                                             Restaurant restaurant, Category category, Integer quantity) {
+//        Product product = product(id, restaurant, category);
+//        product.setName(name);
+//        product.setDescription(description);
+//        product.setPrice(price);
+//        product.setQuantity(quantity);
+//        return product;
+//    }
 
     /**
      * Crea un Product inactivo (isActive = false).
      */
-    public static Product inactiveProduct(Long id, Restaurant restaurant, Category category) {
-        Product product = product(id, restaurant, category);
-        product.setIsActive(false);
-        return product;
-    }
+//    public static Product inactiveProduct(Long id, Restaurant restaurant, Category category) {
+//        Product product = product(id, restaurant, category);
+//        product.setIsActive(false);
+//        return product;
+//    }
 
     /**
      * Crea una lista de Products por defecto para tests.
@@ -377,12 +377,12 @@ public final class EntityModelFactory {
         /**
          * Crea una Order por defecto (con cliente y restaurante por defecto).
          */
-        public static Order defaultOrder() {
-            UserEntity client = clientEntity(1L, "client@test.com");
-            UserEntity owner = restaurantOwnerEntity(2L, "owner@test.com");
-            Restaurant restaurant = restaurant(1L, owner);
-            return order(1L, client, restaurant);
-        }
+//        public static Order defaultOrder() {
+//            UserEntity client = clientEntity(1L, "client@test.com");
+//            UserEntity owner = restaurantOwnerEntity(2L, "owner@test.com");
+//            Restaurant restaurant = restaurant(1L, owner);
+//            return order(1L, client, restaurant);
+//        }
 
         // ================= OrderDetails =================
 
@@ -396,15 +396,92 @@ public final class EntityModelFactory {
          * @param subtotal Subtotal
          * @return nueva instancia de OrderDetails
          */
-        public static OrderDetails orderDetails(Long detailId, Order order, Product product,
-                Integer quantity, BigDecimal subtotal) {
-            OrderDetails detail = new OrderDetails();
-            detail.setOdt_id(detailId);
-            detail.setOrder(order);
-            detail.setProduct(product);
-            detail.setQuantity(quantity);
-            detail.setSubtotal(subtotal);
-            return detail;
-        }
+//        public static OrderDetails orderDetails(Long detailId, Order order, Product product,
+//                Integer quantity, BigDecimal subtotal) {
+//            OrderDetails detail = new OrderDetails();
+//            detail.setOdt_id(detailId);
+//            detail.setOrder(order);
+//            detail.setProduct(product);
+//            detail.setQuantity(quantity);
+//            detail.setSubtotal(subtotal);
+//            return detail;
+//        }
+    // ================= Review =================
 
+    /**
+     * Crea Review desde factory.
+     *
+     * @param reviewId ID de la reseña
+     * @param user     UserEntity que crea la reseña
+     * @param restaurant Restaurant sobre el que es la reseña
+     * @param score    Puntuación (0-10)
+     * @param comments Comentario
+     * @return nueva instancia de Review
+     */
+    public static Review review(Long reviewId, UserEntity user, Restaurant restaurant, Integer score, String comments) {
+        Review review = new Review();
+        review.setId(reviewId);
+        review.setUser(user);
+        review.setRestaurant(restaurant);
+        review.setScore(score);
+        review.setComments(comments);
+        review.setCreatedAt(LocalDateTime.now());
+        return review;
     }
+
+    /**
+     * Crea una Review por defecto.
+     */
+//    public static Review defaultReview() {
+//        UserEntity user = clientEntity(1L, "user@test.com");
+//        UserEntity owner = restaurantOwnerEntity(2L, "owner@test.com");
+//        Restaurant restaurant = restaurant(1L, owner);
+//        return review(1L, user, restaurant, 8, "Excelente");
+//    }
+
+    // ================= UserEntity (Auth-specific) =================
+
+    /**
+     * Crea UserEntity con contraseña SIN encodificar (para testing de login).
+     *
+     * @param id       ID del usuario
+     * @param email    Email personalizado
+     * @param password Contraseña SIN encodificar
+     * @return nueva instancia de UserEntity
+     */
+//    public static UserEntity userEntityWithPassword(Long id, String email, String password) {
+//        UserEntity user = new UserEntity();
+//        user.setId(id);
+//        user.setEmail(email);
+//        user.setName("Test User");
+//        user.setRole("CLIENTE");
+//        user.setPhone("555555555");
+//        user.setAddress("Test Address 123");
+//        user.setPassword(password);  // ← Sin codificar (mockeamos passwordEncoder en tests)
+//        user.setCreatedAt(LocalDateTime.now());
+//        return user;
+//    }
+
+    /**
+     * Crea UserEntity por defecto con contraseña.
+     */
+//    public static UserEntity defaultUserWithPassword() {
+//        return userEntityWithPassword(1L, "user@test.com", "SecurePass123!");
+//    }
+
+    /**
+     * Crea UserEntity RESTAURANTE con contraseña.
+     */
+//    public static UserEntity restaurantOwnerEntityWithPassword(Long id, String email, String password) {
+//        UserEntity user = new UserEntity();
+//        user.setId(id);
+//        user.setEmail(email);
+//        user.setName("Restaurant Owner");
+//        user.setRole("RESTAURANTE");
+//        user.setPhone("666666666");
+//        user.setAddress("Restaurant Address 456");
+//        user.setPassword(password);
+//        user.setCreatedAt(LocalDateTime.now());
+//        return user;
+//    }
+}

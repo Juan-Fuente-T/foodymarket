@@ -11,8 +11,8 @@ public class OrderNotFoundException extends NotFoundException {
             super(message);
         }
 
-        @Override
-        public String getResourceName() {
-            return "Pedido";
-        }
+//        @Override
+//        public String getResourceName() {
+//            return "Pedido";
+//        }
     }

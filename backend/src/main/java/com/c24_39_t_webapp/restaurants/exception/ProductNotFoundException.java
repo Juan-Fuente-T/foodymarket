@@ -11,8 +11,8 @@ public class ProductNotFoundException extends NotFoundException {
         super(message);
     }
 
-    @Override
-    public String getResourceName() {
-        return "Producto";
-    }
+//    @Override
+//    public String getResourceName() {
+//        return "Producto";
+//    }
 }

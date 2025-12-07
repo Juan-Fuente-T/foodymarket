@@ -11,8 +11,8 @@ public class RestaurantNotFoundException extends NotFoundException {
         super(message);
     }
 
-    @Override
-    public String getResourceName() {
-        return "Restaurante";
-    }
+//    @Override
+//    public String getResourceName() {
+//        return "Restaurante";
+//    }
 }

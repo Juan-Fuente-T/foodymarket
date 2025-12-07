@@ -11,5 +11,5 @@ public abstract class NotFoundException extends ApplicationException {
         super(message, HttpStatus.NOT_FOUND);
     }
 
-    public abstract String getResourceName();
+//    public abstract String getResourceName();
 }

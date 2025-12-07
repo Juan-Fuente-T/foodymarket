@@ -10,8 +10,8 @@ public class CategoryNotFoundException extends NotFoundException {
         super(message);
     }
 
-    @Override
-    public String getResourceName() {
-        return "Categoria";
-    }
+//    @Override
+//    public String getResourceName() {
+//        return "Categoria";
+//    }
 }

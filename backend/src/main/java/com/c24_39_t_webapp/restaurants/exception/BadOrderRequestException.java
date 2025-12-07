@@ -18,7 +18,7 @@ public class BadOrderRequestException extends ApplicationException {
         super(message, HttpStatus.BAD_REQUEST);
     }
 
-    public BadOrderRequestException(String message, Throwable cause) {
-        super(message, HttpStatus.BAD_REQUEST, cause);
-    }
+//    public BadOrderRequestException(String message, Throwable cause) {
+//        super(message, HttpStatus.BAD_REQUEST, cause);
+//    }
 }

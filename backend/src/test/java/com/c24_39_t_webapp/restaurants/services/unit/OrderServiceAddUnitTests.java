@@ -4,7 +4,6 @@ import com.c24_39_t_webapp.restaurants.dtos.request.OrderDetailsRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.request.OrderRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.OrderResponseDto;
 import com.c24_39_t_webapp.restaurants.exception.BadOrderRequestException;
-import com.c24_39_t_webapp.restaurants.exception.ProductNotFoundException;
 import com.c24_39_t_webapp.restaurants.exception.RestaurantNotFoundException;
 import com.c24_39_t_webapp.restaurants.exception.UserNotFoundException;
 import com.c24_39_t_webapp.restaurants.factories.EntityModelFactory;

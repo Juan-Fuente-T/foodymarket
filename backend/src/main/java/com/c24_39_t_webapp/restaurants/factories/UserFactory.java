@@ -103,11 +103,11 @@ public final class UserFactory {
      *
      * @return List con 3 UserResponseDto por defecto
      */
-    public static List<UserResponseDto> responseListDefault() {
-        List<UserResponseDto> list = new ArrayList<>();
-        list.add(defaultResponse(1L));
-        list.add(new UserResponseDto(2L, "Carlos García","otro@example.com", "CLIENTE", "9876543210", "Calle de abajo 77"));
-        list.add(new UserResponseDto(3L, "Carlos García","otro@example.com", "RESTAURANTE", "24681379", "Calle de del medio 45"));
-        return list;
-    }
+//    public static List<UserResponseDto> responseListDefault() {
+//        List<UserResponseDto> list = new ArrayList<>();
+//        list.add(defaultResponse(1L));
+//        list.add(new UserResponseDto(2L, "Carlos García","otro@example.com", "CLIENTE", "9876543210", "Calle de abajo 77"));
+//        list.add(new UserResponseDto(3L, "Carlos García","otro@example.com", "RESTAURANTE", "24681379", "Calle de del medio 45"));
+//        return list;
+//    }
 }

@@ -11,8 +11,8 @@ public class UserNotFoundException extends NotFoundException {
         super("Usuario con ID " + id + " no encontrado");
     }
 
-    @Override
-    public String getResourceName() {
-        return "Usuario";
-    }
+//    @Override
+//    public String getResourceName() {
+//        return "Usuario";
+//    }
 }

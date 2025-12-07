@@ -105,7 +105,7 @@ public class CategoryServiceImpl implements ICategoryService {
                 ))
                 .orElseThrow(() -> {
                     log.warn("No se encontro una categoria con el ID: {}", ctg_id);
-                    return new CategoryNotFoundException("No se encontro una categoria con ese ID: " + ctg_id);
+                    return new CategoryNotFoundException("No se encontró una categoria con ese ID: " + ctg_id);
                 });
     }
 //    @Override
