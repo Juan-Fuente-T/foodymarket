@@ -39,15 +39,17 @@ public final class EntityModelFactory {
      * - address: "Calle de arriba 99" desde UserFactory.defaultRequest()
      * - password: "password123" desde UserFactory.defaultRequest()
      *
-//     * @param id    ID del usuario
+     * @param id    ID del usuario
      * @param email Email personalizado (override)
      * @return nueva instancia de UserEntity
      */
-    public static UserEntity userEntity(String email) {
+    public static UserEntity userEntity(Long id, String email) {
         UserRequestDto dto = UserFactory.defaultRequest();
 
         UserEntity user = new UserEntity();
-//        user.setId(id);
+        if (id != null) {
+            user.setId(id);  // Solo se asigna si no es null
+        }
         user.setEmail(email);  // Override del email
         user.setName(dto.name());              // "Juan Pérez" - desde factory
         user.setRole(dto.role());              // "CLIENTE" - desde factory

@@ -3,6 +3,8 @@ package com.c24_39_t_webapp.restaurants.config.security;
 import com.c24_39_t_webapp.restaurants.models.UserEntity;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -35,10 +37,14 @@ public class JwtUtil {
                 .compact();
     }
     private SecretKey getSigningKey(){
-//        byte[] keyBytes = Decoders.BASE64.decode(secret);
+        //Es válida para claves en Base64
+        byte[] keyBytes = Decoders.BASE64.decode(secret);
+        return Keys.hmacShaKeyFor(keyBytes);
+        /* Usa UTF-8. NO USAR. → No valida seguridad → Causa errores silenciosos → No evita claves débiles. Usar la siguiente.
         byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
-//        return Keys.hmacShaKeyFor(keyBytes);
-        return new SecretKeySpec(keyBytes, "HmacSHA256");
+        return new SecretKeySpec(keyBytes, "HmacSHA256");*/
+        // Usa Keys.hmacShaKeyFor para crear la clave directamente desde los bytes UTF-8. Evita problemas de longitud mínima.
+//        return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
     public String extractEmail(String token) {
         return getClaims(token).getSubject();
@@ -49,13 +55,20 @@ public class JwtUtil {
         try{
             getClaims(token);
             return true;
-        }catch (Exception e){
+        }catch (JwtException | IllegalArgumentException e) {
             return false;
         }
     }
     public boolean isValidToken(String token, UserEntity user){
-        String email = extractEmail(token);
-        return (email.equals(user.getEmail())) && !isExpiredToken(token);
+        try {
+            if (!validateToken(token)) return false;
+
+            String email = extractEmail(token);
+            return email.equals(user.getEmail()) && !isExpiredToken(token);
+
+        } catch (Exception e) {
+            return false;  // Devuelve false si hay cualquier excepción
+        }
     }
     public boolean isExpiredToken(String token){
         return getClaims(token).getExpiration().before(new Date());
@@ -66,42 +79,5 @@ public class JwtUtil {
                 .build()
                 .parseSignedClaims(token).
                 getPayload();
-    }
-    public void testSelfVerification() {
-        System.out.println("--- Iniciando Auto-Verificación JWT ---");
-        try {
-            // 1. Obtener la clave (usa el mismo método que para firmar)
-            SecretKey key = getSigningKey();
-            if (key == null) {
-                System.err.println("Self-Test - ERROR: getSigningKey() devolvió null!");
-                return;
-            }
-            System.out.println("Self-Test - Clave obtenida.");
-
-            // 2. Generar un token de prueba simple
-            String testToken = Jwts.builder()
-                    .subject("self-test-user")
-                    .issuedAt(new Date())
-                    .expiration(new Date(System.currentTimeMillis() + 60000)) // Expira en 1 min
-                    .signWith(key, SignatureAlgorithm.HS512) // Usa MISMA clave y algoritmo
-                    .compact();
-            System.out.println("Self-Test - Token Generado: " + testToken);
-
-            // 3. Intentar verificar ESE MISMO token con ESA MISMA clave
-            JwtParser parser = Jwts.parser()
-                    .verifyWith(key) // Usa la misma clave para verificar
-                    .build();
-
-            Jws<Claims> claimsJws = parser.parseSignedClaims(testToken); // Lanza excepción si falla
-
-            // Si llega aquí, la verificación fue exitosa
-            System.out.println("Self-Test - ¡¡VERIFICACIÓN EXITOSA!! Subject: " + claimsJws.getPayload().getSubject());
-
-        } catch (Exception e) {
-            // Si la verificación falla, se captura aquí
-            System.err.println("Self-Test - ¡¡VERIFICACIÓN FALLIDA!! Error: " + e.getMessage());
-            e.printStackTrace(); // Imprime error
-        }
-        System.out.println("--- Fin Auto-Verificación JWT ---");
     }
 }

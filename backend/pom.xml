@@ -154,7 +154,7 @@
                    </execution>
                    <execution>
                        <id>report</id>
-<!--                        <phase>verify</phase> Esto es después del empaquetado-->
+                    <!--<phase>verify</phase> Esto es después del empaquetado-->
                         <phase>test</phase>
                         <goals>
                             <goal>report</goal>
@@ -202,6 +202,15 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.22.2</version>
+                <!--<configuration> -->
+                    <!-- 🔇 Suprimir output de tests -->
+                <!--<trimStackTrace>true</trimStackTrace>-->
+                <!-- Ejecutar tests SIN output verboso -->
+                <!--<argLine>
+                    -Djdk.instrument.traceUsage=silent
+                    -XX:+EnableDynamicAgentLoading
+                </argLine>
+            </configuration>-->
             </plugin>
         </plugins>
     </build>
