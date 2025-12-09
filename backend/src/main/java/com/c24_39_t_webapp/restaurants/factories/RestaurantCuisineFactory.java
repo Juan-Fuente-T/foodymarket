@@ -25,12 +25,12 @@ public final class RestaurantCuisineFactory {
      * @param name      Nombre de la cocina
      * @return nueva instancia de CuisineResponseDto
      */
-//    public static CuisineResponseDto defaultResponse(Long cuisineId, String name) {
-//        return new CuisineResponseDto(
-//                cuisineId,
-//                name
-//        );
-//    }
+    public static CuisineResponseDto defaultResponse(Long cuisineId, String name) {
+        return new CuisineResponseDto(
+                cuisineId,
+                name
+        );
+    }
 
     /**
      * Payload DEFAULT para la respuesta al obtener todas las cuisines.

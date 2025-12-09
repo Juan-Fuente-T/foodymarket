@@ -2,6 +2,8 @@ package com.c24_39_t_webapp.restaurants.config.security;
 
 // --- Importaciones para CORS ---
 
+import org.springframework.http.HttpStatus;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -40,6 +42,9 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(exc -> exc
+                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+                )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/register").permitAll()
@@ -70,7 +75,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/category/**", "/api/restaurant/**", "/api/cuisines/**",
                                 "/api/product/**").hasRole("RESTAURANTE")
                         // Rutas exclusivas de cliente
-                        .requestMatchers("/api/user/**").hasRole("CLIENTE")
+//                        .requestMatchers("/api/user/**").hasRole("CLIENTE")
+                        .requestMatchers("/api/user/**").authenticated()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class);
 
