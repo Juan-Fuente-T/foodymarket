@@ -51,7 +51,7 @@ public class UserServiceImpl implements IUserService {
             log.warn("Intento de registro con rol inválido: {}", registerDto.role());
             throw new IllegalArgumentException("Rol de usuario inválido.");
         }
-        newUser.setRole(requestedRole);
+        newUser.setRole(requestedRole.toUpperCase());
 
         // Guardar la NUEVA entidad
         UserEntity savedUser = userRepository.save(newUser);

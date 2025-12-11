@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -84,6 +85,25 @@ public class GlobalExceptionHandler {
         response.put("status", HttpStatus.BAD_REQUEST.value());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
+
+    /**
+     * Maneja excepciones de tipo ResponseStatusException lanzadas
+     * manualmente en controladores o servicios.
+     * Permite devolver cualquier estado HTTP personalizado.
+     * @param e la excepción ResponseStatusException capturada
+     * @return ResponseEntity con status y mensaje definidos en la excepción
+     */
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<Map<String, Object>> handleResponseStatus(ResponseStatusException e) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("error", e.getReason());
+        response.put("message", e.getMessage());
+        response.put("timestamp", new Date());
+        response.put("status", e.getStatusCode().value());
+
+        return ResponseEntity.status(e.getStatusCode()).body(response);
+    }
+
     /**
      * Maneja cualquier excepción no prevista (catch-all final)
      * como NullPointerException, RuntimeException genérica o cualquiera no manejado explícitamente.
