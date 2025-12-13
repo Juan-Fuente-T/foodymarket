@@ -5,9 +5,7 @@ import com.c24_39_t_webapp.restaurants.exception.ResourceNotFoundException;
 import com.c24_39_t_webapp.restaurants.factories.EntityModelFactory;
 import com.c24_39_t_webapp.restaurants.models.Restaurant;
 import com.c24_39_t_webapp.restaurants.models.Review;
-import com.c24_39_t_webapp.restaurants.repository.RestaurantRepository;
 import com.c24_39_t_webapp.restaurants.repository.ReviewRepository;
-import com.c24_39_t_webapp.restaurants.repository.UserRepository;
 import com.c24_39_t_webapp.restaurants.models.UserEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,12 +44,6 @@ class ReviewServiceGetByIdUnitTests {
 
     @Mock
     private ReviewRepository reviewRepository;
-
-    @Mock
-    private RestaurantRepository restaurantRepository;
-
-    @Mock
-    private UserRepository userRepository;
 
     @InjectMocks
     private com.c24_39_t_webapp.restaurants.services.impl.ReviewServiceImpl reviewService;

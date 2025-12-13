@@ -1,6 +1,5 @@
 package com.c24_39_t_webapp.restaurants.integration;
 
-import com.c24_39_t_webapp.restaurants.config.security.JwtUtil;
 import com.c24_39_t_webapp.restaurants.dtos.request.UserRequestDto;
 import com.c24_39_t_webapp.restaurants.factories.UserFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -46,9 +45,6 @@ class RegistrationAndLoginFlowIntegrationTest {
 
     @Autowired
     private ObjectMapper objectMapper;
-
-    @Autowired
-    private JwtUtil jwtUtil;
 
     /**
      * ✅ FLUJO COMPLETO: Registrar → Login → Usar Token

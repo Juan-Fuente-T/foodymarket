@@ -6,7 +6,6 @@ import com.c24_39_t_webapp.restaurants.dtos.request.UserRequestDto;
 import com.c24_39_t_webapp.restaurants.factories.*;
 import com.c24_39_t_webapp.restaurants.models.Category;
 import com.c24_39_t_webapp.restaurants.repository.CategoryRepository;
-import com.c24_39_t_webapp.restaurants.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
@@ -60,8 +59,6 @@ class RestaurantProductOrderFlowIntegrationTest {
     @Autowired
     private CategoryRepository categoryRepository;
 
-    @Autowired
-    private UserRepository userRepository;
 
     /**
      * ✅ FLUJO COMPLETO: Restaurant → Product → Order
