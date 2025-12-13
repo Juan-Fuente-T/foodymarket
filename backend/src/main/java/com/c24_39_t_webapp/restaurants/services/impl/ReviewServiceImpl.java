@@ -56,9 +56,9 @@ public class ReviewServiceImpl implements IReviewService {
         reviewRepository.save(review);
         log.info("Reseña creada con exito!");
         return new ReviewResponseDto(
-                (restaurant != null) ? restaurant.getId() : null,
-                (review.getRestaurant() != null) ? user.getId() : null,
-                (user != null) ? user.getName() : null,
+                restaurant.getId(),
+                user.getId(),
+                user.getName(),
                 review.getScore(),
                 review.getComments(),
                 review.getCreatedAt()
@@ -132,7 +132,7 @@ public class ReviewServiceImpl implements IReviewService {
         UserEntity user = review.getUser();
         return new ReviewResponseDto(
                 (restaurant != null) ? restaurant.getId() : null,
-                (review.getRestaurant() != null) ? user.getId() : null,
+                (user != null) ? user.getId() : null,
                 (user != null) ? user.getName() : null,
                 review.getScore(),
                 review.getComments(),

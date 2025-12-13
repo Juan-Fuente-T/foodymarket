@@ -24,6 +24,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -121,6 +122,8 @@ class ProductServiceUpdateUnitTests {
             // Assert
             assertNotNull(result, "Resultado no debe ser null");
             assertEquals(PRODUCT_ID, result.prd_id(), "ID debe coincidir");
+            assertEquals("New Name", mockProduct.getName());
+            assertEquals("New Description", mockProduct.getDescription());
 
             // Verify
             verify(productRepository, times(1)).findById(PRODUCT_ID);
@@ -302,6 +305,108 @@ class ProductServiceUpdateUnitTests {
         }
     }
 
+    /**
+     * Test que verifica que si el restaurante es NULL, lanza UnauthorizedAccessException
+     */
+    @Test
+    @DisplayName("Cuando restaurant es NULL → Lanza UnauthorizedAccessException")
+    void whenRestaurantIsNull_thenThrowUnauthorizedAccessException() {
+        setAuthentication("user@example.com");
+
+        ProductUpdateDto updateDto = ProductFactory.defaultUpdatedProduct(
+                RESTAURANT_ID,
+                "Another New Name",
+                "Another New Description");
+        mockProduct.setRestaurant(null);
+        when(productRepository.findById(PRODUCT_ID)).thenReturn(Optional.of(mockProduct));
+
+        assertThrows(UnauthorizedAccessException.class, () ->
+                productService.updateProduct(PRODUCT_ID, updateDto));
+    }
+
+    /**
+     * Test que verifica que si el UserEntity  del restaurante no coincide, lanza UnauthorizedAccessException
+     */
+    @Test
+    @DisplayName("Cuando userEntity o email NO coinciden → Lanza UnauthorizedAccessException")
+    void whenUserNotOwner_thenThrowUnauthorizedAccessException() {
+        setAuthentication("user@example.com");
+
+        ProductUpdateDto updateDto = ProductFactory.defaultUpdatedProduct(
+                RESTAURANT_ID,
+                "Another New Name",
+                "Another New Description");
+        mockProduct.getRestaurant().getUserEntity().setEmail("another@email.com");
+        when(productRepository.findById(PRODUCT_ID)).thenReturn(Optional.of(mockProduct));
+
+        assertThrows(UnauthorizedAccessException.class, () ->
+                productService.updateProduct(PRODUCT_ID, updateDto));
+    }
+
+    /**
+     * Test que verifica que los campos que son Null no se actualizan
+     */
+    @Test
+    @DisplayName("Cuando campos son NULL → No se actualizan")
+    void whenFieldsAreNull_thenNotUpdated() {
+        // Arrange - Todos los campos NULL en el DTO
+        setAuthentication(OWNER_EMAIL);
+
+        ProductUpdateDto updateDto = ProductFactory.defaultUpdatedProductWith(
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+
+        String originalName = mockProduct.getName();
+        String originalDesc = mockProduct.getDescription();
+        BigDecimal originalPrice = mockProduct.getPrice();
+        String originalImage = mockProduct.getImage();
+        Boolean originalActive = mockProduct.getIsActive();
+        Integer originalQuantity = mockProduct.getQuantity();
+
+        when(productRepository.findById(PRODUCT_ID)).thenReturn(Optional.of(mockProduct));
+        when(productRepository.save(any(Product.class))).thenReturn(mockProduct);
+        when(categoryRepository.findById(1L)).thenReturn(Optional.of(mockCategory));
+
+        // Act
+        productService.updateProduct(PRODUCT_ID, updateDto);
+
+        // Assert - Verifica que NADA se actualizó
+        assertEquals(originalName, mockProduct.getName());
+        assertEquals(originalDesc, mockProduct.getDescription());
+        assertEquals(originalPrice, mockProduct.getPrice());
+        assertEquals(originalImage, mockProduct.getImage());
+        assertEquals(originalActive, mockProduct.getIsActive());
+        assertEquals(originalQuantity, mockProduct.getQuantity());
+        assertEquals(mockCategory, mockProduct.getCategory());
+    }
+
+    /**
+    *Test que verifica que si el UserEntity es NULL, lanza UnauthorizedAccessException
+    */
+     @Test
+    @DisplayName("Cuando userEntity del restaurant es NULL → Lanza UnauthorizedAccessException")
+    void whenRestaurantUserEntityIsNull_thenThrowUnauthorizedAccessException() {
+        setAuthentication(OWNER_EMAIL);
+
+        ProductUpdateDto updateDto = ProductFactory.defaultUpdatedProduct(
+                RESTAURANT_ID,
+                "New Name",
+                "New Description"
+        );
+        mockProduct.getRestaurant().setUserEntity(null);
+        when(productRepository.findById(PRODUCT_ID)).thenReturn(Optional.of(mockProduct));
+
+        assertThrows(UnauthorizedAccessException.class, () ->
+                productService.updateProduct(PRODUCT_ID, updateDto));
+    }
     // ==================== HELPER METHODS ====================
 
     private void setAuthentication(String email) {

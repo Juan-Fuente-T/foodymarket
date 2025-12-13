@@ -181,22 +181,18 @@ public class ProductServiceImpl implements IProductService {
         Product updatedProductEntity = productRepository.save(product);
         log.info("Producto ID {} actualizado en BD", updatedProductEntity.getPrd_id());
 
-        //    Necesita los nombres, los obtiene de las entidades cargadas/actualizadas
-        String categoryName = (updatedProductEntity.getCategory() != null) ? updatedProductEntity.getCategory().getName() : null;
-        String restaurantName = (updatedProductEntity.getRestaurant() != null) ? updatedProductEntity.getRestaurant().getName() : null;
-
         return new ProductResponseDto(
                 updatedProductEntity.getPrd_id(),
-                updatedProductEntity.getRestaurant() != null ? updatedProductEntity.getRestaurant().getId() : null,
-                updatedProductEntity.getCategory() != null ? updatedProductEntity.getCategory().getId() : null,
+                updatedProductEntity.getRestaurant().getId(),
+                updatedProductEntity.getCategory().getId(),
                 updatedProductEntity.getName(),
                 updatedProductEntity.getDescription(),
-                updatedProductEntity.getPrice(), // Asegura tipo
+                updatedProductEntity.getPrice(),
                 updatedProductEntity.getImage(),
-                updatedProductEntity.getIsActive(), // Asegura tipo
-                updatedProductEntity.getQuantity(), // Asegura tipo
-                categoryName,
-                restaurantName
+                updatedProductEntity.getIsActive(),
+                updatedProductEntity.getQuantity(),
+                updatedProductEntity.getCategory().getName(),
+                updatedProductEntity.getRestaurant().getName()
         );
     }
 

@@ -93,16 +93,16 @@ public class GlobalExceptionHandler {
      * @param e la excepción ResponseStatusException capturada
      * @return ResponseEntity con status y mensaje definidos en la excepción
      */
-    @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<Map<String, Object>> handleResponseStatus(ResponseStatusException e) {
-        Map<String, Object> response = new HashMap<>();
-        response.put("error", e.getReason());
-        response.put("message", e.getMessage());
-        response.put("timestamp", new Date());
-        response.put("status", e.getStatusCode().value());
-
-        return ResponseEntity.status(e.getStatusCode()).body(response);
-    }
+//    @ExceptionHandler(ResponseStatusException.class)
+//    public ResponseEntity<Map<String, Object>> handleResponseStatus(ResponseStatusException e) {
+//        Map<String, Object> response = new HashMap<>();
+//        response.put("error", e.getReason());
+//        response.put("message", e.getMessage());
+//        response.put("timestamp", new Date());
+//        response.put("status", e.getStatusCode().value());
+//
+//        return ResponseEntity.status(e.getStatusCode()).body(response);
+//    }
 
     /**
      * Maneja cualquier excepción no prevista (catch-all final)

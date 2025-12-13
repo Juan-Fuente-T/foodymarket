@@ -268,5 +268,52 @@ class ReviewServiceUpdateUnitTests {
             // Verify
             verify(reviewRepository, never()).save(any());
         }
+
+        /**
+         * Test: Restaurante es NULL
+         *
+         * Verificación:
+         * ✅ restaurantId es null en la respuesta
+         */
+        @Test
+        @DisplayName("Cuando restaurant es NULL en update → Retorna restaurantId como null")
+        void whenRestaurantIsNullInUpdate_thenReturnsNullRestaurantId() {
+            // Arrange
+            UpdateReviewDto dto = ReviewFactory.defaultUpdateReviewRequest(REVIEW_ID);
+            review.setRestaurant(null);
+            when(reviewRepository.findById(REVIEW_ID)).thenReturn(Optional.of(review));
+            when(reviewRepository.save(any(Review.class))).thenReturn(review);
+
+            // Act
+            ReviewResponseDto result = reviewService.updateReview(dto, REVIEW_ID, USER_ID);
+
+            // Assert
+            assertNull(result.restaurantId());
+            assertNotNull(result.userId());
+        }
+
+        /**
+         * Test: User es NULL
+         *
+         * Verificación:
+         * ✅ userId y userName son null en la respuesta
+         */
+        @Test
+        @DisplayName("Cuando user es NULL en update → Retorna userId y userName como null")
+        void whenUserIsNullInUpdate_thenReturnsNullUserData() {
+            // Arrange
+            UpdateReviewDto dto = ReviewFactory.defaultUpdateReviewRequest(REVIEW_ID);
+            review.setUser(null);
+            when(reviewRepository.findById(REVIEW_ID)).thenReturn(Optional.of(review));
+            when(reviewRepository.save(any(Review.class))).thenReturn(review);
+
+            // Act
+            ReviewResponseDto result = reviewService.updateReview(dto, REVIEW_ID, USER_ID);
+
+            // Assert
+            assertNull(result.userId());
+            assertNull(result.userName());
+            assertNotNull(result.restaurantId());
+        }
     }
 }

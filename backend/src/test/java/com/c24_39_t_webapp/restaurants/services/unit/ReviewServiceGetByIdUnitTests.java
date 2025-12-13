@@ -216,5 +216,59 @@ class ReviewServiceGetByIdUnitTests {
             // Verify
             verify(reviewRepository, times(1)).findById(-1L);
         }
+
+        /**
+         * Test: Restaurante es NULL
+         *
+         * Verificación:
+         * ✅ restaurantId es null en la respuesta
+         */
+        @Test
+        @DisplayName("Cuando restaurant es NULL en getById → Retorna restaurantId como null")
+        void whenRestaurantIsNullInGetById_thenReturnsNullRestaurantId() {
+            // Arrange
+            UserEntity user = EntityModelFactory.clientEntity(USER_ID, "user@test.com");
+            UserEntity owner = EntityModelFactory.restaurantOwnerEntity(2L, "owner@test.com");
+            Restaurant restaurant = EntityModelFactory.restaurant(RESTAURANT_ID, owner);
+            Review review = EntityModelFactory.review(REVIEW_ID, user, restaurant, 8, "Excelente");
+
+            review.setRestaurant(null);
+            when(reviewRepository.findById(REVIEW_ID)).thenReturn(Optional.of(review));
+
+            // Act
+            ReviewResponseDto result = reviewService.getReviewById(REVIEW_ID);
+
+            // Assert
+            assertNull(result.restaurantId());
+            assertNotNull(result.userId());
+        }
+
+        /**
+         * Test: User es NULL
+         *
+         * Verificación:
+         * ✅ Retorna userId y userName como null
+         */
+        @Test
+        @DisplayName("Cuando user es NULL en getById → Retorna userId y userName como null")
+        void whenUserIsNullInGetById_thenReturnsNullUserData() {
+            // Arrange
+            UserEntity user = EntityModelFactory.clientEntity(USER_ID, "user@test.com");
+            UserEntity owner = EntityModelFactory.restaurantOwnerEntity(2L, "owner@test.com");
+            Restaurant restaurant = EntityModelFactory.restaurant(RESTAURANT_ID, owner);
+            Review review = EntityModelFactory.review(REVIEW_ID, user, restaurant, 8, "Excelente");
+
+
+            review.setUser(null);
+            when(reviewRepository.findById(REVIEW_ID)).thenReturn(Optional.of(review));
+
+            // Act
+            ReviewResponseDto result = reviewService.getReviewById(REVIEW_ID);
+
+            // Assert
+            assertNull(result.userId());
+            assertNull(result.userName());
+            assertNotNull(result.restaurantId());
+        }
     }
 }
