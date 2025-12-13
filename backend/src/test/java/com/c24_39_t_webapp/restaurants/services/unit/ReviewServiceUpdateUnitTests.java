@@ -1,6 +1,5 @@
 package com.c24_39_t_webapp.restaurants.services.unit;
 
-import com.c24_39_t_webapp.restaurants.dtos.request.ReviewRequestDto;
 import com.c24_39_t_webapp.restaurants.dtos.request.UpdateReviewDto;
 import com.c24_39_t_webapp.restaurants.dtos.response.ReviewResponseDto;
 import com.c24_39_t_webapp.restaurants.exception.ResourceNotFoundException;

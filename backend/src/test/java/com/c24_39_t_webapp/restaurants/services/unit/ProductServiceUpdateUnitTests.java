@@ -24,7 +24,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -63,13 +62,11 @@ class ProductServiceUpdateUnitTests {
     private static final long PRODUCT_ID = 1L;
     private static final long RESTAURANT_ID = 1L;
     private static final long CATEGORY_ID = 1L;
-    private static final long OTHER_USER_ID = 2L;
 
     private Product mockProduct;
     private Category mockCategory;
     private Restaurant mockRestaurant;
     private UserEntity mockOwner;
-    private UserEntity mockOtherUser;
 
     @BeforeEach
     void setUp() {
@@ -77,9 +74,6 @@ class ProductServiceUpdateUnitTests {
 
         // Usuario propietario
         mockOwner = EntityModelFactory.userEntity(1L, OWNER_EMAIL);
-
-        // Otro usuario
-        mockOtherUser = EntityModelFactory.userEntity(OTHER_USER_ID, "other@restaurant.com");
 
         // Restaurante del propietario
         mockRestaurant = EntityModelFactory.restaurant(RESTAURANT_ID, mockOwner);

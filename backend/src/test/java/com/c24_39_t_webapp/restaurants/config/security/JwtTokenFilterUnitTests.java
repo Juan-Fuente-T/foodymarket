@@ -1,5 +1,5 @@
-import com.c24_39_t_webapp.restaurants.config.security.JwtTokenFilter;
-import com.c24_39_t_webapp.restaurants.config.security.JwtUtil;
+package com.c24_39_t_webapp.restaurants.config.security;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -8,12 +8,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import static org.mockito.Mockito.*;
-import static org.springframework.test.util.AssertionErrors.assertNull;
+//import static org.springframework.test.util.AssertionErrors.assertNull;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -80,12 +78,6 @@ class JwtTokenFilterUnitTests {
         verify(filterChain).doFilter(request, response);
         // SecurityContextHolder NO debe tener autenticación
 //        assertNull(SecurityContextHolder.getContext().getAuthentication());
-    }
-
-    private void setAuthentication(String email) {
-        SecurityContext context = SecurityContextHolder.createEmptyContext();
-        context.setAuthentication(new UsernamePasswordAuthenticationToken(email, null));
-        SecurityContextHolder.setContext(context);
     }
 
     @Test

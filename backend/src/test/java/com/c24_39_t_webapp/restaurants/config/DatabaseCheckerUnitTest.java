@@ -19,7 +19,7 @@ class DatabaseCheckerUnitTest {
 
     @Test
     @DisplayName("Cuando BD conecta → Imprime mensaje de éxito")
-    void whenDatabaseConnects_thenPrintSuccess() throws Exception {
+    void whenDatabaseConnects_thenPrintSuccess() {
         // Arrange
         JdbcTemplate jdbcTemplate = mock(JdbcTemplate.class);
         when(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM information_schema.tables", Integer.class))
@@ -33,7 +33,7 @@ class DatabaseCheckerUnitTest {
 
     @Test
     @DisplayName("Cuando BD falla → Captura excepción sin relanzar")
-    void whenDatabaseFails_thenCatchesException() throws Exception {
+    void whenDatabaseFails_thenCatchesException(){
         // Arrange
         JdbcTemplate jdbcTemplate = mock(JdbcTemplate.class);
         when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class)))

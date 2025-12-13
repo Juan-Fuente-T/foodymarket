@@ -208,7 +208,7 @@ public class ProductServiceImpl implements IProductService {
         String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
         if (product.getRestaurant().getUserEntity() == null || !product.getRestaurant().getUserEntity().getEmail().equals(userEmail)) {
             log.warn("Permiso denegado: Usuario {} intentando eliminar producto {} del restaurante {}",
-                    userEmail, prd_id, product.getRestaurant() != null ? product.getRestaurant().getId() : "DESCONOCIDO");
+                    userEmail, prd_id, product.getRestaurant().getId());
             throw new UnauthorizedAccessException("No tienes permiso para eliminar este producto");
         }
         productRepository.deleteById(prd_id);
