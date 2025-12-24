@@ -32,6 +32,18 @@ Desarrollada con Java (Spring Boot) y React, priorizando el rendimiento en consu
 
 ---
 
+### 🛡️ 4. Fiabilidad y Testing (Coverage >90%)
+* **Filosofía:** Desarrollo guiado por la robustez y el clean code.
+* **Stack:** JUnit 5 (Unitario), Mockito (Aislamiento) y Jacoco (Reportes).
+* **Resultado:** Cobertura superior al **95%** de media, garantizando que los refactors no rompen funcionalidades críticas.
+
+<p align="center">
+  <img src="frontend/public/JacocoCoverage.webp" alt="Reporte Jacoco Coverage" width="600px">
+  <img src="frontend/public/JacocoServicesCoverage.webp" alt="Reporte Jacoco Services Coverage" width="600px">
+</p>
+
+---
+
 ## ⚡ Soluciones Técnicas y Optimizaciones
 
 * **Errores Intermitentes de Base de Datos (JDBC/PostgreSQL):** Se experimentaron problemas persistentes y difíciles de diagnosticar (`prepared statement exists`, `transaction aborted`, `unable to commit`) relacionados con la interacción entre el driver JDBC, Hibernate y el pool de conexiones, especialmente en entornos desplegados (Railway). La investigación involucró análisis de logs detallados, ajuste fino de parámetros del pool (HikariCP), experimentación con diferentes pools y la aplicación final del parámetro `prepareThreshold=0` en la URL JDBC como workaround para lograr estabilidad.
@@ -209,4 +221,5 @@ Las contribuciones son bienvenidas. Por favor, sigue los pasos estándar de fork
 
 Distribuido bajo la Licencia MIT. Ver `LICENSE` para más información.
     
+
 
