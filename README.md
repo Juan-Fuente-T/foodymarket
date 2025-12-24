@@ -8,44 +8,41 @@
 
 [![Licencia: MIT](https://img.shields.io/badge/Licencia-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**Foody** es una plataforma web completa que simula un marketplace de comida online, conectando a clientes con restaurantes locales. Permite a los usuarios explorar una variedad de restaurantes, navegar por sus menús digitales, realizar pedidos personalizados y seguir su estado. Por otro lado, ofrece un panel dedicado para que los dueños de restaurantes gestionen eficientemente sus establecimientos, productos (platos, bebidas) y los pedidos entrantes.
+**FoodyMarket** es una plataforma B2C completa para la gestión de pedidos de restauración. Conecta a clientes finales con restaurantes, permitiendo gestión de menús, carritos en tiempo real y panel de administración para los dueños.
 
-Este proyecto es una demostración de habilidades Full Stack, integrando un backend robusto con Java/Spring Boot y un frontend moderno con React/TypeScript.
+Desarrollada con Java (Spring Boot) y React, priorizando el rendimiento en consultas, la seguridad de datos y un código limpio y mantenible.
 
-## 🚀 Demo en Vivo
+---
 
-* **Frontend:** [https://foodymarket.vercel.app](https://foodymarket.vercel.app) 
-* **Backend API:** `https://foodymarket.onrender.com/api` 
+## 🏗️ Arquitectura y Flujo
 
-**Credenciales de Prueba:**
+### Arquitectura
 
-* **Cliente:** `usuario1@example.com` / `password1` 
+![alt text](frontend/public/flujo_arquitectura.PNG)
 
-* **Restaurante:** `dueno1@example.com` / `password3` 
+### Flujo de pedido
 
-* **Nota:** El despliegue utiliza los planes gratuitos de Vercel y Render. El backend puede experimentar un **arranque en frío** (cold start) si no ha recibido tráfico recientemente, tardando 1-2 minutos en la primera respuesta. ¡Ten paciencia!*
+![alt text](frontend/public/flujo_pedido.PNG)
 
-## ✨ Características Principales
+![alt text](frontend/public/flujo.png)
 
-* **Para Clientes:**
-    * Registro e Inicio de Sesión (Autenticación basada en JWT).
-    * Exploración de Restaurantes (con filtro básico por tipo de restaurante).
-    * Visualización detallada de Menús por Restaurante.
-    * Carrito de Compra interactivo.
-    * Proceso de Pedido simplificado.
-    * Historial de Pedidos del cliente.
-    * Gestión de Perfil de Usuario.
-* **Para Dueños de Restaurante:**
-    * Registro e Inicio de Sesión.
-    * Panel de Administración (Dashboard).
-    * Gestión CRUD completa de Productos.
-    * Asociación de Productos a Categorías.
-    * Visualización y Gestión de Pedidos recibidos en sus restaurantes (cambiar estado).
-    * Gestión del Perfil del Restaurante.
-* **Generales:**
-    * API RESTful documentada (implícitamente con SpringDoc/Swagger).
-    * Seguridad basada en Roles (CLIENTE, RESTAURANTE).
-    * Arquitectura Monorepo gestionada con Git Subtree.
+### Diagrama de base de datos
+
+![alt text](frontend/public/diagrama_database.PNG)
+
+---
+
+## ⚡ Soluciones Técnicas y Optimizaciones
+
+* **Errores Intermitentes de Base de Datos (JDBC/PostgreSQL):** Se experimentaron problemas persistentes y difíciles de diagnosticar (`prepared statement exists`, `transaction aborted`, `unable to commit`) relacionados con la interacción entre el driver JDBC, Hibernate y el pool de conexiones, especialmente en entornos desplegados (Railway). La investigación involucró análisis de logs detallados, ajuste fino de parámetros del pool (HikariCP), experimentación con diferentes pools y la aplicación final del parámetro `prepareThreshold=0` en la URL JDBC como workaround para lograr estabilidad.
+* **Optimización de Consultas (N+1):** Se identificaron y solucionaron múltiples problemas de N+1 consultas mediante el uso estratégico de `JOIN FETCH` en JPQL y `@EntityGraph` en Spring Data JPA, mejorando significativamente el rendimiento en la carga de datos relacionados (Pedidos con Detalles/Productos, Restaurantes con Cocina/Usuario).
+* **Gestión de Monorepo con Git:** Se integraron los repositorios de backend y frontend en una estructura monorepo utilizando `git subtree add`, conservando el historial de commits de ambos proyectos para mantener la trazabilidad del desarrollo (visible principalmente en el historial general de la rama y localmente).
+* **Manejo de Tipos Monetarios:** Se refactorizó el manejo de precios y totales tanto en el backend (migrando de tipos incorrectos a `BigDecimal` y `NUMERIC`) como en el frontend (usando `string` y la librería `Decimal.js` para cálculos) para garantizar la precisión decimal y evitar errores de redondeo.
+* **Configuración de Despliegue y CORS:** Se configuró el despliegue del backend en Railway y del frontend en Vercel, ajustando variables de entorno (locales vs. producción con `VITE_`) y políticas CORS para permitir la comunicación entre ambos servicios. Se gestionaron las limitaciones de los planes gratuitos (ej: cold starts).
+* **Seguridad con Spring Security y JWT:** Se implementó un sistema de autenticación stateless basado en JWT, con registro de usuarios, login y autorización basada en roles (CLIENTE, RESTAURANTE), asegurando endpoints y gestionando el contexto de seguridad.
+
+---
+
 ## 🛠️ Stack Tecnológico
 
 Este proyecto combina tecnologías modernas para frontend y backend:
@@ -78,22 +75,46 @@ Este proyecto combina tecnologías modernas para frontend y backend:
     * **Backend:** Render (Plan Hobby).
     * **Frontend:** Vercel (Plan Hobby) 
     * **Docker & Docker Compose:** Configuración disponible para entorno local contenerizado.
-## 🏗️ Arquitectura y Flujo
 
-### Arquitectura
+---
 
-![alt text](frontend/public/flujo_arquitectura.PNG)
+## 🚀 Demo en Vivo
 
-### Flujo de pedido
+* **Frontend:** [https://foodymarket.vercel.app](https://foodymarket.vercel.app) 
+* **Backend API:** `https://foodymarket.onrender.com/api` 
 
-![alt text](frontend/public/flujo_pedido.PNG)
+**Credenciales de Prueba:**
 
-![alt text](frontend/public/flujo.png)
+* **Cliente:** `usuario1@example.com` / `password1` 
 
-### Diagrama de base de datos
+* **Restaurante:** `dueno1@example.com` / `password3` 
 
-![alt text](frontend/public/diagrama_database.PNG)
+* **Nota:** El despliegue utiliza los planes gratuitos de Vercel y Render. El backend puede experimentar un **arranque en frío** (cold start) si no ha recibido tráfico recientemente, tardando 1-2 minutos en la primera respuesta. ¡Ten paciencia!*
 
+---
+
+## ✨ Características Principales
+
+* **Para Clientes:**
+    * Registro e Inicio de Sesión (Autenticación basada en JWT).
+    * Exploración de Restaurantes (con filtro básico por tipo de restaurante).
+    * Visualización detallada de Menús por Restaurante.
+    * Carrito de Compra interactivo.
+    * Proceso de Pedido simplificado.
+    * Historial de Pedidos del cliente.
+    * Gestión de Perfil de Usuario.
+* **Para Dueños de Restaurante:**
+    * Registro e Inicio de Sesión.
+    * Panel de Administración (Dashboard).
+    * Gestión CRUD completa de Productos.
+    * Asociación de Productos a Categorías.
+    * Visualización y Gestión de Pedidos recibidos en sus restaurantes (cambiar estado).
+    * Gestión del Perfil del Restaurante.
+* **Generales:**
+    * API RESTful documentada (implícitamente con SpringDoc/Swagger).
+    * Seguridad basada en Roles (CLIENTE, RESTAURANTE).
+    * Arquitectura Monorepo gestionada con Git Subtree.
+---
 
 ## 🚀 Uso de la Aplicación
 
@@ -180,17 +201,6 @@ Sigue estos pasos para levantar el entorno de desarrollo en tu máquina.
 
 4.  **Acceder:** Abre `http://localhost:8081` en tu navegador.
 
-## 🤔 Retos y Aprendizajes
-
-Durante el desarrollo de este proyecto, me enfrenté a varios desafíos técnicos significativos, cuya resolución contribuyó enormemente a mi aprendizaje:
-
-* **Errores Intermitentes de Base de Datos (JDBC/PostgreSQL):** Se experimentaron problemas persistentes y difíciles de diagnosticar (`prepared statement exists`, `transaction aborted`, `unable to commit`) relacionados con la interacción entre el driver JDBC, Hibernate y el pool de conexiones, especialmente en entornos desplegados (Railway). La investigación involucró análisis de logs detallados, ajuste fino de parámetros del pool (HikariCP), experimentación con diferentes pools y la aplicación final del parámetro `prepareThreshold=0` en la URL JDBC como workaround para lograr estabilidad.
-* **Optimización de Consultas (N+1):** Se identificaron y solucionaron múltiples problemas de N+1 consultas mediante el uso estratégico de `JOIN FETCH` en JPQL y `@EntityGraph` en Spring Data JPA, mejorando significativamente el rendimiento en la carga de datos relacionados (Pedidos con Detalles/Productos, Restaurantes con Cocina/Usuario).
-* **Gestión de Monorepo con Git:** Se integraron los repositorios de backend y frontend en una estructura monorepo utilizando `git subtree add`, conservando el historial de commits de ambos proyectos para mantener la trazabilidad del desarrollo (visible principalmente en el historial general de la rama y localmente).
-* **Manejo de Tipos Monetarios:** Se refactorizó el manejo de precios y totales tanto en el backend (migrando de tipos incorrectos a `BigDecimal` y `NUMERIC`) como en el frontend (usando `string` y la librería `Decimal.js` para cálculos) para garantizar la precisión decimal y evitar errores de redondeo.
-* **Configuración de Despliegue y CORS:** Se configuró el despliegue del backend en Railway y del frontend en Vercel, ajustando variables de entorno (locales vs. producción con `VITE_`) y políticas CORS para permitir la comunicación entre ambos servicios. Se gestionaron las limitaciones de los planes gratuitos (ej: cold starts).
-* **Seguridad con Spring Security y JWT:** Se implementó un sistema de autenticación stateless basado en JWT, con registro de usuarios, login y autorización basada en roles (CLIENTE, RESTAURANTE), asegurando endpoints y gestionando el contexto de seguridad.
-
 ## 🤝 Contribuciones
 
 Las contribuciones son bienvenidas. Por favor, sigue los pasos estándar de fork y pull request.
@@ -199,3 +209,4 @@ Las contribuciones son bienvenidas. Por favor, sigue los pasos estándar de fork
 
 Distribuido bajo la Licencia MIT. Ver `LICENSE` para más información.
     
+
